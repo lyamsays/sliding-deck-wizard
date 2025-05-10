@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Loader } from "lucide-react";
@@ -26,6 +25,30 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
 }) => {
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
+
+  // Helper function to convert image URLs to base64 format
+  const getBase64FromUrl = async (url: string): Promise<string> => {
+    try {
+      // If URL is already base64, return it as is
+      if (url.startsWith('data:image')) {
+        return url;
+      }
+      
+      // Otherwise fetch and convert to base64
+      const response = await fetch(url);
+      const blob = await response.blob();
+      
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error("Error converting image to base64:", error);
+      throw error;
+    }
+  };
 
   const handleExportPDF = async () => {
     try {
@@ -76,7 +99,8 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         if (slide.imageUrl) {
           try {
             const layout = slide.style?.layout || 'right-image';
-            const imgData = slide.imageUrl;
+            // Convert image URL to base64 if needed
+            const imgData = await getBase64FromUrl(slide.imageUrl);
             const imgWidth = 60;
             const imgHeight = 60;
             const imgX = layout === 'left-image' ? 20 : width - imgWidth - 20;
@@ -119,7 +143,9 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       pptx.author = 'SlideMaker AI';
       pptx.title = deckTitle || 'Presentation';
       
-      for (const slide of editedSlides) {
+      // Process all slides
+      for (let i = 0; i < editedSlides.length; i++) {
+        const slide = editedSlides[i];
         const layout = slide.style?.layout || 'right-image';
         const bgColor = slide.style?.backgroundColor || '#ffffff';
         
@@ -175,8 +201,11 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         // Add image if available
         if (slide.imageUrl) {
           try {
+            // Convert image URL to base64 if needed
+            const base64Image = await getBase64FromUrl(slide.imageUrl);
+            
             pptSlide.addImage({
-              data: slide.imageUrl,
+              data: base64Image,
               x: imageX,
               y: imageY,
               w: imageWidth,
@@ -236,7 +265,13 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         }
       }
       
+      // Write file to download
       pptx.writeFile({ fileName: `${deckTitle || 'presentation'}.pptx` });
+      
+      toast({
+        title: "PowerPoint exported successfully",
+        description: "Your presentation has been downloaded as a PPTX file."
+      });
     } catch (error) {
       console.error('Error generating PPTX:', error);
       toast({

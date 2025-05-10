@@ -73,6 +73,30 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
     window.print();
   };
 
+  // Helper function to convert image URLs to base64 format
+  const getBase64FromUrl = async (url: string): Promise<string> => {
+    try {
+      // If URL is already base64, return it as is
+      if (url.startsWith('data:image')) {
+        return url;
+      }
+      
+      // Otherwise fetch and convert to base64
+      const response = await fetch(url);
+      const blob = await response.blob();
+      
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error("Error converting image to base64:", error);
+      throw error;
+    }
+  };
+
   const handleDownloadPDF = async () => {
     try {
       setIsPdfExporting(true);
@@ -122,7 +146,8 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
         if (slide.imageUrl) {
           try {
             const layout = slide.style?.layout || 'right-image';
-            const imgData = slide.imageUrl;
+            // Convert image URL to base64 if needed
+            const imgData = await getBase64FromUrl(slide.imageUrl);
             const imgWidth = 60;
             const imgHeight = 60;
             const imgX = layout === 'left-image' ? 20 : width - imgWidth - 20;
