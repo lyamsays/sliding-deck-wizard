@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Json } from '@/integrations/supabase/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -276,24 +276,14 @@ const SlideInput = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="purpose">Purpose</Label>
-                <Select
+                <Input
+                  id="purpose"
+                  placeholder="Enter purpose (e.g., Proposal, Pitch)"
                   value={purpose}
-                  onValueChange={setPurpose}
+                  onChange={(e) => setPurpose(e.target.value)}
                   disabled={isGenerating}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select purpose" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Purpose</SelectLabel>
-                      <SelectItem value="Proposal">Proposal</SelectItem>
-                      <SelectItem value="Lecture">Lecture</SelectItem>
-                      <SelectItem value="Team Update">Team Update</SelectItem>
-                      <SelectItem value="Pitch">Pitch</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                  className="w-full"
+                />
               </div>
               
               <div className="space-y-2">
