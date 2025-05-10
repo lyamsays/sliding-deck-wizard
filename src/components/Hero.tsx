@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
@@ -14,8 +15,8 @@ const Hero = () => {
             Transform your notes, bullet points, and raw content into beautiful, structured slide decks using AI — no design skills required.
           </p>
           <div className="mt-10 flex justify-center gap-4 animate-fade-up">
-            <Button size="lg" className="bg-primary hover:bg-primary/90 transition-all">
-              Try the Demo
+            <Button size="lg" className="bg-primary hover:bg-primary/90 transition-all" asChild>
+              <Link to="/create">Try the Demo</Link>
             </Button>
             <Button variant="outline" size="lg" className="border-primary text-primary hover:bg-accent transition-all">
               Learn More
