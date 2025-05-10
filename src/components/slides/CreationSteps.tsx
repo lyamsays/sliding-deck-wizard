@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, Edit, FileImage, FileText, Download } from 'lucide-react';
+import { Check, Edit, FileText, Download } from 'lucide-react';
 
 interface CreationStepsProps {
   currentStep: 'input' | 'generating' | 'editing' | 'exporting';

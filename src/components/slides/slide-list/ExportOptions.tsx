@@ -1,51 +1,32 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Download, Edit, Save, Loader, LayoutGrid, LayoutList } from "lucide-react";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Slide } from '@/types/deck';
-import OutlineSlide from '@/components/slides/OutlineSlide';
-import StyledSlide from '@/components/slides/StyledSlide';
-import PptxGenJS from 'pptxgenjs';
-import { jsPDF } from 'jspdf';
+import { Download, Loader } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { jsPDF } from 'jspdf';
+import PptxGenJS from 'pptxgenjs';
+import { Slide } from '@/types/deck';
+import { useToast } from "@/hooks/use-toast";
 
-interface SlideListProps {
+interface ExportOptionsProps {
   editedSlides: Slide[];
-  viewMode: 'outline' | 'slide';
-  setViewMode: (mode: 'outline' | 'slide') => void;
   deckTitle: string;
-  setDeckTitle: (title: string) => void;
-  handleSave: () => void;
-  handleSlideUpdate: (index: number, updatedSlide: Slide) => void;
-  handleRemoveImage: (index: number) => void;
   handleDownloadSlides: () => void;
-  isSaving: boolean;
 }
 
-const SlideList: React.FC<SlideListProps> = ({
-  editedSlides,
-  viewMode,
-  setViewMode,
-  deckTitle,
-  setDeckTitle,
-  handleSave,
-  handleSlideUpdate,
-  handleRemoveImage,
-  handleDownloadSlides,
-  isSaving
+const ExportOptions: React.FC<ExportOptionsProps> = ({ 
+  editedSlides, 
+  deckTitle, 
+  handleDownloadSlides 
 }) => {
   const [isExporting, setIsExporting] = useState(false);
+  const { toast } = useToast();
 
-  if (editedSlides.length === 0) {
-    return null;
-  }
-  
   const handleExportPDF = async () => {
     try {
       setIsExporting(true);
@@ -248,108 +229,49 @@ const SlideList: React.FC<SlideListProps> = ({
       pptx.writeFile({ fileName: `${deckTitle || 'presentation'}.pptx` });
     } catch (error) {
       console.error('Error generating PPTX:', error);
+      toast({
+        title: "Export failed",
+        description: "Failed to generate PowerPoint file. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsExporting(false);
     }
   };
   
   return (
-    <div className="mt-12 md:mt-16 space-y-6 animate-fade-up">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white rounded-lg p-4 shadow-sm border border-border">
-        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">Your Presentation</h2>
-        <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-          <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'outline' | 'slide')} className="self-start sm:self-auto">
-            <ToggleGroupItem value="outline" aria-label="Toggle outline view" className="px-3">
-              <LayoutList className="h-4 w-4 mr-2" />
-              Outline
-            </ToggleGroupItem>
-            <ToggleGroupItem value="slide" aria-label="Toggle slide view" className="px-3">
-              <LayoutGrid className="h-4 w-4 mr-2" />
-              Slides
-            </ToggleGroupItem>
-          </ToggleGroup>
-          
-          <div className="flex items-center gap-2">
-            <input 
-              type="text"
-              placeholder="Deck Title"
-              className="px-3 py-2 border rounded-md text-sm min-w-[200px] focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
-              value={deckTitle}
-              onChange={(e) => setDeckTitle(e.target.value)}
-            />
-            <Button 
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-2 btn-enhanced"
-            >
-              {isSaving ? <Loader className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {isSaving ? "Saving..." : "Save Deck"}
-            </Button>
-          </div>
-        </div>
-      </div>
-      
-      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4 flex items-center">
-        <Edit className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
-        <p className="text-sm text-blue-700">
-          Click on any text to edit your slides directly. Your changes will be saved automatically.
-        </p>
-      </div>
-      
-      <div className="grid grid-cols-1 gap-8">
-        {editedSlides.map((slide, index) => (
-          <div key={index} className="card-enhanced hover-lift">
-            {viewMode === 'outline' ? (
-              <OutlineSlide 
-                slide={slide} 
-                index={index} 
-                onSlideUpdate={handleSlideUpdate} 
-              />
-            ) : (
-              <StyledSlide 
-                slide={slide} 
-                index={index} 
-                onSlideUpdate={handleSlideUpdate}
-                onRemoveImage={() => handleRemoveImage(index)}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-      
-      <div className="flex flex-col sm:flex-row justify-center mt-8 gap-4">
-        <Button 
-          onClick={handleDownloadSlides}
-          className="flex items-center gap-2 bg-secondary hover:bg-secondary/80 btn-enhanced"
-          size="lg"
-        >
-          <Download className="h-5 w-5" />
-          <span>Download as Text</span>
-        </Button>
+    <div className="flex flex-col sm:flex-row justify-center mt-8 gap-4">
+      <Button 
+        onClick={handleDownloadSlides}
+        className="flex items-center gap-2 bg-secondary hover:bg-secondary/80 btn-enhanced"
+        size="lg"
+      >
+        <Download className="h-5 w-5" />
+        <span>Download as Text</span>
+      </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              className="flex items-center gap-2 btn-enhanced bg-gradient-purple"
-              size="lg"
-              disabled={isExporting}
-            >
-              {isExporting ? <Loader className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
-              <span>Export Presentation</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem onClick={handleExportPDF} className="cursor-pointer">
-              Export as PDF
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleExportPPTX} className="cursor-pointer">
-              Export as PowerPoint (.pptx)
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            className="flex items-center gap-2 btn-enhanced bg-gradient-purple"
+            size="lg"
+            disabled={isExporting}
+          >
+            {isExporting ? <Loader className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
+            <span>Export Presentation</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem onClick={handleExportPDF} className="cursor-pointer">
+            Export as PDF
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleExportPPTX} className="cursor-pointer">
+            Export as PowerPoint (.pptx)
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };
 
-export default SlideList;
+export default ExportOptions;

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Navbar from '../components/Navbar';
@@ -13,7 +14,7 @@ import { getRandomPastelColor, getIconSuggestion } from '@/types/deck';
 import SlideForm from '@/components/slides/SlideForm';
 import GenerationProgress from '@/components/slides/GenerationProgress';
 import ImageGenerationProgress from '@/components/slides/ImageGenerationProgress';
-import SlideList from '@/components/slides/SlideList';
+import SlideList from '@/components/slides/slide-list'; // Updated import path
 
 // Import new components
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
