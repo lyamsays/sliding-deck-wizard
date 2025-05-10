@@ -19,7 +19,9 @@ serve(async (req) => {
   try {
     const requestStart = Date.now();
     console.log("generate-slides: Parsing request body");
-    const { content } = await req.json();
+    const { content, profession, purpose, tone } = await req.json();
+    
+    console.log(`generate-slides: Received parameters - Profession: ${profession}, Purpose: ${purpose}, Tone: ${tone}`);
     
     // Return 400 if content is empty
     if (!content || content.trim() === '') {
@@ -61,6 +63,17 @@ serve(async (req) => {
               role: 'system',
               content: `
                 You are a slide generation assistant. Convert the provided content into well-structured presentation slides.
+                
+                Here are the specific parameters for this presentation:
+                - Profession: ${profession || 'Consultant'}
+                - Purpose: ${purpose || 'Proposal'} 
+                - Tone: ${tone || 'Formal'}
+                
+                Adapt your slide generation to match these parameters. For example:
+                - If the profession is 'Professor', create more educational slides.
+                - If the purpose is 'Team Update', focus on progress and next steps.
+                - If the tone is 'Visual-heavy', suggest more diagrams and visual elements.
+                
                 Return ONLY a JSON object with the following structure:
                 {
                   "slides": [
