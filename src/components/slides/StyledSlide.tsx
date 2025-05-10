@@ -2,12 +2,14 @@
 import React, { useState } from 'react';
 import { Slide } from '@/types/deck';
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
-import { Copy, Edit, Download, Image, LayoutGrid, LayoutList, GalleryHorizontal, GalleryVertical, ChevronLeft, ChevronRight, RefreshCw, Trash2 } from 'lucide-react';
+import { Copy, Edit, Download, Image, LayoutGrid, LayoutList, GalleryHorizontal, GalleryVertical, ChevronLeft, ChevronRight, RefreshCw, Trash2, MessageSquare, Wand } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { getIconSuggestion } from '@/types/deck';
 import { supabase } from "@/integrations/supabase/client";
+import ImageGenerationDialog from './ImageGenerationDialog';
+import SlideEditDialog from './SlideEditDialog';
 
 interface StyledSlideProps {
   slide: Slide;
@@ -19,6 +21,8 @@ interface StyledSlideProps {
 const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, onRemoveImage }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
   const backgroundColor = slide.style?.backgroundColor || '#F1F0FB';
   const iconName = slide.style?.iconType || getIconSuggestion(slide.title, slide.visualSuggestion);
@@ -110,180 +114,13 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
     }
   };
 
-  // Render the slide content based on layout
-  const renderSlideContent = () => {
-    // If we have an image, display it instead of the icon
-    const imageElement = slide.imageUrl ? (
-      <div className="relative overflow-hidden rounded-lg">
-        <img 
-          src={slide.imageUrl} 
-          alt={slide.title} 
-          className="object-cover w-full h-full"
-        />
-      </div>
-    ) : (
-      <div className="w-20 h-20 flex items-center justify-center bg-primary/10 rounded-full">
-        <IconComponent className="h-10 w-10 text-primary" />
-      </div>
-    );
-    
-    const imageSize = slide.imageUrl ? "w-full max-w-xs" : "w-20 h-20";
-    
-    switch(layout) {
-      case 'left-image':
-        return (
-          <div className="flex flex-row-reverse">
-            <div className="flex-grow">
-              <ul className="space-y-3">
-                {slide.bullets.map((bullet, bulletIndex) => (
-                  <li 
-                    key={bulletIndex} 
-                    className="flex items-start"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleBulletChange(bulletIndex, e)}
-                    role="textbox"
-                    aria-label={`Bullet point ${bulletIndex + 1}`}
-                  >
-                    <span className="text-primary mr-2 mt-1">•</span>
-                    <span>{bullet}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="mr-6 flex items-center justify-center">
-              {imageElement}
-            </div>
-          </div>
-        );
-      case 'right-image':
-        return (
-          <div className="flex flex-row">
-            <div className="flex-grow">
-              <ul className="space-y-3">
-                {slide.bullets.map((bullet, bulletIndex) => (
-                  <li 
-                    key={bulletIndex} 
-                    className="flex items-start"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleBulletChange(bulletIndex, e)}
-                    role="textbox"
-                    aria-label={`Bullet point ${bulletIndex + 1}`}
-                  >
-                    <span className="text-primary mr-2 mt-1">•</span>
-                    <span>{bullet}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="ml-6 flex items-center justify-center">
-              {imageElement}
-            </div>
-          </div>
-        );
-      case 'centered':
-        return (
-          <div className="flex flex-col items-center">
-            <div className={`mb-6 ${slide.imageUrl ? 'w-64 h-64' : 'w-24 h-24'} flex items-center justify-center ${!slide.imageUrl ? 'bg-primary/10 rounded-full' : ''}`}>
-              {imageElement}
-            </div>
-            <div className="w-full">
-              <ul className="space-y-3">
-                {slide.bullets.map((bullet, bulletIndex) => (
-                  <li 
-                    key={bulletIndex} 
-                    className="flex items-center justify-center text-center"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleBulletChange(bulletIndex, e)}
-                    role="textbox"
-                    aria-label={`Bullet point ${bulletIndex + 1}`}
-                  >
-                    <span>{bullet}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        );
-      case 'title-focus':
-        return (
-          <div className="flex flex-col">
-            <div className="mb-8 py-4 bg-primary/30 rounded-lg text-center">
-              <h2 className="text-3xl font-bold text-gray-800">{slide.title}</h2>
-            </div>
-            <div className="flex items-start">
-              <div className="mr-6 flex-shrink-0">
-                <div className="w-16 h-16 flex items-center justify-center bg-primary/10 rounded-full">
-                  <IconComponent className="h-8 w-8 text-primary" />
-                </div>
-              </div>
-              <ul className="space-y-3 flex-grow">
-                {slide.bullets.map((bullet, bulletIndex) => (
-                  <li 
-                    key={bulletIndex} 
-                    className="flex items-start"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleBulletChange(bulletIndex, e)}
-                    role="textbox"
-                    aria-label={`Bullet point ${bulletIndex + 1}`}
-                  >
-                    <span className="text-primary mr-2 mt-1">•</span>
-                    <span>{bullet}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        );
-      default:
-        return (
-          <div className="flex flex-row">
-            <div className="flex-grow">
-              <ul className="space-y-3">
-                {slide.bullets.map((bullet, bulletIndex) => (
-                  <li 
-                    key={bulletIndex} 
-                    className="flex items-start"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleBulletChange(bulletIndex, e)}
-                    role="textbox"
-                    aria-label={`Bullet point ${bulletIndex + 1}`}
-                  >
-                    <span className="text-primary mr-2 mt-1">•</span>
-                    <span>{bullet}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="ml-6 flex items-center justify-center">
-              <div className="w-20 h-20 flex items-center justify-center bg-primary/10 rounded-full">
-                <IconComponent className="h-10 w-10 text-primary" />
-              </div>
-            </div>
-          </div>
-        );
-    }
-  };
-
-  const handleGenerateImage = async () => {
-    if (!slide.visualSuggestion) {
-      toast({
-        title: "No visual suggestion",
-        description: "This slide doesn't have a visual suggestion to generate an image from.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+  // Handle AI-assisted image generation
+  const handleGenerateImageWithPrompt = async (prompt: string) => {
     setIsGeneratingImage(true);
     
     try {
-      // Create a refined prompt based on slide content for better image generation
-      const imagePrompt = `Create a professional presentation slide visual about "${slide.title}". ${slide.visualSuggestion}. Make it suitable for a business presentation, clean and minimal style, no text in the image.`;
+      // Create a refined prompt based on the provided input
+      const imagePrompt = `Create a professional presentation slide visual about "${slide.title}". ${prompt}. Make it suitable for a business presentation, clean and minimal style, no text in the image.`;
       
       toast({
         title: "Generating image",
@@ -313,6 +150,8 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
         revisedPrompt
       });
       
+      setIsImageDialogOpen(false);
+      
       toast({
         title: "Image generated",
         description: "Visual has been added to your slide.",
@@ -327,6 +166,193 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
       console.error("Image generation error:", error);
     } finally {
       setIsGeneratingImage(false);
+    }
+  };
+
+  // Handle AI slide edits
+  const handleSlideEdit = (updatedSlide: Slide) => {
+    onSlideUpdate(index, updatedSlide);
+  };
+
+  // Render the slide content based on layout
+  const renderSlideContent = () => {
+    // If we have an image, display it instead of the icon
+    const imageElement = slide.imageUrl ? (
+      <div className="relative overflow-hidden rounded-lg">
+        <img 
+          src={slide.imageUrl} 
+          alt={slide.title} 
+          className="object-cover w-full h-full"
+        />
+      </div>
+    ) : (
+      <div className="w-20 h-20 flex items-center justify-center bg-primary/10 rounded-full">
+        <IconComponent className="h-10 w-10 text-primary" />
+      </div>
+    );
+    
+    const imageSize = slide.imageUrl ? "w-full max-w-xs" : "w-20 h-20";
+    
+    // Add speaker notes display if available
+    const speakerNotesElement = slide.speakerNotes ? (
+      <div className="mt-4 pt-4 border-t border-dashed border-gray-200">
+        <p className="text-sm font-medium text-gray-700">Speaker Notes:</p>
+        <p className="text-sm text-gray-600 italic">{slide.speakerNotes}</p>
+      </div>
+    ) : null;
+    
+    switch(layout) {
+      case 'left-image':
+        return (
+          <>
+            <div className="flex flex-row-reverse">
+              <div className="flex-grow">
+                <ul className="space-y-3">
+                  {slide.bullets.map((bullet, bulletIndex) => (
+                    <li 
+                      key={bulletIndex} 
+                      className="flex items-start"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleBulletChange(bulletIndex, e)}
+                      role="textbox"
+                      aria-label={`Bullet point ${bulletIndex + 1}`}
+                    >
+                      <span className="text-primary mr-2 mt-1">•</span>
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mr-6 flex items-center justify-center">
+                {imageElement}
+              </div>
+            </div>
+            {speakerNotesElement}
+          </>
+        );
+      case 'right-image':
+        return (
+          <>
+            <div className="flex flex-row">
+              <div className="flex-grow">
+                <ul className="space-y-3">
+                  {slide.bullets.map((bullet, bulletIndex) => (
+                    <li 
+                      key={bulletIndex} 
+                      className="flex items-start"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleBulletChange(bulletIndex, e)}
+                      role="textbox"
+                      aria-label={`Bullet point ${bulletIndex + 1}`}
+                    >
+                      <span className="text-primary mr-2 mt-1">•</span>
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="ml-6 flex items-center justify-center">
+                {imageElement}
+              </div>
+            </div>
+            {speakerNotesElement}
+          </>
+        );
+      case 'centered':
+        return (
+          <>
+            <div className="flex flex-col items-center">
+              <div className={`mb-6 ${slide.imageUrl ? 'w-64 h-64' : 'w-24 h-24'} flex items-center justify-center ${!slide.imageUrl ? 'bg-primary/10 rounded-full' : ''}`}>
+                {imageElement}
+              </div>
+              <div className="w-full">
+                <ul className="space-y-3">
+                  {slide.bullets.map((bullet, bulletIndex) => (
+                    <li 
+                      key={bulletIndex} 
+                      className="flex items-center justify-center text-center"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleBulletChange(bulletIndex, e)}
+                      role="textbox"
+                      aria-label={`Bullet point ${bulletIndex + 1}`}
+                    >
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            {speakerNotesElement}
+          </>
+        );
+      case 'title-focus':
+        return (
+          <>
+            <div className="flex flex-col">
+              <div className="mb-8 py-4 bg-primary/30 rounded-lg text-center">
+                <h2 className="text-3xl font-bold text-gray-800">{slide.title}</h2>
+              </div>
+              <div className="flex items-start">
+                <div className="mr-6 flex-shrink-0">
+                  <div className="w-16 h-16 flex items-center justify-center bg-primary/10 rounded-full">
+                    <IconComponent className="h-8 w-8 text-primary" />
+                  </div>
+                </div>
+                <ul className="space-y-3 flex-grow">
+                  {slide.bullets.map((bullet, bulletIndex) => (
+                    <li 
+                      key={bulletIndex} 
+                      className="flex items-start"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleBulletChange(bulletIndex, e)}
+                      role="textbox"
+                      aria-label={`Bullet point ${bulletIndex + 1}`}
+                    >
+                      <span className="text-primary mr-2 mt-1">•</span>
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            {speakerNotesElement}
+          </>
+        );
+      default:
+        return (
+          <>
+            <div className="flex flex-row">
+              <div className="flex-grow">
+                <ul className="space-y-3">
+                  {slide.bullets.map((bullet, bulletIndex) => (
+                    <li 
+                      key={bulletIndex} 
+                      className="flex items-start"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleBulletChange(bulletIndex, e)}
+                      role="textbox"
+                      aria-label={`Bullet point ${bulletIndex + 1}`}
+                    >
+                      <span className="text-primary mr-2 mt-1">•</span>
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="ml-6 flex items-center justify-center">
+                <div className="w-20 h-20 flex items-center justify-center bg-primary/10 rounded-full">
+                  <IconComponent className="h-10 w-10 text-primary" />
+                </div>
+              </div>
+            </div>
+            {speakerNotesElement}
+          </>
+        );
     }
   };
 
@@ -380,6 +406,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
             size="sm" 
             onClick={handleCopySlide}
             className={`transition-opacity ${isHovering ? 'opacity-100' : 'opacity-0'}`}
+            title="Copy slide content"
           >
             <Copy className="h-4 w-4" />
             <span className="sr-only">Copy slide</span>
@@ -389,48 +416,73 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
       <CardContent className="pt-6">
         {renderSlideContent()}
       </CardContent>
-      {(slide.visualSuggestion || slide.revisedPrompt) && (
-        <CardFooter className="border-t border-gray-100 pt-4 mt-4 flex justify-between items-center">
-          <div className="flex items-start text-sm text-gray-600 max-w-[65%]">
-            <Image className="h-4 w-4 mr-2 mt-1 flex-shrink-0" />
-            <span className="line-clamp-2">
-              <strong>Visual:</strong> {slide.revisedPrompt || slide.visualSuggestion}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            {slide.imageUrl && onRemoveImage && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onRemoveImage}
-                className="flex-shrink-0"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Remove
-              </Button>
-            )}
+      
+      <CardFooter className="border-t border-gray-100 pt-4 mt-4 flex justify-between items-center flex-wrap gap-2">
+        <div className="flex items-start text-sm text-gray-600 max-w-[55%]">
+          <Image className="h-4 w-4 mr-2 mt-1 flex-shrink-0" />
+          <span className="line-clamp-2">
+            <strong>Visual:</strong> {slide.revisedPrompt || slide.visualSuggestion || "Add an image to this slide"}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditDialogOpen(true)}
+            className="flex-shrink-0"
+          >
+            <Wand className="h-4 w-4 mr-2" />
+            Edit with AI
+          </Button>
+          
+          {slide.imageUrl && onRemoveImage && (
             <Button
               variant="outline"
               size="sm"
-              onClick={handleGenerateImage}
-              disabled={isGeneratingImage || !slide.visualSuggestion}
+              onClick={onRemoveImage}
               className="flex-shrink-0"
             >
-              {isGeneratingImage ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Image className="h-4 w-4 mr-2" />
-                  {slide.imageUrl ? "Regenerate" : "Generate Image"}
-                </>
-              )}
+              <Trash2 className="h-4 w-4 mr-2" />
+              Remove Image
             </Button>
-          </div>
-        </CardFooter>
-      )}
+          )}
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsImageDialogOpen(true)}
+            disabled={isGeneratingImage}
+            className="flex-shrink-0"
+          >
+            {isGeneratingImage ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Image className="h-4 w-4 mr-2" />
+                {slide.imageUrl ? "Change Image" : "Add Image"}
+              </>
+            )}
+          </Button>
+        </div>
+      </CardFooter>
+      
+      <ImageGenerationDialog
+        open={isImageDialogOpen}
+        onOpenChange={setIsImageDialogOpen}
+        onGenerateImage={handleGenerateImageWithPrompt}
+        isGenerating={isGeneratingImage}
+        slideTitle={slide.title}
+      />
+      
+      <SlideEditDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        slide={slide}
+        onSlideUpdate={handleSlideEdit}
+      />
     </Card>
   );
 };

@@ -5,6 +5,7 @@ export interface Slide {
   visualSuggestion?: string;
   imageUrl?: string;
   revisedPrompt?: string;
+  speakerNotes?: string;
   style?: {
     backgroundColor?: string;
     iconType?: string; 
@@ -31,6 +32,7 @@ export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
       visualSuggestion: slide.visualSuggestion || undefined,
       imageUrl: slide.imageUrl || undefined,
       revisedPrompt: slide.revisedPrompt || undefined,
+      speakerNotes: slide.speakerNotes || undefined,
       style: slide.style || {
         backgroundColor: getRandomPastelColor(),
         layout: 'right-image',
@@ -48,6 +50,7 @@ export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
         visualSuggestion: slide.visualSuggestion || undefined,
         imageUrl: slide.imageUrl || undefined,
         revisedPrompt: slide.revisedPrompt || undefined,
+        speakerNotes: slide.speakerNotes || undefined,
         style: slide.style || {
           backgroundColor: getRandomPastelColor(),
           layout: 'right-image',
