@@ -24,6 +24,8 @@ const Navbar = () => {
             <Logo />
           </Link>
         </div>
+        
+        {/* Mobile menu button - remains on the right */}
         <div className="flex lg:hidden">
           <button
             type="button"
@@ -34,7 +36,9 @@ const Navbar = () => {
             <MenuIcon className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
-        <div className="hidden lg:flex lg:gap-x-12">
+        
+        {/* Navigation links - now positioned to the right */}
+        <div className="hidden lg:flex lg:gap-x-8 lg:items-center">
           <Link 
             to="/" 
             className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary transition-colors"
@@ -56,7 +60,9 @@ const Navbar = () => {
             </Link>
           )}
         </div>
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+        
+        {/* User menu or auth buttons - remains on the far right */}
+        <div className="hidden lg:flex lg:items-center lg:ml-4">
           {user ? (
             <UserMenu />
           ) : (
@@ -79,7 +85,7 @@ const Navbar = () => {
         </div>
       </nav>
       
-      {/* Mobile menu */}
+      {/* Mobile menu - no changes needed here */}
       <div className={`lg:hidden ${isMenuOpen ? 'fixed inset-0 z-50 bg-white/95' : 'hidden'}`}>
         <div className="fixed inset-0 z-50">
           <div className="flex h-16 items-center justify-between px-6">
