@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { Json } from '@/integrations/supabase/types';
 
 interface Slide {
   title: string;
@@ -122,12 +123,15 @@ const SlideInput = () => {
     setIsSaving(true);
     
     try {
+      // Convert the slides to a format compatible with Supabase's Json type
+      const slidesJson = JSON.parse(JSON.stringify(generatedSlides)) as Json;
+      
       const { error } = await supabase
         .from('slide_decks')
         .insert({
           user_id: user.id,
           title: deckTitle,
-          slides: generatedSlides
+          slides: slidesJson
         });
       
       if (error) throw error;

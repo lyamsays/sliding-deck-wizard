@@ -25,11 +25,12 @@ import {
 } from "@/components/ui/table";
 import { Eye, Loader, Trash } from "lucide-react";
 import { format } from "date-fns";
+import { Json } from '@/integrations/supabase/types';
 
 interface SlideDeck {
   id: string;
   title: string;
-  slides: any[];
+  slides: any; // Using any for slides to accommodate Json type from Supabase
   created_at: string;
 }
 
@@ -57,7 +58,7 @@ const MyDecks = () => {
         
         if (error) throw error;
         
-        setDecks(data || []);
+        setDecks(data as SlideDeck[]);
       } catch (error: any) {
         console.error('Error fetching decks:', error);
         toast({
