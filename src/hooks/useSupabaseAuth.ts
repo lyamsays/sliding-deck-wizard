@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
