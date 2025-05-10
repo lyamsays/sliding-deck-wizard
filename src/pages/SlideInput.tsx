@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -7,7 +6,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { AlertCircle, Loader, Save, Image } from "lucide-react";
+import { AlertCircle, Loader, Save, Copy, Download, Edit, FileText, Image } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,9 +35,110 @@ interface SlidesResponse {
   slides: Slide[];
 }
 
+interface EditableSlideProps {
+  slide: Slide;
+  index: number;
+  onSlideUpdate: (index: number, updatedSlide: Slide) => void;
+}
+
+const EditableSlideCard: React.FC<EditableSlideProps> = ({ slide, index, onSlideUpdate }) => {
+  const [isHovering, setIsHovering] = useState(false);
+  const { toast } = useToast();
+  
+  const handleTitleChange = (e: React.FormEvent<HTMLHeadingElement>) => {
+    const newTitle = e.currentTarget.textContent || "";
+    onSlideUpdate(index, {
+      ...slide,
+      title: newTitle
+    });
+  };
+  
+  const handleBulletChange = (bulletIndex: number, e: React.FormEvent<HTMLLIElement>) => {
+    const newBulletText = e.currentTarget.textContent || "";
+    const updatedBullets = [...slide.bullets];
+    updatedBullets[bulletIndex] = newBulletText;
+    
+    onSlideUpdate(index, {
+      ...slide,
+      bullets: updatedBullets
+    });
+  };
+  
+  const handleCopySlide = () => {
+    let content = `${slide.title}\n\n`;
+    slide.bullets.forEach(bullet => {
+      content += `• ${bullet}\n`;
+    });
+    
+    navigator.clipboard.writeText(content).then(() => {
+      toast({
+        title: "Copied to clipboard",
+        description: "Slide content has been copied.",
+      });
+    });
+  };
+  
+  return (
+    <Card 
+      className="overflow-hidden border border-gray-200 transition-shadow hover:shadow-md"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      <CardHeader className="bg-primary/5 pb-3 flex flex-row justify-between items-center">
+        <CardTitle 
+          className="text-xl text-gray-800"
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={handleTitleChange}
+          role="textbox"
+          aria-label="Slide title"
+        >
+          {slide.title}
+        </CardTitle>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleCopySlide}
+          className={`transition-opacity ${isHovering ? 'opacity-100' : 'opacity-0'}`}
+        >
+          <Copy className="h-4 w-4 mr-1" />
+          <span className="sr-only">Copy slide</span>
+        </Button>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <ul className="space-y-3">
+          {slide.bullets.map((bullet, bulletIndex) => (
+            <li 
+              key={bulletIndex} 
+              className="flex items-start"
+              contentEditable
+              suppressContentEditableWarning
+              onBlur={(e) => handleBulletChange(bulletIndex, e)}
+              role="textbox"
+              aria-label={`Bullet point ${bulletIndex + 1}`}
+            >
+              <span className="text-primary mr-2 mt-1">•</span>
+              <span>{bullet}</span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+      {slide.visualSuggestion && (
+        <CardFooter className="border-t border-gray-100 pt-4 mt-4">
+          <div className="flex items-start text-sm text-gray-600">
+            <Image className="h-4 w-4 mr-2 mt-1" />
+            <span><strong>Visual suggestion:</strong> {slide.visualSuggestion}</span>
+          </div>
+        </CardFooter>
+      )}
+    </Card>
+  );
+};
+
 const SlideInput = () => {
   const [slideContent, setSlideContent] = useState('');
   const [generatedSlides, setGeneratedSlides] = useState<Slide[]>([]);
+  const [editedSlides, setEditedSlides] = useState<Slide[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [deckTitle, setDeckTitle] = useState('');
@@ -50,10 +150,18 @@ const SlideInput = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const slidePreviewRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     console.log("SlideInput: Component mounted, user status:", user ? "Logged in" : "Not logged in");
   }, [user]);
+  
+  useEffect(() => {
+    // When generatedSlides updates, update editedSlides
+    if (generatedSlides.length > 0) {
+      setEditedSlides([...generatedSlides]);
+    }
+  }, [generatedSlides]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,6 +342,63 @@ const SlideInput = () => {
       setIsSaving(false);
     }
   };
+  
+  const handleSlideUpdate = (index: number, updatedSlide: Slide) => {
+    const updatedSlides = [...editedSlides];
+    updatedSlides[index] = updatedSlide;
+    setEditedSlides(updatedSlides);
+  };
+  
+  const handleDownloadSlides = () => {
+    if (editedSlides.length === 0) {
+      toast({
+        title: "No slides to download",
+        description: "Generate some slides first before downloading.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    let content = `# ${deckTitle || 'Untitled Presentation'}\n\n`;
+    
+    editedSlides.forEach((slide, index) => {
+      content += `## Slide ${index + 1}: ${slide.title}\n\n`;
+      
+      slide.bullets.forEach(bullet => {
+        content += `* ${bullet}\n`;
+      });
+      
+      if (slide.visualSuggestion) {
+        content += `\nVisual suggestion: ${slide.visualSuggestion}\n`;
+      }
+      
+      content += '\n\n';
+    });
+    
+    // Create a blob and download link
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${deckTitle || 'presentation'}.md`;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Download started",
+      description: "Your slides are being downloaded.",
+    });
+  };
+  
+  const scrollToPreview = () => {
+    if (slidePreviewRef.current) {
+      slidePreviewRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -333,6 +498,11 @@ const SlideInput = () => {
                 size="lg" 
                 className="bg-primary hover:bg-primary/90 transition-all px-8 py-6 text-lg"
                 disabled={isGenerating}
+                onClick={() => {
+                  if (generatedSlides.length > 0) {
+                    setTimeout(scrollToPreview, 1000);
+                  }
+                }}
               >
                 {isGenerating ? (
                   <div className="flex items-center gap-2">
@@ -387,8 +557,8 @@ const SlideInput = () => {
             </div>
           )}
           
-          {!isGenerating && generatedSlides.length > 0 && (
-            <div className="mt-16 space-y-12 animate-fade-up">
+          {!isGenerating && editedSlides.length > 0 && (
+            <div className="mt-16 space-y-6 animate-fade-up" ref={slidePreviewRef}>
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-900">Your Generated Slides</h2>
                 <div className="flex items-center gap-2">
@@ -410,34 +580,33 @@ const SlideInput = () => {
                 </div>
               </div>
               
+              <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 mb-4 flex items-center">
+                <Edit className="h-4 w-4 mr-2 text-primary" />
+                <p className="text-sm text-gray-600">
+                  Click on any text to edit your slides directly. Changes will be saved automatically.
+                </p>
+              </div>
+              
               <div className="space-y-8">
-                {generatedSlides.map((slide, index) => (
-                  <Card key={index} className="overflow-hidden">
-                    <CardHeader className="bg-primary/5 pb-3">
-                      <CardTitle className="text-xl text-gray-800">
-                        {slide.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <ul className="space-y-3">
-                        {slide.bullets.map((bullet, i) => (
-                          <li key={i} className="flex items-start">
-                            <span className="text-primary mr-2 mt-1">•</span>
-                            <span>{bullet}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                    {slide.visualSuggestion && (
-                      <CardFooter className="border-t border-gray-100 pt-4 mt-4">
-                        <div className="flex items-start text-sm text-gray-600">
-                          <Image className="h-4 w-4 mr-2 mt-1" />
-                          <span><strong>Visual suggestion:</strong> {slide.visualSuggestion}</span>
-                        </div>
-                      </CardFooter>
-                    )}
-                  </Card>
+                {editedSlides.map((slide, index) => (
+                  <EditableSlideCard 
+                    key={index} 
+                    slide={slide} 
+                    index={index} 
+                    onSlideUpdate={handleSlideUpdate} 
+                  />
                 ))}
+              </div>
+              
+              <div className="flex justify-center mt-8">
+                <Button 
+                  onClick={handleDownloadSlides}
+                  className="flex items-center gap-2 bg-secondary hover:bg-secondary/80"
+                  size="lg"
+                >
+                  <Download className="h-5 w-5" />
+                  <span>Download All Slides</span>
+                </Button>
               </div>
             </div>
           )}
