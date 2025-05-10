@@ -14,6 +14,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Json } from '@/integrations/supabase/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface Slide {
   title: string;
@@ -32,6 +42,9 @@ const SlideInput = () => {
   const [deckTitle, setDeckTitle] = useState('');
   const [generationProgress, setGenerationProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [profession, setProfession] = useState<string>("Consultant");
+  const [purpose, setPurpose] = useState<string>("Proposal");
+  const [tone, setTone] = useState<string>("Formal");
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -43,6 +56,7 @@ const SlideInput = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("SlideInput: Form submitted for slide generation");
+    console.log("SlideInput: Selected options - Profession:", profession, "Purpose:", purpose, "Tone:", tone);
     
     // Reset any previous errors
     setError(null);
@@ -80,9 +94,14 @@ const SlideInput = () => {
       });
       
       console.log("SlideInput: Calling Supabase function");
-      // Call the Supabase function with a timeout
+      // Call the Supabase function with a timeout, including the new dropdown selections
       const responsePromise = supabase.functions.invoke('generate-slides', {
-        body: { content: slideContent }
+        body: { 
+          content: slideContent,
+          profession: profession,
+          purpose: purpose,
+          tone: tone
+        }
       });
       
       // Race between the actual API call and the timeout
@@ -232,6 +251,74 @@ const SlideInput = () => {
           )}
           
           <form onSubmit={handleSubmit} className="space-y-6 animate-fade-up">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="profession">Profession</Label>
+                <Select
+                  value={profession}
+                  onValueChange={setProfession}
+                  disabled={isGenerating}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select profession" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Profession</SelectLabel>
+                      <SelectItem value="Consultant">Consultant</SelectItem>
+                      <SelectItem value="Professor">Professor</SelectItem>
+                      <SelectItem value="Executive">Executive</SelectItem>
+                      <SelectItem value="Student">Student</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="purpose">Purpose</Label>
+                <Select
+                  value={purpose}
+                  onValueChange={setPurpose}
+                  disabled={isGenerating}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select purpose" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Purpose</SelectLabel>
+                      <SelectItem value="Proposal">Proposal</SelectItem>
+                      <SelectItem value="Lecture">Lecture</SelectItem>
+                      <SelectItem value="Team Update">Team Update</SelectItem>
+                      <SelectItem value="Pitch">Pitch</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="tone">Tone</Label>
+                <Select
+                  value={tone}
+                  onValueChange={setTone}
+                  disabled={isGenerating}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select tone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Tone</SelectLabel>
+                      <SelectItem value="Formal">Formal</SelectItem>
+                      <SelectItem value="Friendly">Friendly</SelectItem>
+                      <SelectItem value="Visual-heavy">Visual-heavy</SelectItem>
+                      <SelectItem value="Academic">Academic</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
               <Textarea 
                 className="min-h-[300px] w-full bg-white border-0 resize-none focus-visible:ring-1 focus-visible:ring-primary text-base md:text-lg"
