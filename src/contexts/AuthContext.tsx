@@ -31,9 +31,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   } = useSupabaseAuth();
 
   useEffect(() => {
+    console.log('AuthProvider: Initializing auth context');
+    
     // Set up auth state listener FIRST to prevent missing auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
+        console.log('Auth state change detected:', event);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -42,16 +45,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     // THEN check for existing session
     const initializeAuth = async () => {
+      console.log('AuthProvider: Checking for existing session');
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
+        if (session) {
+          console.log('AuthProvider: Existing session found');
+        } else {
+          console.log('AuthProvider: No existing session');
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (error) {
-          console.error('Error fetching session:', error);
+          console.error('AuthProvider: Error fetching session:', error);
         }
       } catch (error) {
-        console.error('Error in auth initialization:', error);
+        console.error('AuthProvider: Error in auth initialization:', error);
       } finally {
         setLoading(false);
       }
@@ -60,6 +70,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initializeAuth();
     
     return () => {
+      console.log('AuthProvider: Cleaning up auth subscription');
       subscription.unsubscribe();
     };
   }, [setSession, setUser, setLoading]);

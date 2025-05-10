@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
@@ -11,19 +12,26 @@ export const useSupabaseAuth = () => {
 
   const signUp = async (email: string, password: string) => {
     try {
+      console.log('useSupabaseAuth: Starting sign-up process');
       setLoading(true);
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('useSupabaseAuth: Sign-up error:', error);
+        throw error;
+      }
+
+      console.log('useSupabaseAuth: Sign-up successful, verification status:', data?.user?.email_confirmed_at ? 'Confirmed' : 'Pending');
       
       toast({
         title: "Success!",
         description: "Please check your email to verify your account.",
       });
     } catch (error: any) {
+      console.error('useSupabaseAuth: Sign-up exception:', error);
       toast({
         variant: "destructive",
         title: "Error signing up",
@@ -37,19 +45,26 @@ export const useSupabaseAuth = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('useSupabaseAuth: Starting sign-in process');
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('useSupabaseAuth: Sign-in error:', error);
+        throw error;
+      }
+
+      console.log('useSupabaseAuth: Sign-in successful, user:', data?.user?.id);
       
       toast({
         title: "Welcome back!",
         description: "Successfully signed in",
       });
     } catch (error: any) {
+      console.error('useSupabaseAuth: Sign-in exception:', error);
       toast({
         variant: "destructive",
         title: "Error signing in",
@@ -63,6 +78,7 @@ export const useSupabaseAuth = () => {
 
   const signInWithGoogle = async () => {
     try {
+      console.log('useSupabaseAuth: Starting Google sign-in flow');
       setLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -71,8 +87,14 @@ export const useSupabaseAuth = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('useSupabaseAuth: Google sign-in error:', error);
+        throw error;
+      }
+      
+      console.log('useSupabaseAuth: Google sign-in flow initiated');
     } catch (error: any) {
+      console.error('useSupabaseAuth: Google sign-in exception:', error);
       toast({
         variant: "destructive",
         title: "Error signing in with Google",
@@ -86,15 +108,21 @@ export const useSupabaseAuth = () => {
 
   const signOut = async () => {
     try {
+      console.log('useSupabaseAuth: Starting sign-out process');
       setLoading(true);
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error('useSupabaseAuth: Sign-out error:', error);
+        throw error;
+      }
       
+      console.log('useSupabaseAuth: Sign-out successful');
       toast({
         title: "Signed out",
         description: "You have been successfully signed out",
       });
     } catch (error: any) {
+      console.error('useSupabaseAuth: Sign-out exception:', error);
       toast({
         variant: "destructive",
         title: "Error signing out",

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -36,13 +36,19 @@ const SlideInput = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   
+  useEffect(() => {
+    console.log("SlideInput: Component mounted, user status:", user ? "Logged in" : "Not logged in");
+  }, [user]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("SlideInput: Form submitted for slide generation");
     
     // Reset any previous errors
     setError(null);
     
     if (!slideContent.trim()) {
+      console.warn("SlideInput: Empty content submitted");
       setError("Please enter some content to generate slides.");
       toast({
         title: "Content is empty",
@@ -65,6 +71,7 @@ const SlideInput = () => {
     }, 500);
     
     try {
+      console.log("SlideInput: Starting slide generation, content length:", slideContent.length);
       setGenerationProgress(30);
       
       // Add a timeout to handle cases where the function might take too long
@@ -72,6 +79,7 @@ const SlideInput = () => {
         setTimeout(() => reject(new Error('Generation timed out. The server might be busy, please try again.')), 30000);
       });
       
+      console.log("SlideInput: Calling Supabase function");
       // Call the Supabase function with a timeout
       const responsePromise = supabase.functions.invoke('generate-slides', {
         body: { content: slideContent }
@@ -80,16 +88,26 @@ const SlideInput = () => {
       // Race between the actual API call and the timeout
       const { data, error } = await Promise.race([
         responsePromise,
-        timeoutPromise.then(() => { throw new Error('Generation timed out. The server might be busy, please try again.'); })
+        timeoutPromise.then(() => { 
+          console.error("SlideInput: Generation timeout reached");
+          throw new Error('Generation timed out. The server might be busy, please try again.'); 
+        })
       ]) as any;
       
-      if (error) throw error;
+      if (error) {
+        console.error("SlideInput: Function returned error:", error);
+        throw error;
+      }
       
+      console.log("SlideInput: Received response from function");
       const slidesData = data as SlidesResponse;
       
       if (!slidesData.slides || !Array.isArray(slidesData.slides) || slidesData.slides.length === 0) {
+        console.error("SlideInput: Invalid slides structure:", slidesData);
         throw new Error('Invalid or empty response from AI. Please try with more detailed content.');
       }
+      
+      console.log("SlideInput: Successfully generated slides:", slidesData.slides.length);
       
       setGenerationProgress(100);
       setGeneratedSlides(slidesData.slides);
@@ -97,6 +115,7 @@ const SlideInput = () => {
       // Generate a title for the deck based on the first slide
       if (slidesData.slides.length > 0) {
         setDeckTitle(slidesData.slides[0].title);
+        console.log("SlideInput: Set deck title to:", slidesData.slides[0].title);
       } else {
         setDeckTitle('Untitled Deck');
       }
@@ -106,7 +125,7 @@ const SlideInput = () => {
         description: `Successfully created ${slidesData.slides.length} slides.`,
       });
     } catch (error: any) {
-      console.error('Error generating slides:', error);
+      console.error('SlideInput: Error generating slides:', error);
       setError(error.message || "Failed to generate slides. Please try again.");
       toast({
         title: "Generation failed",
@@ -117,6 +136,7 @@ const SlideInput = () => {
       clearInterval(progressInterval);
       setIsGenerating(false);
       if (generationProgress < 100) {
+        console.log("SlideInput: Resetting progress as generation did not complete successfully");
         setGenerationProgress(0); // Reset progress if we didn't complete
       }
     }
@@ -124,6 +144,7 @@ const SlideInput = () => {
   
   const handleSave = async () => {
     if (!user) {
+      console.warn("SlideInput: Save attempted without being logged in");
       toast({
         title: "Authentication required",
         description: "Please sign in to save your slides.",
@@ -134,6 +155,7 @@ const SlideInput = () => {
     }
     
     if (generatedSlides.length === 0) {
+      console.warn("SlideInput: Save attempted with no slides generated");
       toast({
         title: "No slides to save",
         description: "Generate some slides first before saving.",
@@ -142,21 +164,30 @@ const SlideInput = () => {
       return;
     }
     
+    console.log("SlideInput: Attempting to save slides:", generatedSlides.length);
     setIsSaving(true);
     
     try {
       // Convert the slides to a format compatible with Supabase's Json type
       const slidesJson = JSON.parse(JSON.stringify(generatedSlides)) as Json;
       
-      const { error } = await supabase
+      console.log("SlideInput: Inserting slide deck into database");
+      const { error, data } = await supabase
         .from('slide_decks')
         .insert({
           user_id: user.id,
           title: deckTitle,
           slides: slidesJson
-        });
+        })
+        .select()
+        .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("SlideInput: Database error when saving:", error);
+        throw error;
+      }
+      
+      console.log("SlideInput: Successfully saved slides, deck ID:", data?.id);
       
       toast({
         title: "Saved successfully!",
@@ -166,7 +197,7 @@ const SlideInput = () => {
       // Redirect to My Decks page after saving
       navigate('/my-decks');
     } catch (error: any) {
-      console.error('Error saving slides:', error);
+      console.error('SlideInput: Error saving slides:', error);
       toast({
         title: "Save failed",
         description: error.message || "Failed to save slides. Please try again.",

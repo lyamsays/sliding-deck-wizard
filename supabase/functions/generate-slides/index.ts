@@ -8,32 +8,45 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("generate-slides: Function invoked");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("generate-slides: Handling CORS preflight");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const requestStart = Date.now();
+    console.log("generate-slides: Parsing request body");
     const { content } = await req.json();
     
     // Return 400 if content is empty
     if (!content || content.trim() === '') {
+      console.error("generate-slides: Empty content provided");
       return new Response(
         JSON.stringify({ error: 'Content cannot be empty' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    console.log("generate-slides: Content received, length:", content.length);
+    
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
+      console.error("generate-slides: Missing OPENAI_API_KEY");
       throw new Error('OPENAI_API_KEY is not set');
     }
 
     // Add a timeout to the OpenAI API call
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+    const timeoutId = setTimeout(() => {
+      console.warn("generate-slides: Request timeout triggered");
+      controller.abort();
+    }, 25000); // 25 second timeout
 
     try {
+      console.log("generate-slides: Calling OpenAI API");
       // Call OpenAI API with abort controller for timeout
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -76,36 +89,46 @@ serve(async (req) => {
       
       clearTimeout(timeoutId); // Clear timeout if API call completes
       
+      const apiDuration = Date.now() - requestStart;
+      console.log(`generate-slides: OpenAI API call completed in ${apiDuration}ms`);
+      
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("OpenAI API Error:", errorData);
+        console.error("generate-slides: OpenAI API Error:", errorData);
         throw new Error(`API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 
       const data = await response.json();
       const slidesContent = data.choices[0].message.content;
       
+      console.log("generate-slides: Raw response from OpenAI:", slidesContent.substring(0, 100) + "...");
+      
       // Parse the JSON from the OpenAI response
       let slides;
       try {
         // Clean the response in case OpenAI returns markdown code blocks
         const jsonStr = slidesContent.replace(/```json|```/g, '').trim();
+        console.log("generate-slides: Attempting to parse JSON response");
         slides = JSON.parse(jsonStr);
       } catch (e) {
-        console.error("Error parsing OpenAI response:", e);
-        console.log("Response content:", slidesContent);
+        console.error("generate-slides: Error parsing OpenAI response:", e);
+        console.log("generate-slides: Response content preview:", slidesContent.substring(0, 200));
         return new Response(
           JSON.stringify({ error: 'Failed to parse slide content' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      console.log("Generated slides:", slides);
+      console.log("generate-slides: Successfully generated slides:", slides.slides?.length || 0);
       
       // Validate the response structure
       if (!slides.slides || !Array.isArray(slides.slides) || slides.slides.length === 0) {
+        console.error("generate-slides: Invalid response format from AI");
         throw new Error('Invalid response format from AI');
       }
+      
+      const totalDuration = Date.now() - requestStart;
+      console.log(`generate-slides: Total function execution time: ${totalDuration}ms`);
       
       return new Response(
         JSON.stringify(slides),
@@ -114,12 +137,14 @@ serve(async (req) => {
     } catch (fetchError) {
       clearTimeout(timeoutId);
       if (fetchError.name === 'AbortError') {
+        console.error("generate-slides: Request timed out");
         throw new Error('Generation request timed out. Please try again.');
       }
+      console.error("generate-slides: Fetch error:", fetchError);
       throw fetchError;
     }
   } catch (error) {
-    console.error("Error generating slides:", error);
+    console.error("generate-slides: Error generating slides:", error);
     
     return new Response(
       JSON.stringify({ error: error.message || 'An error occurred during slide generation' }),

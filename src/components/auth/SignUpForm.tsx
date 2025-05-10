@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaGoogle } from 'react-icons/fa';
+import { useToast } from '@/hooks/use-toast';
 
 const SignUpForm = () => {
   const [email, setEmail] = useState('');
@@ -13,27 +14,43 @@ const SignUpForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('SignUpForm: Starting sign-up process');
     setIsLoading(true);
     
     try {
+      console.log('SignUpForm: Attempting to sign up with email:', email);
       await signUp(email, password);
+      console.log('SignUpForm: Sign-up successful, redirecting to home page');
       navigate('/');
-    } catch (error) {
-      console.error('Error signing up:', error);
+    } catch (error: any) {
+      console.error('SignUpForm Error:', error);
+      toast({
+        variant: "destructive",
+        title: "Sign-up failed",
+        description: error.message || "Could not create your account. Please try again."
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleSignUp = async () => {
+    console.log('SignUpForm: Attempting to sign up with Google');
     try {
       await signInWithGoogle();
+      console.log('SignUpForm: Google sign-in flow initiated');
       // Redirection is handled by the OAuth provider
-    } catch (error) {
-      console.error('Error signing up with Google:', error);
+    } catch (error: any) {
+      console.error('Google Sign-up Error:', error);
+      toast({
+        variant: "destructive",
+        title: "Google sign-in failed",
+        description: error.message || "Could not sign in with Google. Please try again."
+      });
     }
   };
 
