@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,6 +48,8 @@ const SlideInput = () => {
   const [purpose, setPurpose] = useState<string>("");
   const [tone, setTone] = useState<string>("Formal");
   const [viewMode, setViewMode] = useState<'outline' | 'slide'>('slide');
+  const [isGeneratingImages, setIsGeneratingImages] = useState(false);
+  const [imageProgress, setImageProgress] = useState(0);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -261,6 +262,100 @@ const SlideInput = () => {
     const updatedSlides = [...editedSlides];
     updatedSlides[index] = updatedSlide;
     setEditedSlides(updatedSlides);
+  };
+  
+  const handleGenerateAllImages = async () => {
+    if (editedSlides.length === 0) {
+      toast({
+        title: "No slides to generate images for",
+        description: "Generate some slides first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const slidesWithSuggestions = editedSlides.filter(slide => slide.visualSuggestion);
+    
+    if (slidesWithSuggestions.length === 0) {
+      toast({
+        title: "No visual suggestions",
+        description: "None of your slides have visual suggestions to generate images from.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsGeneratingImages(true);
+    
+    // Start with 10% progress
+    setImageProgress(10);
+    
+    const updatedSlides = [...editedSlides];
+    const totalSlides = slidesWithSuggestions.length;
+    let processedCount = 0;
+    
+    toast({
+      title: "Generating images",
+      description: `Starting image generation for ${totalSlides} slides...`,
+    });
+    
+    try {
+      for (let i = 0; i < editedSlides.length; i++) {
+        const slide = editedSlides[i];
+        
+        if (!slide.visualSuggestion || slide.imageUrl) {
+          continue;
+        }
+        
+        // Create a refined prompt for image generation
+        const imagePrompt = `Create a professional presentation slide visual about "${slide.title}". ${slide.visualSuggestion}. Make it suitable for a business presentation, clean and minimal style, no text in the image.`;
+        
+        const { data, error } = await supabase.functions.invoke('generate-image', {
+          body: { prompt: imagePrompt }
+        });
+        
+        if (error) {
+          console.error(`Error generating image for slide ${i}:`, error);
+          continue;
+        }
+        
+        if (data.error) {
+          console.error(`API error generating image for slide ${i}:`, data.error);
+          continue;
+        }
+        
+        const { imageUrl, revisedPrompt } = data;
+        
+        updatedSlides[i] = {
+          ...slide,
+          imageUrl,
+          revisedPrompt
+        };
+        
+        processedCount++;
+        
+        // Update progress (keeping 10% for start and 10% for completion)
+        const progressValue = 10 + Math.round((processedCount / totalSlides) * 80);
+        setImageProgress(progressValue);
+      }
+      
+      // Final update to slides
+      setEditedSlides(updatedSlides);
+      setImageProgress(100);
+      
+      toast({
+        title: "Images generated",
+        description: `Successfully generated ${processedCount} images.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Some images failed",
+        description: error.message || "Some images could not be generated. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingImages(false);
+    }
   };
   
   const handleDownloadSlides = () => {

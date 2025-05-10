@@ -1,12 +1,12 @@
-
 import React, { useState } from 'react';
 import { Slide } from '@/types/deck';
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
-import { Copy, Edit, Download, Image, LayoutGrid, LayoutList, GalleryHorizontal, GalleryVertical, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Copy, Edit, Download, Image, LayoutGrid, LayoutList, GalleryHorizontal, GalleryVertical, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { getIconSuggestion } from '@/types/deck';
+import { supabase } from "@/integrations/supabase/client";
 
 interface StyledSlideProps {
   slide: Slide;
@@ -16,6 +16,7 @@ interface StyledSlideProps {
 
 const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }) => {
   const [isHovering, setIsHovering] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const { toast } = useToast();
   const backgroundColor = slide.style?.backgroundColor || '#F1F0FB';
   const iconName = slide.style?.iconType || getIconSuggestion(slide.title, slide.visualSuggestion);
@@ -109,6 +110,23 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }
 
   // Render the slide content based on layout
   const renderSlideContent = () => {
+    // If we have an image, display it instead of the icon
+    const imageElement = slide.imageUrl ? (
+      <div className="relative overflow-hidden rounded-lg">
+        <img 
+          src={slide.imageUrl} 
+          alt={slide.title} 
+          className="object-cover w-full h-full"
+        />
+      </div>
+    ) : (
+      <div className="w-20 h-20 flex items-center justify-center bg-primary/10 rounded-full">
+        <IconComponent className="h-10 w-10 text-primary" />
+      </div>
+    );
+    
+    const imageSize = slide.imageUrl ? "w-full max-w-xs" : "w-20 h-20";
+    
     switch(layout) {
       case 'left-image':
         return (
@@ -132,9 +150,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }
               </ul>
             </div>
             <div className="mr-6 flex items-center justify-center">
-              <div className="w-20 h-20 flex items-center justify-center bg-primary/10 rounded-full">
-                <IconComponent className="h-10 w-10 text-primary" />
-              </div>
+              {imageElement}
             </div>
           </div>
         );
@@ -160,17 +176,15 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }
               </ul>
             </div>
             <div className="ml-6 flex items-center justify-center">
-              <div className="w-20 h-20 flex items-center justify-center bg-primary/10 rounded-full">
-                <IconComponent className="h-10 w-10 text-primary" />
-              </div>
+              {imageElement}
             </div>
           </div>
         );
       case 'centered':
         return (
           <div className="flex flex-col items-center">
-            <div className="mb-6 w-24 h-24 flex items-center justify-center bg-primary/10 rounded-full">
-              <IconComponent className="h-12 w-12 text-primary" />
+            <div className={`mb-6 ${slide.imageUrl ? 'w-64 h-64' : 'w-24 h-24'} flex items-center justify-center ${!slide.imageUrl ? 'bg-primary/10 rounded-full' : ''}`}>
+              {imageElement}
             </div>
             <div className="w-full">
               <ul className="space-y-3">
@@ -253,6 +267,67 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }
     }
   };
 
+  const handleGenerateImage = async () => {
+    if (!slide.visualSuggestion) {
+      toast({
+        title: "No visual suggestion",
+        description: "This slide doesn't have a visual suggestion to generate an image from.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsGeneratingImage(true);
+    
+    try {
+      // Create a refined prompt based on slide content for better image generation
+      const imagePrompt = `Create a professional presentation slide visual about "${slide.title}". ${slide.visualSuggestion}. Make it suitable for a business presentation, clean and minimal style, no text in the image.`;
+      
+      toast({
+        title: "Generating image",
+        description: "Creating a visual for your slide...",
+      });
+      
+      const { data, error } = await supabase.functions.invoke('generate-image', {
+        body: { prompt: imagePrompt }
+      });
+      
+      if (error) {
+        console.error("Error generating image:", error);
+        throw new Error(error.message || "Failed to generate image");
+      }
+      
+      if (data.error) {
+        console.error("API error generating image:", data.error);
+        throw new Error(data.error);
+      }
+      
+      const { imageUrl, revisedPrompt } = data;
+      
+      // Update the slide with the generated image
+      onSlideUpdate(index, {
+        ...slide,
+        imageUrl,
+        revisedPrompt
+      });
+      
+      toast({
+        title: "Image generated",
+        description: "Visual has been added to your slide.",
+      });
+      
+    } catch (error: any) {
+      toast({
+        title: "Image generation failed",
+        description: error.message || "Failed to generate image. Please try again.",
+        variant: "destructive"
+      });
+      console.error("Image generation error:", error);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   return (
     <Card 
       className="overflow-hidden border border-gray-200 transition-shadow hover:shadow-md"
@@ -312,12 +387,33 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }
       <CardContent className="pt-6">
         {renderSlideContent()}
       </CardContent>
-      {slide.visualSuggestion && (
-        <CardFooter className="border-t border-gray-100 pt-4 mt-4">
+      {(slide.visualSuggestion || slide.revisedPrompt) && (
+        <CardFooter className="border-t border-gray-100 pt-4 mt-4 flex justify-between items-start">
           <div className="flex items-start text-sm text-gray-600">
-            <Image className="h-4 w-4 mr-2 mt-1" />
-            <span><strong>Visual suggestion:</strong> {slide.visualSuggestion}</span>
+            <Image className="h-4 w-4 mr-2 mt-1 flex-shrink-0" />
+            <span>
+              <strong>Visual:</strong> {slide.revisedPrompt || slide.visualSuggestion}
+            </span>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGenerateImage}
+            disabled={isGeneratingImage || !slide.visualSuggestion}
+            className="ml-4 flex-shrink-0"
+          >
+            {isGeneratingImage ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Image className="h-4 w-4 mr-2" />
+                {slide.imageUrl ? "Regenerate" : "Generate Image"}
+              </>
+            )}
+          </Button>
         </CardFooter>
       )}
     </Card>

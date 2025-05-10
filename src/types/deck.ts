@@ -3,6 +3,8 @@ export interface Slide {
   title: string;
   bullets: string[];
   visualSuggestion?: string;
+  imageUrl?: string;
+  revisedPrompt?: string;
   style?: {
     backgroundColor?: string;
     iconType?: string; 
@@ -27,6 +29,8 @@ export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
       title: slide.title || '',
       bullets: Array.isArray(slide.bullets) ? slide.bullets : [],
       visualSuggestion: slide.visualSuggestion || undefined,
+      imageUrl: slide.imageUrl || undefined,
+      revisedPrompt: slide.revisedPrompt || undefined,
       style: slide.style || {
         backgroundColor: getRandomPastelColor(),
         layout: 'right-image',
@@ -42,6 +46,8 @@ export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
         title: slide.title || '',
         bullets: Array.isArray(slide.bullets) ? slide.bullets : [],
         visualSuggestion: slide.visualSuggestion || undefined,
+        imageUrl: slide.imageUrl || undefined,
+        revisedPrompt: slide.revisedPrompt || undefined,
         style: slide.style || {
           backgroundColor: getRandomPastelColor(),
           layout: 'right-image',
