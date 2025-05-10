@@ -1,21 +1,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { createClient, Session, User } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
-
-// Get the Supabase URL and key from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Check if the required environment variables are available
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables. Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.');
-}
-
-// Create the Supabase client only if URL and key are available
-const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthContextProps {
   user: User | null;
@@ -36,13 +23,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // If Supabase client isn't initialized, skip authentication setup
-    if (!supabase) {
-      setLoading(false);
-      console.error('Supabase client not initialized. Authentication will not work.');
-      return;
-    }
-
     const setData = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -62,37 +42,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setData();
 
     // Listen for auth changes
-    let subscription: { unsubscribe: () => void } | undefined;
-    
-    if (supabase) {
-      const { data } = supabase.auth.onAuthStateChange(
-        (_event, session) => {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
-      );
-      
-      subscription = data.subscription;
-    }
-
-    return () => {
-      if (subscription) {
-        subscription.unsubscribe();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
       }
+    );
+    
+    return () => {
+      subscription.unsubscribe();
     };
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    if (!supabase) {
-      toast({
-        variant: "destructive",
-        title: "Configuration Error",
-        description: "Authentication is not properly configured. Please check your Supabase setup.",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
       const { error } = await supabase.auth.signUp({
@@ -119,15 +82,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    if (!supabase) {
-      toast({
-        variant: "destructive",
-        title: "Configuration Error",
-        description: "Authentication is not properly configured. Please check your Supabase setup.",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
@@ -154,15 +108,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
-    if (!supabase) {
-      toast({
-        variant: "destructive",
-        title: "Configuration Error",
-        description: "Authentication is not properly configured. Please check your Supabase setup.",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
@@ -186,15 +131,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    if (!supabase) {
-      toast({
-        variant: "destructive",
-        title: "Configuration Error",
-        description: "Authentication is not properly configured. Please check your Supabase setup.",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
       const { error } = await supabase.auth.signOut();
