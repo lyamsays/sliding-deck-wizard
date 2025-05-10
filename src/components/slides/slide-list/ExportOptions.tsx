@@ -93,8 +93,18 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       }
       
       pdf.save(`${deckTitle || 'presentation'}.pdf`);
+      
+      toast({
+        title: "PDF exported successfully",
+        description: "Your presentation has been downloaded as a PDF file."
+      });
     } catch (error) {
       console.error('Error generating PDF:', error);
+      toast({
+        title: "Export failed",
+        description: "Failed to generate PDF file. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsExporting(false);
     }

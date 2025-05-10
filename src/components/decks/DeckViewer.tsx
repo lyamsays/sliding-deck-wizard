@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -14,8 +13,9 @@ import { SlideDeck, Slide, prepareDbSlides } from "@/types/deck";
 import * as LucideIcons from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Download, Printer } from 'lucide-react';
+import { Edit, Download, Printer, Loader } from 'lucide-react';
 import SlideEditDialog from '../slides/SlideEditDialog';
+import { jsPDF } from 'jspdf';
 
 interface DeckViewerProps {
   deck: SlideDeck;
@@ -26,6 +26,7 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
   const [currentDeck, setCurrentDeck] = useState<SlideDeck>(deck);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(-1);
+  const [isPdfExporting, setIsPdfExporting] = useState(false);
   const { toast } = useToast();
 
   const handleEditSlide = (index: number) => {
@@ -72,12 +73,87 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
     window.print();
   };
 
-  const handleDownloadPDF = () => {
-    // This is a placeholder - a real PDF download would require a PDF generation library
-    toast({
-      title: "Feature coming soon",
-      description: "PDF download will be available in a future update.",
-    });
+  const handleDownloadPDF = async () => {
+    try {
+      setIsPdfExporting(true);
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // PDF dimensions
+      const width = pdf.internal.pageSize.getWidth();
+      const height = pdf.internal.pageSize.getHeight();
+
+      for (let i = 0; i < currentDeck.slides.length; i++) {
+        const slide = currentDeck.slides[i];
+        
+        if (i > 0) {
+          pdf.addPage();
+        }
+        
+        // Add slide background color
+        if (slide.style?.backgroundColor) {
+          pdf.setFillColor(slide.style.backgroundColor);
+          pdf.rect(0, 0, width, height, 'F');
+        } else {
+          pdf.setFillColor('#ffffff');
+          pdf.rect(0, 0, width, height, 'F');
+        }
+        
+        // Add slide title
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(24);
+        pdf.setTextColor('#000000');
+        pdf.text(slide.title, width / 2, 20, { align: 'center' });
+        
+        // Add slide content
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(14);
+        let y = 35;
+        
+        for (const bullet of slide.bullets) {
+          pdf.text('• ' + bullet, 20, y, { maxWidth: width - 40 });
+          y += 10;
+        }
+        
+        // Add image if available
+        if (slide.imageUrl) {
+          try {
+            const layout = slide.style?.layout || 'right-image';
+            const imgData = slide.imageUrl;
+            const imgWidth = 60;
+            const imgHeight = 60;
+            const imgX = layout === 'left-image' ? 20 : width - imgWidth - 20;
+            
+            pdf.addImage(imgData, 'JPEG', imgX, height - imgHeight - 20, imgWidth, imgHeight);
+          } catch (err) {
+            console.error('Error adding image to PDF:', err);
+          }
+        }
+        
+        // Add slide number
+        pdf.setFontSize(10);
+        pdf.text(`Slide ${i + 1}/${currentDeck.slides.length}`, width - 20, height - 10, { align: 'right' });
+      }
+      
+      pdf.save(`${currentDeck.title || 'presentation'}.pdf`);
+      
+      toast({
+        title: "PDF exported successfully",
+        description: "Your presentation has been downloaded as a PDF file."
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Export failed",
+        description: "Failed to generate PDF file. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsPdfExporting(false);
+    }
   };
 
   return (
@@ -103,8 +179,13 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
               variant="outline" 
               size="sm" 
               onClick={handleDownloadPDF}
+              disabled={isPdfExporting}
             >
-              <Download className="h-4 w-4 mr-2" />
+              {isPdfExporting ? (
+                <Loader className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
               PDF
             </Button>
             <Button 

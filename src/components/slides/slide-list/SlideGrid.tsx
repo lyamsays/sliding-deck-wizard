@@ -18,9 +18,9 @@ const SlideGrid: React.FC<SlideGridProps> = ({
   handleRemoveImage 
 }) => {
   return (
-    <div className="grid grid-cols-1 gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
       {editedSlides.map((slide, index) => (
-        <div key={index} className="card-enhanced hover-lift">
+        <div key={index} className="card-enhanced hover-lift transition-all duration-300">
           {viewMode === 'outline' ? (
             <OutlineSlide 
               slide={slide} 
