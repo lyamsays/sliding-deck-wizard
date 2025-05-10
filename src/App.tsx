@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import SlideInput from "./pages/SlideInput";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import MyDecks from "./pages/MyDecks";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/create" element={<SlideInput />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/my-decks" element={<MyDecks />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

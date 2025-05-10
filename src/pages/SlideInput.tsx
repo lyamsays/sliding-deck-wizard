@@ -7,9 +7,11 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Loader } from "lucide-react";
+import { Loader, Save } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface Slide {
   title: string;
@@ -24,8 +26,12 @@ const SlideInput = () => {
   const [slideContent, setSlideContent] = useState('');
   const [generatedSlides, setGeneratedSlides] = useState<Slide[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [deckTitle, setDeckTitle] = useState('');
   const [generationProgress, setGenerationProgress] = useState(0);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +75,13 @@ const SlideInput = () => {
       setGenerationProgress(100);
       setGeneratedSlides(slidesData.slides);
       
+      // Generate a title for the deck based on the first slide
+      if (slidesData.slides.length > 0) {
+        setDeckTitle(slidesData.slides[0].title);
+      } else {
+        setDeckTitle('Untitled Deck');
+      }
+      
       toast({
         title: "Slides generated!",
         description: `Successfully created ${slidesData.slides.length} slides.`,
@@ -83,6 +96,58 @@ const SlideInput = () => {
     } finally {
       clearInterval(progressInterval);
       setIsGenerating(false);
+    }
+  };
+  
+  const handleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to save your slides.",
+        variant: "destructive"
+      });
+      navigate('/signin');
+      return;
+    }
+    
+    if (generatedSlides.length === 0) {
+      toast({
+        title: "No slides to save",
+        description: "Generate some slides first before saving.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      const { error } = await supabase
+        .from('slide_decks')
+        .insert({
+          user_id: user.id,
+          title: deckTitle,
+          slides: generatedSlides
+        });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Saved successfully!",
+        description: "Your slides have been saved to your account.",
+      });
+      
+      // Redirect to My Decks page after saving
+      navigate('/my-decks');
+    } catch (error: any) {
+      console.error('Error saving slides:', error);
+      toast({
+        title: "Save failed",
+        description: error.message || "Failed to save slides. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -170,7 +235,26 @@ const SlideInput = () => {
           
           {!isGenerating && generatedSlides.length > 0 && (
             <div className="mt-16 space-y-12 animate-fade-up">
-              <h2 className="text-2xl font-bold text-gray-900 text-center">Your Generated Slides</h2>
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">Your Generated Slides</h2>
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="text"
+                    placeholder="Deck Title"
+                    className="px-3 py-2 border rounded-md text-sm"
+                    value={deckTitle}
+                    onChange={(e) => setDeckTitle(e.target.value)}
+                  />
+                  <Button 
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="flex items-center gap-2"
+                  >
+                    {isSaving ? <Loader className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {isSaving ? "Saving..." : "Save Deck"}
+                  </Button>
+                </div>
+              </div>
               
               <div className="space-y-8">
                 {generatedSlides.map((slide, index) => (

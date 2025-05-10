@@ -1,45 +1,151 @@
 
-import React from 'react';
-import Logo from './Logo';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { PresentationIcon, MenuIcon, X } from 'lucide-react';
 import UserMenu from './UserMenu';
+import { useAuth } from '@/contexts/AuthContext';
+import Logo from './Logo';
 
 const Navbar = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user } = useAuth();
-  
+  const navigate = useNavigate();
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
-    <header className="w-full py-4 px-4 md:px-6">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Link to="/">
-          <Logo />
-        </Link>
-        <nav className="hidden md:flex space-x-8">
-          <a href="#features" className="text-gray-600 hover:text-primary transition-colors">Features</a>
-          <a href="#how-it-works" className="text-gray-600 hover:text-primary transition-colors">How it Works</a>
-          <a href="#pricing" className="text-gray-600 hover:text-primary transition-colors">Pricing</a>
-        </nav>
-        <div className="flex items-center gap-4">
+    <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-40">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
+        <div className="flex lg:flex-1">
+          <Link to="/" className="-m-1.5 p-1.5">
+            <Logo />
+          </Link>
+        </div>
+        <div className="flex lg:hidden">
+          <button
+            type="button"
+            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
+            onClick={toggleMenu}
+          >
+            <span className="sr-only">Open main menu</span>
+            <MenuIcon className="h-6 w-6" aria-hidden="true" />
+          </button>
+        </div>
+        <div className="hidden lg:flex lg:gap-x-12">
+          <Link 
+            to="/" 
+            className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary transition-colors"
+          >
+            Home
+          </Link>
+          <Link 
+            to="/create" 
+            className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary transition-colors"
+          >
+            Create Slides
+          </Link>
+          {user && (
+            <Link 
+              to="/my-decks" 
+              className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary transition-colors"
+            >
+              My Decks
+            </Link>
+          )}
+        </div>
+        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
           {user ? (
             <UserMenu />
           ) : (
-            <>
-              <Link to="/signin" className="hidden md:block text-gray-700 hover:text-primary font-medium transition-colors">
+            <div className="flex gap-4">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/signin')}
+              >
                 Sign In
-              </Link>
-              <Link to="/signup" className="hidden md:block">
-                <Button variant="secondary" className="hover:bg-gray-100 text-gray-800 font-medium py-2 px-4 rounded-md transition-colors">
-                  Sign Up
-                </Button>
-              </Link>
-            </>
+              </Button>
+              <Button 
+                onClick={() => navigate('/signup')}
+                className="flex items-center gap-2"
+              >
+                <PresentationIcon className="h-4 w-4" /> 
+                Sign Up
+              </Button>
+            </div>
           )}
-          <button className="md:hidden text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+        </div>
+      </nav>
+      
+      {/* Mobile menu */}
+      <div className={`lg:hidden ${isMenuOpen ? 'fixed inset-0 z-50 bg-white/95' : 'hidden'}`}>
+        <div className="fixed inset-0 z-50">
+          <div className="flex h-16 items-center justify-between px-6">
+            <Link to="/" className="-m-1.5 p-1.5">
+              <Logo />
+            </Link>
+            <button
+              type="button"
+              className="rounded-md p-2.5 text-gray-700"
+              onClick={toggleMenu}
+            >
+              <span className="sr-only">Close menu</span>
+              <X className="h-6 w-6" aria-hidden="true" />
+            </button>
+          </div>
+          <div className="mt-6 flow-root px-6">
+            <div className="space-y-2 py-6">
+              <Link
+                to="/"
+                className="block px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link
+                to="/create"
+                className="block px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Create Slides
+              </Link>
+              {user && (
+                <Link
+                  to="/my-decks"
+                  className="block px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 rounded-md"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Decks
+                </Link>
+              )}
+            </div>
+            <div className="border-t border-gray-200 py-6">
+              {user ? (
+                <div className="px-3">
+                  <UserMenu />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Link
+                    to="/signin"
+                    className="block px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 rounded-md"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="block px-3 py-2 text-base font-semibold leading-7 bg-primary text-white hover:bg-primary/90 rounded-md"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </header>
