@@ -29,70 +29,95 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
-    // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini', // Using gpt-4o-mini for cost-effectiveness
-        messages: [
-          {
-            role: 'system',
-            content: `
-              You are a slide generation assistant. Convert the provided content into well-structured presentation slides.
-              Return ONLY a JSON object with the following structure:
-              {
-                "slides": [
-                  {
-                    "title": "Clear and concise slide title",
-                    "bullets": ["Key point 1", "Key point 2", "Key point 3"]
-                  }
-                ]
-              }
-              
-              Create between 3-7 slides based on the content length and complexity.
-              Each slide should have a clear title and 2-5 bullet points.
-              Ensure the content is well-organized and follows a logical flow.
-              DO NOT include any explanations or notes outside the JSON structure.
-            `
-          },
-          {
-            role: 'user',
-            content: content
-          }
-        ],
-        temperature: 0.5,
-      }),
-    });
+    // Add a timeout to the OpenAI API call
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
 
-    const data = await response.json();
-    const slidesContent = data.choices[0].message.content;
-    
-    // Parse the JSON from the OpenAI response
-    let slides;
     try {
-      // Clean the response in case OpenAI returns markdown code blocks
-      const jsonStr = slidesContent.replace(/```json|```/g, '').trim();
-      slides = JSON.parse(jsonStr);
-    } catch (e) {
-      console.error("Error parsing OpenAI response:", e);
-      console.log("Response content:", slidesContent);
-      return new Response(
-        JSON.stringify({ error: 'Failed to parse slide content' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+      // Call OpenAI API with abort controller for timeout
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini', // Using gpt-4o-mini for cost-effectiveness
+          messages: [
+            {
+              role: 'system',
+              content: `
+                You are a slide generation assistant. Convert the provided content into well-structured presentation slides.
+                Return ONLY a JSON object with the following structure:
+                {
+                  "slides": [
+                    {
+                      "title": "Clear and concise slide title",
+                      "bullets": ["Key point 1", "Key point 2", "Key point 3"]
+                    }
+                  ]
+                }
+                
+                Create between 3-7 slides based on the content length and complexity.
+                Each slide should have a clear title and 2-5 bullet points.
+                Ensure the content is well-organized and follows a logical flow.
+                DO NOT include any explanations or notes outside the JSON structure.
+              `
+            },
+            {
+              role: 'user',
+              content: content
+            }
+          ],
+          temperature: 0.5,
+        }),
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId); // Clear timeout if API call completes
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("OpenAI API Error:", errorData);
+        throw new Error(`API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+      }
 
-    console.log("Generated slides:", slides);
-    
-    return new Response(
-      JSON.stringify(slides),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-    
+      const data = await response.json();
+      const slidesContent = data.choices[0].message.content;
+      
+      // Parse the JSON from the OpenAI response
+      let slides;
+      try {
+        // Clean the response in case OpenAI returns markdown code blocks
+        const jsonStr = slidesContent.replace(/```json|```/g, '').trim();
+        slides = JSON.parse(jsonStr);
+      } catch (e) {
+        console.error("Error parsing OpenAI response:", e);
+        console.log("Response content:", slidesContent);
+        return new Response(
+          JSON.stringify({ error: 'Failed to parse slide content' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log("Generated slides:", slides);
+      
+      // Validate the response structure
+      if (!slides.slides || !Array.isArray(slides.slides) || slides.slides.length === 0) {
+        throw new Error('Invalid response format from AI');
+      }
+      
+      return new Response(
+        JSON.stringify(slides),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Generation request timed out. Please try again.');
+      }
+      throw fetchError;
+    }
   } catch (error) {
     console.error("Error generating slides:", error);
     

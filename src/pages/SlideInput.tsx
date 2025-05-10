@@ -7,12 +7,13 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Loader, Save } from "lucide-react";
+import { AlertCircle, Loader, Save } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Json } from '@/integrations/supabase/types';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Slide {
   title: string;
@@ -30,6 +31,7 @@ const SlideInput = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [deckTitle, setDeckTitle] = useState('');
   const [generationProgress, setGenerationProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -37,7 +39,11 @@ const SlideInput = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Reset any previous errors
+    setError(null);
+    
     if (!slideContent.trim()) {
+      setError("Please enter some content to generate slides.");
       toast({
         title: "Content is empty",
         description: "Please enter some content to generate slides.",
@@ -61,16 +67,28 @@ const SlideInput = () => {
     try {
       setGenerationProgress(30);
       
-      const { data, error } = await supabase.functions.invoke('generate-slides', {
+      // Add a timeout to handle cases where the function might take too long
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Generation timed out. The server might be busy, please try again.')), 30000);
+      });
+      
+      // Call the Supabase function with a timeout
+      const responsePromise = supabase.functions.invoke('generate-slides', {
         body: { content: slideContent }
       });
+      
+      // Race between the actual API call and the timeout
+      const { data, error } = await Promise.race([
+        responsePromise,
+        timeoutPromise.then(() => { throw new Error('Generation timed out. The server might be busy, please try again.'); })
+      ]) as any;
       
       if (error) throw error;
       
       const slidesData = data as SlidesResponse;
       
-      if (!slidesData.slides || !Array.isArray(slidesData.slides)) {
-        throw new Error('Invalid response format');
+      if (!slidesData.slides || !Array.isArray(slidesData.slides) || slidesData.slides.length === 0) {
+        throw new Error('Invalid or empty response from AI. Please try with more detailed content.');
       }
       
       setGenerationProgress(100);
@@ -89,6 +107,7 @@ const SlideInput = () => {
       });
     } catch (error: any) {
       console.error('Error generating slides:', error);
+      setError(error.message || "Failed to generate slides. Please try again.");
       toast({
         title: "Generation failed",
         description: error.message || "Failed to generate slides. Please try again.",
@@ -97,6 +116,9 @@ const SlideInput = () => {
     } finally {
       clearInterval(progressInterval);
       setIsGenerating(false);
+      if (generationProgress < 100) {
+        setGenerationProgress(0); // Reset progress if we didn't complete
+      }
     }
   };
   
@@ -170,6 +192,14 @@ const SlideInput = () => {
             </p>
           </div>
           
+          {error && (
+            <Alert variant="destructive" className="mb-6 animate-fade-down">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-6 animate-fade-up">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
               <Textarea 
@@ -177,6 +207,7 @@ const SlideInput = () => {
                 placeholder="Paste your content here... (bullet points, notes, or paragraphs)"
                 value={slideContent}
                 onChange={(e) => setSlideContent(e.target.value)}
+                disabled={isGenerating}
               />
             </div>
             
@@ -201,12 +232,15 @@ const SlideInput = () => {
                 <div className="w-full mt-6 space-y-2">
                   <Progress value={generationProgress} className="h-2 w-full" />
                   <p className="text-sm text-center text-gray-500 italic">
-                    Creating your slides with AI...
+                    {generationProgress < 30 ? "Preparing your content..." : 
+                     generationProgress < 60 ? "Creating slides with AI..." : 
+                     generationProgress < 90 ? "Polishing your presentation..." : 
+                     "Finalizing your slides..."}
                   </p>
                 </div>
               )}
               
-              {!isGenerating && !generatedSlides.length && (
+              {!isGenerating && !generatedSlides.length && !error && (
                 <p className="mt-4 text-sm text-gray-500 italic">
                   Slide previews will appear after generation.
                 </p>
