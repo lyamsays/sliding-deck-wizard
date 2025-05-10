@@ -1,36 +1,18 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { AlertCircle, Loader, Save, Copy, Download, Edit, FileText, Image, Sparkles, LayoutGrid, LayoutList, Trash2 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Json } from '@/integrations/supabase/types';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Toggle } from "@/components/ui/toggle";
 import { Slide } from '@/types/deck';
 import { getRandomPastelColor, getIconSuggestion } from '@/types/deck';
-import OutlineSlide from '@/components/slides/OutlineSlide';
-import StyledSlide from '@/components/slides/StyledSlide';
+
+// Import refactored components
+import SlideForm from '@/components/slides/SlideForm';
+import GenerationProgress from '@/components/slides/GenerationProgress';
+import ImageGenerationProgress from '@/components/slides/ImageGenerationProgress';
+import SlideList from '@/components/slides/SlideList';
 
 interface SlidesResponse {
   slides: Slide[];
@@ -181,6 +163,10 @@ const SlideInput = () => {
         title: "Slides generated!",
         description: `Successfully created ${slidesData.slides.length} slides.`,
       });
+      
+      // Scroll to the slides preview
+      setTimeout(scrollToPreview, 1000);
+      
     } catch (error: any) {
       console.error('SlideInput: Error generating slides:', error);
       setError(error.message || "Failed to generate slides. Please try again.");
@@ -462,260 +448,51 @@ Nudge theory`;
             </p>
           </div>
           
-          {error && (
-            <Alert variant="destructive" className="mb-6 animate-fade-down">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+          <SlideForm
+            isGenerating={isGenerating}
+            error={error}
+            slideContent={slideContent}
+            profession={profession}
+            purpose={purpose}
+            tone={tone}
+            generationProgress={generationProgress}
+            autoGenerateImages={autoGenerateImages}
+            setSlideContent={setSlideContent}
+            setProfession={setProfession}
+            setPurpose={setPurpose}
+            setTone={setTone}
+            setAutoGenerateImages={setAutoGenerateImages}
+            onSubmit={handleSubmit}
+            onTryExample={handleTryExample}
+          />
+          
+          <ImageGenerationProgress
+            isGeneratingImages={isGeneratingImages}
+            imageProgress={imageProgress}
+          />
+          
+          {!isGenerating && !generatedSlides.length && !error && (
+            <p className="mt-4 text-sm text-gray-500 italic text-center">
+              Slide previews will appear after generation.
+            </p>
           )}
           
-          <form onSubmit={handleSubmit} className="space-y-6 animate-fade-up">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="profession">Profession</Label>
-                <Select
-                  value={profession}
-                  onValueChange={setProfession}
-                  disabled={isGenerating}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select profession" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Profession</SelectLabel>
-                      <SelectItem value="Consultant">Consultant</SelectItem>
-                      <SelectItem value="Professor">Professor</SelectItem>
-                      <SelectItem value="Executive">Executive</SelectItem>
-                      <SelectItem value="Student">Student</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="purpose">Purpose</Label>
-                <Input
-                  id="purpose"
-                  placeholder="Enter purpose (e.g., Proposal, Pitch)"
-                  value={purpose}
-                  onChange={(e) => setPurpose(e.target.value)}
-                  disabled={isGenerating}
-                  className="w-full"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="tone">Tone</Label>
-                <Select
-                  value={tone}
-                  onValueChange={setTone}
-                  disabled={isGenerating}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select tone" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Tone</SelectLabel>
-                      <SelectItem value="Formal">Formal</SelectItem>
-                      <SelectItem value="Friendly">Friendly</SelectItem>
-                      <SelectItem value="Visual-heavy">Visual-heavy</SelectItem>
-                      <SelectItem value="Academic">Academic</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-              <div className="flex justify-between items-center mb-3">
-                <label className="text-sm text-gray-500">Content</label>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={handleTryExample}
-                  size="sm"
-                  className="text-xs flex items-center gap-1"
-                  disabled={isGenerating}
-                >
-                  <Sparkles className="h-3 w-3" />
-                  Try Example
-                </Button>
-              </div>
-              <Textarea 
-                className="min-h-[300px] w-full bg-white border-0 resize-none focus-visible:ring-1 focus-visible:ring-primary text-base md:text-lg"
-                placeholder="Paste your content here... (bullet points, notes, or paragraphs)"
-                value={slideContent}
-                onChange={(e) => setSlideContent(e.target.value)}
-                disabled={isGenerating}
-              />
-            </div>
-            
-            <div className="flex flex-col gap-4 items-center">
-              <div className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
-                  id="auto-generate-images" 
-                  checked={autoGenerateImages} 
-                  onChange={(e) => setAutoGenerateImages(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-primary"
-                />
-                <label htmlFor="auto-generate-images" className="text-sm text-gray-600">
-                  Automatically generate images for slides
-                </label>
-              </div>
-              
-              <Button 
-                type="submit" 
-                size="lg" 
-                className="bg-primary hover:bg-primary/90 transition-all px-8 py-6 text-lg"
-                disabled={isGenerating}
-                onClick={() => {
-                  if (generatedSlides.length > 0) {
-                    setTimeout(scrollToPreview, 1000);
-                  }
-                }}
-              >
-                {isGenerating ? (
-                  <div className="flex items-center gap-2">
-                    <Loader className="h-4 w-4 animate-spin" />
-                    <span>Generating slides...</span>
-                  </div>
-                ) : (
-                  "Generate Slides"
-                )}
-              </Button>
-              
-              {isGenerating && (
-                <div className="w-full mt-6 space-y-2">
-                  <Progress value={generationProgress} className="h-2 w-full" />
-                  <p className="text-sm text-center text-gray-500 italic">
-                    {generationProgress < 30 ? "Preparing your content..." : 
-                     generationProgress < 60 ? "Creating slides with AI..." : 
-                     generationProgress < 90 ? "Polishing your presentation..." : 
-                     "Finalizing your slides..."}
-                  </p>
-                </div>
-              )}
-              
-              {isGeneratingImages && (
-                <div className="w-full mt-2 space-y-2">
-                  <Progress value={imageProgress} className="h-2 w-full bg-secondary/30" />
-                  <p className="text-sm text-center text-gray-500 italic">
-                    Generating images for your slides... {Math.round(imageProgress)}%
-                  </p>
-                </div>
-              )}
-              
-              {!isGenerating && !generatedSlides.length && !error && (
-                <p className="mt-4 text-sm text-gray-500 italic">
-                  Slide previews will appear after generation.
-                </p>
-              )}
-            </div>
-          </form>
+          <GenerationProgress isGenerating={isGenerating} />
           
-          {isGenerating && (
-            <div className="mt-16 space-y-12 animate-fade-up">
-              <h2 className="text-2xl font-bold text-gray-900 text-center">Preparing Your Slides</h2>
-              
-              <div className="space-y-8">
-                {[1, 2, 3].map(i => (
-                  <Card key={i} className="overflow-hidden border-gray-200">
-                    <CardHeader className="bg-primary/5 pb-3">
-                      <Skeleton className="h-7 w-3/4" />
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="space-y-4">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-5/6" />
-                        <Skeleton className="h-4 w-4/6" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {!isGenerating && editedSlides.length > 0 && (
-            <div className="mt-16 space-y-6 animate-fade-up" ref={slidePreviewRef}>
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900">Your Generated Slides</h2>
-                <div className="flex items-center gap-4">
-                  <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'outline' | 'slide')}>
-                    <ToggleGroupItem value="outline" aria-label="Toggle outline view">
-                      <LayoutList className="h-4 w-4 mr-2" />
-                      Outline
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="slide" aria-label="Toggle slide view">
-                      <LayoutGrid className="h-4 w-4 mr-2" />
-                      Slide
-                    </ToggleGroupItem>
-                  </ToggleGroup>
-                  
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="text"
-                      placeholder="Deck Title"
-                      className="px-3 py-2 border rounded-md text-sm"
-                      value={deckTitle}
-                      onChange={(e) => setDeckTitle(e.target.value)}
-                    />
-                    <Button 
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="flex items-center gap-2"
-                    >
-                      {isSaving ? <Loader className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                      {isSaving ? "Saving..." : "Save Deck"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 mb-4 flex items-center">
-                <Edit className="h-4 w-4 mr-2 text-primary" />
-                <p className="text-sm text-gray-600">
-                  Click on any text to edit your slides directly. Changes will be saved automatically.
-                </p>
-              </div>
-              
-              <div className="space-y-8">
-                {editedSlides.map((slide, index) => (
-                  viewMode === 'outline' ? (
-                    <OutlineSlide 
-                      key={index} 
-                      slide={slide} 
-                      index={index} 
-                      onSlideUpdate={handleSlideUpdate} 
-                    />
-                  ) : (
-                    <StyledSlide 
-                      key={index} 
-                      slide={slide} 
-                      index={index} 
-                      onSlideUpdate={handleSlideUpdate}
-                      onRemoveImage={() => handleRemoveImage(index)}
-                    />
-                  )
-                ))}
-              </div>
-              
-              <div className="flex justify-center mt-8">
-                <Button 
-                  onClick={handleDownloadSlides}
-                  className="flex items-center gap-2 bg-secondary hover:bg-secondary/80"
-                  size="lg"
-                >
-                  <Download className="h-5 w-5" />
-                  <span>Download All Slides</span>
-                </Button>
-              </div>
-            </div>
-          )}
+          <div ref={slidePreviewRef}>
+            <SlideList
+              editedSlides={editedSlides}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              deckTitle={deckTitle}
+              setDeckTitle={setDeckTitle}
+              handleSave={handleSave}
+              handleSlideUpdate={handleSlideUpdate}
+              handleRemoveImage={handleRemoveImage}
+              handleDownloadSlides={handleDownloadSlides}
+              isSaving={isSaving}
+            />
+          </div>
         </div>
       </main>
       
