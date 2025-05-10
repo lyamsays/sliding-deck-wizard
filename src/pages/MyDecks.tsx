@@ -8,7 +8,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SlideDeck } from '@/types/deck';
+import { SlideDeck, convertDbSlidesToTypedSlides } from '@/types/deck';
 import DeckList from '@/components/decks/DeckList';
 import DeckViewer from '@/components/decks/DeckViewer';
 import EmptyDeckState from '@/components/decks/EmptyDeckState';
@@ -38,7 +38,17 @@ const MyDecks = () => {
         
         if (error) throw error;
         
-        setDecks(data as SlideDeck[]);
+        // Convert the database results to the properly typed SlideDeck[]
+        const typedDecks: SlideDeck[] = data.map(deck => ({
+          id: deck.id,
+          title: deck.title,
+          created_at: deck.created_at,
+          updated_at: deck.updated_at,
+          user_id: deck.user_id,
+          slides: convertDbSlidesToTypedSlides(deck.slides)
+        }));
+        
+        setDecks(typedDecks);
       } catch (error: any) {
         console.error('Error fetching decks:', error);
         toast({
