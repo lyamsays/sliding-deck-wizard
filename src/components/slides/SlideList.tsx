@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Edit, Save, Loader, LayoutGrid, LayoutList } from "lucide-react";
@@ -6,7 +5,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Slide } from '@/types/deck';
 import OutlineSlide from '@/components/slides/OutlineSlide';
 import StyledSlide from '@/components/slides/StyledSlide';
-import pptxgen from 'pptxgenjs';
+import PptxGenJS from 'pptxgenjs';
 import { jsPDF } from 'jspdf';
 import {
   DropdownMenu,
@@ -122,7 +121,7 @@ const SlideList: React.FC<SlideListProps> = ({
   const handleExportPPTX = async () => {
     try {
       setIsExporting(true);
-      const pptx = new pptxgen();
+      const pptx = new PptxGenJS();
       
       // Set presentation properties
       pptx.author = 'SlideMaker AI';
