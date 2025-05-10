@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -42,9 +43,9 @@ serve(async (req) => {
       return await handleEditRequest(content, editInstruction, isSingleSlideEdit, corsHeaders);
     } else {
       // Regular slide generation
-      const { content, profession, purpose, tone } = requestBody;
+      const { content, profession, purpose, tone, framework } = requestBody;
       
-      console.log(`generate-slides: Received parameters - Profession: ${profession}, Purpose: ${purpose}, Tone: ${tone}`);
+      console.log(`generate-slides: Received parameters - Profession: ${profession}, Purpose: ${purpose}, Tone: ${tone}, Framework: ${framework || 'None'}`);
       
       // Return 400 if content is empty
       if (!content || content.trim() === '') {
@@ -73,6 +74,67 @@ serve(async (req) => {
 
       try {
         console.log("generate-slides: Calling OpenAI API");
+        
+        // Create system prompt with framework if selected for consultant
+        let systemPrompt = `
+          You are an expert presentation designer specialized in creating highly effective slides.
+          
+          Convert the provided content into well-structured presentation slides following these specific guidelines:
+          
+          SLIDE STRUCTURE:
+          - Create clean, logically structured slides that flow naturally from introduction to conclusion
+          - Include 3-7 slides total, based on content length and complexity
+          - Each slide should contribute to a cohesive narrative
+          
+          SLIDE CONTENT:
+          - Create engaging, concise titles that capture the essence of each slide
+          - Include 3-5 bullet points per slide, each being clear and concise
+          - Add examples, analogies, or insightful perspectives that enrich the content
+          - For each slide, suggest a visual element that would enhance the content (icon, chart type, diagram style, layout)
+          
+          ADAPTATION:
+          - Adapt the vocabulary, tone, and complexity based on the user's profession (${profession}) and purpose (${purpose})
+          - Maintain a consistent ${tone} tone throughout the presentation
+          - If the profession is technical, use appropriate terminology; if non-technical, use accessible language
+          - Consider the purpose (${purpose}) when determining what to emphasize
+        `;
+        
+        // Add framework specific instructions for consultants
+        if (profession === "Consultant" && framework && framework !== "None") {
+          systemPrompt += `
+          
+          CONSULTING FRAMEWORK:
+          - You are a consultant. Use the ${framework} to structure the slide content in a business context.
+          - Ensure the slide structure follows the components and methodology of ${framework}.
+          - Use appropriate business terminology and concepts specific to ${framework}.
+          - Include relevant analysis categories, quadrants, or components from the ${framework} framework.
+        `;
+        }
+        
+        systemPrompt += `  
+          VISUAL SUGGESTIONS:
+          - For each slide, provide a specific visual suggestion like:
+            * Recommended icons or icon style
+            * Background color or gradient that complements the content
+            * Layout structure (e.g., split screen, grid, centered)
+            * Chart or diagram type if data is presented
+            * Image concept that would reinforce the message
+          
+          Return ONLY a JSON object with the following structure:
+          {
+            "slides": [
+              {
+                "title": "Clear and concise slide title",
+                "bullets": ["Key point 1", "Key point 2", "Key point 3"],
+                "visualSuggestion": "Brief description of recommended visual element or layout"
+              }
+            ]
+          }
+          
+          DO NOT include any explanations or notes outside the JSON structure.
+          ENSURE the presentation flows logically and maintains coherence throughout.
+        `;
+        
         // Call OpenAI API with abort controller for timeout
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -85,50 +147,7 @@ serve(async (req) => {
             messages: [
               {
                 role: 'system',
-                content: `
-                  You are an expert presentation designer specialized in creating highly effective slides.
-                  
-                  Convert the provided content into well-structured presentation slides following these specific guidelines:
-                  
-                  SLIDE STRUCTURE:
-                  - Create clean, logically structured slides that flow naturally from introduction to conclusion
-                  - Include 3-7 slides total, based on content length and complexity
-                  - Each slide should contribute to a cohesive narrative
-                  
-                  SLIDE CONTENT:
-                  - Create engaging, concise titles that capture the essence of each slide
-                  - Include 3-5 bullet points per slide, each being clear and concise
-                  - Add examples, analogies, or insightful perspectives that enrich the content
-                  - For each slide, suggest a visual element that would enhance the content (icon, chart type, diagram style, layout)
-                  
-                  ADAPTATION:
-                  - Adapt the vocabulary, tone, and complexity based on the user's profession (${profession}) and purpose (${purpose})
-                  - Maintain a consistent ${tone} tone throughout the presentation
-                  - If the profession is technical, use appropriate terminology; if non-technical, use accessible language
-                  - Consider the purpose (${purpose}) when determining what to emphasize
-                  
-                  VISUAL SUGGESTIONS:
-                  - For each slide, provide a specific visual suggestion like:
-                    * Recommended icons or icon style
-                    * Background color or gradient that complements the content
-                    * Layout structure (e.g., split screen, grid, centered)
-                    * Chart or diagram type if data is presented
-                    * Image concept that would reinforce the message
-                  
-                  Return ONLY a JSON object with the following structure:
-                  {
-                    "slides": [
-                      {
-                        "title": "Clear and concise slide title",
-                        "bullets": ["Key point 1", "Key point 2", "Key point 3"],
-                        "visualSuggestion": "Brief description of recommended visual element or layout"
-                      }
-                    ]
-                  }
-                  
-                  DO NOT include any explanations or notes outside the JSON structure.
-                  ENSURE the presentation flows logically and maintains coherence throughout.
-                `
+                content: systemPrompt
               },
               {
                 role: 'user',

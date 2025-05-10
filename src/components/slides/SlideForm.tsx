@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -28,11 +28,13 @@ interface SlideFormProps {
   tone: string;
   generationProgress: number;
   autoGenerateImages: boolean;
+  framework?: string;
   setSlideContent: (content: string) => void;
   setProfession: (profession: string) => void;
   setPurpose: (purpose: string) => void;
   setTone: (tone: string) => void;
   setAutoGenerateImages: (autoGenerate: boolean) => void;
+  setFramework?: (framework: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onTryExample: () => void;
 }
@@ -46,14 +48,24 @@ const SlideForm: React.FC<SlideFormProps> = ({
   tone,
   generationProgress,
   autoGenerateImages,
+  framework,
   setSlideContent,
   setProfession,
   setPurpose,
   setTone,
   setAutoGenerateImages,
+  setFramework,
   onSubmit,
   onTryExample
 }) => {
+  // State to track if we need to show the framework dropdown
+  const [showFrameworkDropdown, setShowFrameworkDropdown] = useState(profession === "Consultant");
+  
+  // Update the showFrameworkDropdown state when profession changes
+  useEffect(() => {
+    setShowFrameworkDropdown(profession === "Consultant");
+  }, [profession]);
+
   return (
     <>
       {error && (
@@ -70,7 +82,13 @@ const SlideForm: React.FC<SlideFormProps> = ({
             <Label htmlFor="profession">Profession</Label>
             <Select
               value={profession}
-              onValueChange={setProfession}
+              onValueChange={(value) => {
+                setProfession(value);
+                // Reset framework if changing away from Consultant
+                if (value !== "Consultant" && setFramework) {
+                  setFramework("None");
+                }
+              }}
               disabled={isGenerating}
             >
               <SelectTrigger className="w-full">
@@ -122,6 +140,40 @@ const SlideForm: React.FC<SlideFormProps> = ({
             </Select>
           </div>
         </div>
+
+        {/* Framework dropdown - shown only when Consultant is selected */}
+        {showFrameworkDropdown && setFramework && (
+          <div className="border border-dashed border-gray-200 rounded-md p-4 bg-gray-50">
+            <div className="space-y-2">
+              <Label htmlFor="framework">Select a Framework</Label>
+              <Select
+                value={framework || "None"}
+                onValueChange={setFramework}
+                disabled={isGenerating}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select framework" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Consulting Frameworks</SelectLabel>
+                    <SelectItem value="None">None</SelectItem>
+                    <SelectItem value="BCG Matrix">BCG Matrix</SelectItem>
+                    <SelectItem value="SWOT Analysis">SWOT Analysis</SelectItem>
+                    <SelectItem value="Porter's Five Forces">Porter's Five Forces</SelectItem>
+                    <SelectItem value="Ansoff Matrix">Ansoff Matrix</SelectItem>
+                    <SelectItem value="PESTLE Analysis">PESTLE Analysis</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                {framework && framework !== "None" ? 
+                  `Your slides will be structured using the ${framework} framework.` : 
+                  "Select a framework to structure your presentation slides."}
+              </p>
+            </div>
+          </div>
+        )}
         
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
           <div className="flex justify-between items-center mb-3">

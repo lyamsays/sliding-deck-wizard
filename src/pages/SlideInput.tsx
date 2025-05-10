@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
-import { Json } from "@/integrations/supabase/types"; // Added import for Json type
+import { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Slide } from '@/types/deck';
@@ -31,6 +32,7 @@ const SlideInput = () => {
   const [profession, setProfession] = useState<string>("Consultant");
   const [purpose, setPurpose] = useState<string>("");
   const [tone, setTone] = useState<string>("Formal");
+  const [framework, setFramework] = useState<string>("None");
   const [viewMode, setViewMode] = useState<'outline' | 'slide'>('slide');
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [imageProgress, setImageProgress] = useState(0);
@@ -71,7 +73,7 @@ const SlideInput = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("SlideInput: Form submitted for slide generation");
-    console.log("SlideInput: Selected options - Profession:", profession, "Purpose:", purpose, "Tone:", tone);
+    console.log("SlideInput: Selected options - Profession:", profession, "Purpose:", purpose, "Tone:", tone, "Framework:", framework);
     
     // Reset any previous errors
     setError(null);
@@ -115,7 +117,8 @@ const SlideInput = () => {
           content: slideContent,
           profession: profession,
           purpose: purpose,
-          tone: tone
+          tone: tone,
+          framework: profession === "Consultant" ? framework : undefined
         }
       });
       
@@ -456,12 +459,14 @@ Nudge theory`;
             profession={profession}
             purpose={purpose}
             tone={tone}
+            framework={framework}
             generationProgress={generationProgress}
             autoGenerateImages={autoGenerateImages}
             setSlideContent={setSlideContent}
             setProfession={setProfession}
             setPurpose={setPurpose}
             setTone={setTone}
+            setFramework={setFramework}
             setAutoGenerateImages={setAutoGenerateImages}
             onSubmit={handleSubmit}
             onTryExample={handleTryExample}
