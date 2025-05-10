@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,7 +45,7 @@ const SlideInput = () => {
   const [generationProgress, setGenerationProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [profession, setProfession] = useState<string>("Consultant");
-  const [purpose, setPurpose] = useState<string>("Proposal");
+  const [purpose, setPurpose] = useState<string>("");
   const [tone, setTone] = useState<string>("Formal");
   const { toast } = useToast();
   const { user } = useAuth();
