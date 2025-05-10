@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,7 +7,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { AlertCircle, Loader, Save, Copy, Download, Edit, FileText, Image } from "lucide-react";
+import { AlertCircle, Loader, Save, Copy, Download, Edit, FileText, Image, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
@@ -400,6 +401,25 @@ const SlideInput = () => {
     }
   };
 
+  const handleTryExample = () => {
+    const exampleContent = `Traditional economics assumes rational actors
+
+Behavioral economics shows people are biased
+
+Anchoring effect
+
+Loss aversion
+
+Nudge theory`;
+    
+    setSlideContent(exampleContent);
+    
+    toast({
+      title: "Example loaded",
+      description: "Try generating slides with this sample content!",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -483,6 +503,20 @@ const SlideInput = () => {
             </div>
             
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+              <div className="flex justify-between items-center mb-3">
+                <label className="text-sm text-gray-500">Content</label>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleTryExample}
+                  size="sm"
+                  className="text-xs flex items-center gap-1"
+                  disabled={isGenerating}
+                >
+                  <Sparkles className="h-3 w-3" />
+                  Try Example
+                </Button>
+              </div>
               <Textarea 
                 className="min-h-[300px] w-full bg-white border-0 resize-none focus-visible:ring-1 focus-visible:ring-primary text-base md:text-lg"
                 placeholder="Paste your content here... (bullet points, notes, or paragraphs)"

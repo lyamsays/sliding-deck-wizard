@@ -2,6 +2,7 @@
 export interface Slide {
   title: string;
   bullets: string[];
+  visualSuggestion?: string;
 }
 
 export interface SlideDeck {
@@ -18,7 +19,8 @@ export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
   if (Array.isArray(dbSlides)) {
     return dbSlides.map(slide => ({
       title: slide.title || '',
-      bullets: Array.isArray(slide.bullets) ? slide.bullets : []
+      bullets: Array.isArray(slide.bullets) ? slide.bullets : [],
+      visualSuggestion: slide.visualSuggestion || undefined
     }));
   }
   // Handle case when slides might be stored as stringified JSON
@@ -27,7 +29,8 @@ export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
       const parsed = JSON.parse(dbSlides);
       return Array.isArray(parsed) ? parsed.map(slide => ({
         title: slide.title || '',
-        bullets: Array.isArray(slide.bullets) ? slide.bullets : []
+        bullets: Array.isArray(slide.bullets) ? slide.bullets : [],
+        visualSuggestion: slide.visualSuggestion || undefined
       })) : [];
     } catch (e) {
       console.error('Error parsing slides:', e);

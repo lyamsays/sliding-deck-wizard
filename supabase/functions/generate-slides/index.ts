@@ -60,7 +60,8 @@ serve(async (req) => {
               "Overview of key concepts",
               "Background information",
               "Goals and objectives"
-            ]
+            ],
+            visualSuggestion: "Use a gradient background with profession-related icon"
           },
           {
             title: "Main Points",
@@ -68,7 +69,8 @@ serve(async (req) => {
               "First key point from your content",
               "Second important concept",
               "Supporting evidence"
-            ]
+            ],
+            visualSuggestion: "Split screen layout with bullet points on left, illustration on right"
           },
           {
             title: "Conclusion",
@@ -76,7 +78,8 @@ serve(async (req) => {
               "Summary of main points",
               "Recommendations",
               "Next steps"
-            ]
+            ],
+            visualSuggestion: "Use a call-to-action box at bottom with arrow graphic"
           }
         ]
       };
@@ -124,6 +127,14 @@ serve(async (req) => {
                 - Maintain a consistent ${tone} tone throughout the presentation
                 - If the profession is technical, use appropriate terminology; if non-technical, use accessible language
                 - Consider the purpose (${purpose}) when determining what to emphasize
+                
+                VISUAL SUGGESTIONS:
+                - For each slide, provide a specific visual suggestion like:
+                  * Recommended icons or icon style
+                  * Background color or gradient that complements the content
+                  * Layout structure (e.g., split screen, grid, centered)
+                  * Chart or diagram type if data is presented
+                  * Image concept that would reinforce the message
                 
                 Return ONLY a JSON object with the following structure:
                 {
