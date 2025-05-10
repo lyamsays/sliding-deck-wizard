@@ -25,8 +25,8 @@ const Hero = () => {
         
         <div className="mt-16 md:mt-24 max-w-5xl mx-auto p-4 md:p-8 bg-white rounded-2xl shadow-sm border border-gray-100 animate-fade-up">
           <img 
-            src="https://images.unsplash.com/photo-1581092795360-fd1ca04f0952" 
-            alt="Consultant giving a presentation" 
+            src="https://images.unsplash.com/photo-1519389950473-47ba0277781c" 
+            alt="Professional team collaborating on presentation" 
             className="w-full h-auto rounded-xl object-cover"
           />
         </div>
