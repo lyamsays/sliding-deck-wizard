@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Slide } from '@/types/deck';
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
-import { Copy, Edit, Download, Image, LayoutGrid, LayoutList, GalleryHorizontal, GalleryVertical } from 'lucide-react';
+import { Copy, Edit, Download, Image, LayoutGrid, LayoutList, GalleryHorizontal, GalleryVertical, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -58,25 +58,36 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }
     });
   };
   
-  const handleLayoutChange = () => {
-    // Cycle through available layouts
-    const layouts: Array<'left-image' | 'right-image' | 'centered' | 'title-focus'> = [
-      'left-image', 'right-image', 'centered', 'title-focus'
-    ];
+  // Define available layouts
+  const layouts: Array<'left-image' | 'right-image' | 'centered' | 'title-focus'> = [
+    'left-image', 'right-image', 'centered', 'title-focus'
+  ];
+  
+  const handleLayoutChange = (direction: 'next' | 'previous') => {
     const currentIndex = layouts.indexOf(layout as any);
-    const nextLayout = layouts[(currentIndex + 1) % layouts.length];
+    
+    // Calculate the new index based on direction
+    let newIndex;
+    if (direction === 'next') {
+      newIndex = (currentIndex + 1) % layouts.length;
+    } else {
+      // For previous, we add layouts.length before modulo to handle negative index
+      newIndex = (currentIndex - 1 + layouts.length) % layouts.length;
+    }
+    
+    const newLayout = layouts[newIndex];
     
     onSlideUpdate(index, {
       ...slide,
       style: {
         ...slide.style,
-        layout: nextLayout
+        layout: newLayout
       }
     });
     
     toast({
       title: "Layout updated",
-      description: `Slide layout changed to ${nextLayout.replace('-', ' ')}.`,
+      description: `Slide layout changed to ${newLayout.replace('-', ' ')}.`,
     });
   };
 
@@ -261,15 +272,32 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }
           {slide.title}
         </h3>
         <div className="flex items-center space-x-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleLayoutChange}
-            className={`transition-opacity ${isHovering ? 'opacity-100' : 'opacity-0'}`}
-          >
-            {getLayoutIcon()}
-            <span className="sr-only">Change layout</span>
-          </Button>
+          <div className={`flex items-center transition-opacity ${isHovering ? 'opacity-100' : 'opacity-0'}`}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => handleLayoutChange('previous')}
+              title="Previous layout"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only">Previous layout</span>
+            </Button>
+            
+            <div className="flex items-center px-1">
+              {getLayoutIcon()}
+            </div>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => handleLayoutChange('next')}
+              title="Next layout"
+            >
+              <ChevronRight className="h-4 w-4" />
+              <span className="sr-only">Next layout</span>
+            </Button>
+          </div>
+          
           <Button 
             variant="ghost" 
             size="sm" 
