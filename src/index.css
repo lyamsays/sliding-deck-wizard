@@ -33,7 +33,7 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 264 51% 60%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -74,5 +74,78 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Card with soft shadow and hover effect */
+  .card-enhanced {
+    @apply bg-white rounded-lg border border-border shadow-sm transition-all duration-300 hover:shadow-md;
+  }
+  
+  /* Primary buttons with hover effect */
+  .btn-enhanced {
+    @apply transform transition-transform duration-200 hover:scale-105 active:scale-95;
+  }
+  
+  /* Section dividers */
+  .section-divider {
+    @apply my-8 border-b border-border;
+  }
+  
+  /* Form groups with consistent spacing */
+  .form-group-enhanced {
+    @apply mb-4 space-y-2;
+  }
+  
+  /* Gradient background options */
+  .bg-gradient-purple {
+    @apply bg-gradient-to-r from-primary/80 to-purple-400/80;
+  }
+  
+  .bg-gradient-light {
+    @apply bg-gradient-to-br from-white to-secondary/50;
+  }
+  
+  /* Enhanced containers */
+  .container-enhanced {
+    @apply px-4 py-6 md:px-6 lg:px-8;
+  }
+
+  /* Micro-interactions */
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-md;
+  }
+  
+  /* Fade in animation */
+  .fade-in {
+    @apply animate-fade-in;
+  }
+  
+  /* Enhanced layout sections */
+  .section-card {
+    @apply bg-white rounded-xl shadow-sm p-6 border border-border;
+  }
+}
+
+@layer utilities {
+  /* Additional animations */
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+  
+  .animate-pulse-subtle {
+    animation: pulse-subtle 2s ease-in-out infinite;
   }
 }

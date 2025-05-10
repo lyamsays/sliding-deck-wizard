@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Edit, Save, Loader, LayoutGrid, LayoutList } from "lucide-react";
@@ -253,18 +254,18 @@ const SlideList: React.FC<SlideListProps> = ({
   };
   
   return (
-    <div className="mt-16 space-y-6 animate-fade-up">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Your Generated Slides</h2>
-        <div className="flex items-center gap-4">
-          <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'outline' | 'slide')}>
-            <ToggleGroupItem value="outline" aria-label="Toggle outline view">
+    <div className="mt-12 md:mt-16 space-y-6 animate-fade-up">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white rounded-lg p-4 shadow-sm border border-border">
+        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">Your Presentation</h2>
+        <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+          <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'outline' | 'slide')} className="self-start sm:self-auto">
+            <ToggleGroupItem value="outline" aria-label="Toggle outline view" className="px-3">
               <LayoutList className="h-4 w-4 mr-2" />
               Outline
             </ToggleGroupItem>
-            <ToggleGroupItem value="slide" aria-label="Toggle slide view">
+            <ToggleGroupItem value="slide" aria-label="Toggle slide view" className="px-3">
               <LayoutGrid className="h-4 w-4 mr-2" />
-              Slide
+              Slides
             </ToggleGroupItem>
           </ToggleGroup>
           
@@ -272,14 +273,14 @@ const SlideList: React.FC<SlideListProps> = ({
             <input 
               type="text"
               placeholder="Deck Title"
-              className="px-3 py-2 border rounded-md text-sm"
+              className="px-3 py-2 border rounded-md text-sm min-w-[200px] focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
               value={deckTitle}
               onChange={(e) => setDeckTitle(e.target.value)}
             />
             <Button 
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 btn-enhanced"
             >
               {isSaving ? <Loader className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {isSaving ? "Saving..." : "Save Deck"}
@@ -288,38 +289,38 @@ const SlideList: React.FC<SlideListProps> = ({
         </div>
       </div>
       
-      <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 mb-4 flex items-center">
-        <Edit className="h-4 w-4 mr-2 text-primary" />
-        <p className="text-sm text-gray-600">
-          Click on any text to edit your slides directly. Changes will be saved automatically.
+      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4 flex items-center">
+        <Edit className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
+        <p className="text-sm text-blue-700">
+          Click on any text to edit your slides directly. Your changes will be saved automatically.
         </p>
       </div>
       
-      <div className="space-y-8">
+      <div className="grid grid-cols-1 gap-8">
         {editedSlides.map((slide, index) => (
-          viewMode === 'outline' ? (
-            <OutlineSlide 
-              key={index} 
-              slide={slide} 
-              index={index} 
-              onSlideUpdate={handleSlideUpdate} 
-            />
-          ) : (
-            <StyledSlide 
-              key={index} 
-              slide={slide} 
-              index={index} 
-              onSlideUpdate={handleSlideUpdate}
-              onRemoveImage={() => handleRemoveImage(index)}
-            />
-          )
+          <div key={index} className="card-enhanced hover-lift">
+            {viewMode === 'outline' ? (
+              <OutlineSlide 
+                slide={slide} 
+                index={index} 
+                onSlideUpdate={handleSlideUpdate} 
+              />
+            ) : (
+              <StyledSlide 
+                slide={slide} 
+                index={index} 
+                onSlideUpdate={handleSlideUpdate}
+                onRemoveImage={() => handleRemoveImage(index)}
+              />
+            )}
+          </div>
         ))}
       </div>
       
-      <div className="flex justify-center mt-8 gap-4">
+      <div className="flex flex-col sm:flex-row justify-center mt-8 gap-4">
         <Button 
           onClick={handleDownloadSlides}
-          className="flex items-center gap-2 bg-secondary hover:bg-secondary/80"
+          className="flex items-center gap-2 bg-secondary hover:bg-secondary/80 btn-enhanced"
           size="lg"
         >
           <Download className="h-5 w-5" />
@@ -329,7 +330,7 @@ const SlideList: React.FC<SlideListProps> = ({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 btn-enhanced bg-gradient-purple"
               size="lg"
               disabled={isExporting}
             >
@@ -337,11 +338,11 @@ const SlideList: React.FC<SlideListProps> = ({
               <span>Export Presentation</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleExportPDF}>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={handleExportPDF} className="cursor-pointer">
               Export as PDF
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleExportPPTX}>
+            <DropdownMenuItem onClick={handleExportPPTX} className="cursor-pointer">
               Export as PowerPoint (.pptx)
             </DropdownMenuItem>
           </DropdownMenuContent>
