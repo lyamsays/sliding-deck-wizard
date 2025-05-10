@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -75,28 +74,39 @@ serve(async (req) => {
       try {
         console.log("generate-slides: Calling OpenAI API");
         
-        // Create system prompt with framework if selected for consultant
+        // Enhanced system prompt with stronger emphasis on visual design
         let systemPrompt = `
-          You are an expert presentation designer specialized in creating highly effective slides.
+          You are an expert presentation designer specializing in visually stunning, high-impact slides.
           
-          Convert the provided content into well-structured presentation slides following these specific guidelines:
+          Transform the provided content into a visually dominant presentation following these design principles:
+          
+          VISUAL-FIRST APPROACH:
+          - Create slides that communicate primarily through visuals, with minimal text
+          - Follow the 3-second rule: viewers should grasp the slide's message in 3 seconds
+          - Use the "billboard approach" - slides should work like highway billboards
           
           SLIDE STRUCTURE:
-          - Create clean, logically structured slides that flow naturally from introduction to conclusion
-          - Include 3-7 slides total, based on content length and complexity
-          - Each slide should contribute to a cohesive narrative
+          - Create 4-6 slides total (based on content complexity)
+          - Follow a clear visual hierarchy on each slide
+          - Use consistent visual language throughout the presentation
+          - Design slides that build on each other to tell a cohesive story
           
-          SLIDE CONTENT:
-          - Create engaging, concise titles that capture the essence of each slide
-          - Include 3-5 bullet points per slide, each being clear and concise
-          - Add examples, analogies, or insightful perspectives that enrich the content
-          - For each slide, suggest a visual element that would enhance the content (icon, chart type, diagram style, layout)
+          CONTENT STRATEGY:
+          - Create concise, impactful titles (maximum 5-7 words)
+          - Limit bullet points to 3 maximum per slide, each 1-5 words
+          - Convert complex ideas into visual metaphors, diagrams, or illustrations
+          - Suggest specific imagery or visual treatment for each slide
+          
+          VISUAL DESIGN:
+          - For each slide, specify a compelling layout that prioritizes visual impact
+          - Suggest color schemes that evoke appropriate emotions for the content
+          - Recommend specific icon styles, chart types, or imagery based on content
+          - Provide detailed descriptions of suggested visuals that would enhance the message
           
           ADAPTATION:
-          - Adapt the vocabulary, tone, and complexity based on the user's profession (${profession}) and purpose (${purpose})
+          - Adapt the design style for the user's profession (${profession}) and purpose (${purpose})
           - Maintain a consistent ${tone} tone throughout the presentation
-          - If the profession is technical, use appropriate terminology; if non-technical, use accessible language
-          - Consider the purpose (${purpose}) when determining what to emphasize
+          - Consider the purpose (${purpose}) when determining visual emphasis
         `;
         
         // Add framework specific instructions for consultants
@@ -108,17 +118,19 @@ serve(async (req) => {
           - Ensure the slide structure follows the components and methodology of ${framework}.
           - Use appropriate business terminology and concepts specific to ${framework}.
           - Include relevant analysis categories, quadrants, or components from the ${framework} framework.
+          - Design visual representations that effectively communicate the ${framework} concepts.
         `;
         }
         
         systemPrompt += `  
-          VISUAL SUGGESTIONS:
-          - For each slide, provide a specific visual suggestion like:
-            * Recommended icons or icon style
-            * Background color or gradient that complements the content
-            * Layout structure (e.g., split screen, grid, centered)
-            * Chart or diagram type if data is presented
-            * Image concept that would reinforce the message
+          SPECIFIC VISUAL GUIDANCE:
+          - For each slide, provide detailed visual suggestions:
+            * Background color or gradient recommendation
+            * Layout structure specifics (e.g., asymmetric, Z-pattern, golden ratio)
+            * Imagery concept with specific description (not generic terms)
+            * Iconography style and specific icons to use
+            * Typography recommendation (font pairing, weight, sizing)
+            * Data visualization approach if presenting numbers or statistics
           
           Return ONLY a JSON object with the following structure:
           {
@@ -126,7 +138,13 @@ serve(async (req) => {
               {
                 "title": "Clear and concise slide title",
                 "bullets": ["Key point 1", "Key point 2", "Key point 3"],
-                "visualSuggestion": "Brief description of recommended visual element or layout"
+                "visualSuggestion": "Detailed description of recommended visual with specific layout, colors, and imagery details",
+                "style": {
+                  "backgroundColor": "Specific color in hex format or gradient",
+                  "layout": "Specific layout type: left-image, right-image, centered, or title-focus",
+                  "iconType": "Suggested icon name that would work well for this slide",
+                  "colorScheme": "Suggested color palette that enhances the message"
+                }
               }
             ]
           }
@@ -154,7 +172,7 @@ serve(async (req) => {
                 content: content
               }
             ],
-            temperature: 0.5,
+            temperature: 0.7, // Slightly higher temperature for more creative visual suggestions
           }),
           signal: controller.signal,
         });
@@ -242,7 +260,7 @@ serve(async (req) => {
   }
 });
 
-// Helper function to handle slide edit requests
+// Helper function to handle slide edit requests - make more visually focused
 async function handleEditRequest(content, instruction, isSingleSlide, corsHeaders) {
   console.log(`generate-slides: Processing edit request for ${isSingleSlide ? 'single slide' : 'slides'}`);
   
@@ -271,26 +289,44 @@ async function handleEditRequest(content, instruction, isSingleSlide, corsHeader
           {
             role: 'system',
             content: `
-              You are an expert presentation slide editor that improves slides for clarity, engagement, and impact.
+              You are an expert presentation designer specializing in visually stunning, high-impact slides.
               
-              You will receive a slide with a title and bullet points.
-              Apply the user's edit instruction to improve the slide.
+              You will receive slide content that needs improvement. Apply the user's edit instruction
+              while also enhancing the visual design and impact.
               
-              GUIDANCE:
-              - Keep the same general meaning and topic of the slide
-              - Make bullet points concise, clear, and impactful
-              - Add relevant examples or clarifications if requested
-              - Adjust tone as requested (more formal/academic or more casual/conversational)
-              - Keep to 3-5 bullet points usually, unless clearly instructed otherwise
-              - Consider adding speaker notes if appropriate for context or additional details
+              VISUAL-FIRST PRINCIPLES:
+              - Prioritize visual communication over text
+              - Follow the 3-second rule: viewers should grasp the message in 3 seconds
+              - Use powerful visual metaphors, diagrams or illustrations where possible
+              - Suggest specific, detailed imagery that amplifies the message
+              
+              DESIGN IMPROVEMENT:
+              - Reduce text to absolute minimum while maintaining clarity
+              - Maximum 3 bullet points per slide, each 1-5 words if possible
+              - Suggest specific visual layout improvements (asymmetric, Z-pattern, rule of thirds)
+              - Recommend typography improvements (font pairings, size hierarchies)
+              - Provide color palette suggestions that evoke the right emotion
+              
+              ENHANCEMENT GUIDANCE:
+              - Make titles shorter and more impactful (5-7 words maximum)
+              - Convert abstract concepts into concrete visual metaphors
+              - Suggest data visualization approaches for any numbers or statistics
+              - Add speaker notes to capture details that should be spoken, not shown
               
               Return ONLY a JSON object with this structure:
               {
                 "slides": [
                   {
-                    "title": "Original or improved title",
-                    "bullets": ["Improved bullet 1", "Improved bullet 2", "Improved bullet 3"],
-                    "speakerNotes": "Optional speaker notes to supplement the slide content"
+                    "title": "Short impactful title",
+                    "bullets": ["Concise point 1", "Concise point 2", "Concise point 3"],
+                    "visualSuggestion": "Detailed description of specific visuals to enhance impact",
+                    "speakerNotes": "Additional context and details for the presenter",
+                    "style": {
+                      "backgroundColor": "Specific color or gradient suggestion",
+                      "layout": "Optimal layout: left-image, right-image, centered, or title-focus",
+                      "iconType": "Specific icon that would enhance this slide",
+                      "colorScheme": "Color palette that reinforces the message"
+                    }
                   }
                 ]
               }
@@ -307,11 +343,11 @@ async function handleEditRequest(content, instruction, isSingleSlide, corsHeader
               EDIT INSTRUCTION:
               ${instruction}
               
-              Please improve this slide content according to the instruction.
+              Please improve this slide content according to the instruction while enhancing visual design.
             `
           }
         ],
-        temperature: 0.5,
+        temperature: 0.7, // Higher temperature for more creative visual design
       }),
     });
     
