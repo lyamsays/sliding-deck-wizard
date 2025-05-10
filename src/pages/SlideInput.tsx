@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +6,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { AlertCircle, Loader, Save, Copy, Download, Edit, FileText, Image, Sparkles } from "lucide-react";
+import { AlertCircle, Loader, Save, Copy, Download, Edit, FileText, Image, Sparkles, LayoutGrid, LayoutList } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,116 +24,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-
-interface Slide {
-  title: string;
-  bullets: string[];
-  visualSuggestion?: string;
-}
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Toggle } from "@/components/ui/toggle";
+import { Slide } from '@/types/deck';
+import { getRandomPastelColor, getIconSuggestion } from '@/types/deck';
+import OutlineSlide from '@/components/slides/OutlineSlide';
+import StyledSlide from '@/components/slides/StyledSlide';
 
 interface SlidesResponse {
   slides: Slide[];
 }
-
-interface EditableSlideProps {
-  slide: Slide;
-  index: number;
-  onSlideUpdate: (index: number, updatedSlide: Slide) => void;
-}
-
-const EditableSlideCard: React.FC<EditableSlideProps> = ({ slide, index, onSlideUpdate }) => {
-  const [isHovering, setIsHovering] = useState(false);
-  const { toast } = useToast();
-  
-  const handleTitleChange = (e: React.FormEvent<HTMLHeadingElement>) => {
-    const newTitle = e.currentTarget.textContent || "";
-    onSlideUpdate(index, {
-      ...slide,
-      title: newTitle
-    });
-  };
-  
-  const handleBulletChange = (bulletIndex: number, e: React.FormEvent<HTMLLIElement>) => {
-    const newBulletText = e.currentTarget.textContent || "";
-    const updatedBullets = [...slide.bullets];
-    updatedBullets[bulletIndex] = newBulletText;
-    
-    onSlideUpdate(index, {
-      ...slide,
-      bullets: updatedBullets
-    });
-  };
-  
-  const handleCopySlide = () => {
-    let content = `${slide.title}\n\n`;
-    slide.bullets.forEach(bullet => {
-      content += `• ${bullet}\n`;
-    });
-    
-    navigator.clipboard.writeText(content).then(() => {
-      toast({
-        title: "Copied to clipboard",
-        description: "Slide content has been copied.",
-      });
-    });
-  };
-  
-  return (
-    <Card 
-      className="overflow-hidden border border-gray-200 transition-shadow hover:shadow-md"
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-    >
-      <CardHeader className="bg-primary/5 pb-3 flex flex-row justify-between items-center">
-        <CardTitle 
-          className="text-xl text-gray-800"
-          contentEditable
-          suppressContentEditableWarning
-          onBlur={handleTitleChange}
-          role="textbox"
-          aria-label="Slide title"
-        >
-          {slide.title}
-        </CardTitle>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={handleCopySlide}
-          className={`transition-opacity ${isHovering ? 'opacity-100' : 'opacity-0'}`}
-        >
-          <Copy className="h-4 w-4 mr-1" />
-          <span className="sr-only">Copy slide</span>
-        </Button>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <ul className="space-y-3">
-          {slide.bullets.map((bullet, bulletIndex) => (
-            <li 
-              key={bulletIndex} 
-              className="flex items-start"
-              contentEditable
-              suppressContentEditableWarning
-              onBlur={(e) => handleBulletChange(bulletIndex, e)}
-              role="textbox"
-              aria-label={`Bullet point ${bulletIndex + 1}`}
-            >
-              <span className="text-primary mr-2 mt-1">•</span>
-              <span>{bullet}</span>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-      {slide.visualSuggestion && (
-        <CardFooter className="border-t border-gray-100 pt-4 mt-4">
-          <div className="flex items-start text-sm text-gray-600">
-            <Image className="h-4 w-4 mr-2 mt-1" />
-            <span><strong>Visual suggestion:</strong> {slide.visualSuggestion}</span>
-          </div>
-        </CardFooter>
-      )}
-    </Card>
-  );
-};
 
 const SlideInput = () => {
   const [slideContent, setSlideContent] = useState('');
@@ -148,6 +47,7 @@ const SlideInput = () => {
   const [profession, setProfession] = useState<string>("Consultant");
   const [purpose, setPurpose] = useState<string>("");
   const [tone, setTone] = useState<string>("Formal");
+  const [viewMode, setViewMode] = useState<'outline' | 'slide'>('slide');
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -160,7 +60,18 @@ const SlideInput = () => {
   useEffect(() => {
     // When generatedSlides updates, update editedSlides
     if (generatedSlides.length > 0) {
-      setEditedSlides([...generatedSlides]);
+      // Add style properties to each slide
+      const styledSlides = generatedSlides.map(slide => ({
+        ...slide,
+        style: {
+          backgroundColor: getRandomPastelColor(),
+          iconType: getIconSuggestion(slide.title, slide.visualSuggestion),
+          layout: Math.random() > 0.5 ? 'right-image' : 'left-image',
+          colorScheme: 'professional'
+        }
+      }));
+      
+      setEditedSlides(styledSlides);
     }
   }, [generatedSlides]);
   
@@ -595,22 +506,35 @@ Nudge theory`;
             <div className="mt-16 space-y-6 animate-fade-up" ref={slidePreviewRef}>
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-900">Your Generated Slides</h2>
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="text"
-                    placeholder="Deck Title"
-                    className="px-3 py-2 border rounded-md text-sm"
-                    value={deckTitle}
-                    onChange={(e) => setDeckTitle(e.target.value)}
-                  />
-                  <Button 
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="flex items-center gap-2"
-                  >
-                    {isSaving ? <Loader className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    {isSaving ? "Saving..." : "Save Deck"}
-                  </Button>
+                <div className="flex items-center gap-4">
+                  <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'outline' | 'slide')}>
+                    <ToggleGroupItem value="outline" aria-label="Toggle outline view">
+                      <LayoutList className="h-4 w-4 mr-2" />
+                      Outline
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="slide" aria-label="Toggle slide view">
+                      <LayoutGrid className="h-4 w-4 mr-2" />
+                      Slide
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                  
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="text"
+                      placeholder="Deck Title"
+                      className="px-3 py-2 border rounded-md text-sm"
+                      value={deckTitle}
+                      onChange={(e) => setDeckTitle(e.target.value)}
+                    />
+                    <Button 
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="flex items-center gap-2"
+                    >
+                      {isSaving ? <Loader className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      {isSaving ? "Saving..." : "Save Deck"}
+                    </Button>
+                  </div>
                 </div>
               </div>
               
@@ -623,12 +547,21 @@ Nudge theory`;
               
               <div className="space-y-8">
                 {editedSlides.map((slide, index) => (
-                  <EditableSlideCard 
-                    key={index} 
-                    slide={slide} 
-                    index={index} 
-                    onSlideUpdate={handleSlideUpdate} 
-                  />
+                  viewMode === 'outline' ? (
+                    <OutlineSlide 
+                      key={index} 
+                      slide={slide} 
+                      index={index} 
+                      onSlideUpdate={handleSlideUpdate} 
+                    />
+                  ) : (
+                    <StyledSlide 
+                      key={index} 
+                      slide={slide} 
+                      index={index} 
+                      onSlideUpdate={handleSlideUpdate} 
+                    />
+                  )
                 ))}
               </div>
               
