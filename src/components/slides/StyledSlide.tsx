@@ -19,6 +19,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }
   const { toast } = useToast();
   const backgroundColor = slide.style?.backgroundColor || '#F1F0FB';
   const iconName = slide.style?.iconType || getIconSuggestion(slide.title, slide.visualSuggestion);
+  // Ensure layout is one of the allowed types
   const layout = slide.style?.layout || 'right-image';
   
   // Get the icon component dynamically

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,7 +67,8 @@ const SlideInput = () => {
         style: {
           backgroundColor: getRandomPastelColor(),
           iconType: getIconSuggestion(slide.title, slide.visualSuggestion),
-          layout: Math.random() > 0.5 ? 'right-image' : 'left-image',
+          // Explicitly cast to one of the allowed layout types
+          layout: Math.random() > 0.5 ? 'right-image' : 'left-image' as 'right-image' | 'left-image',
           colorScheme: 'professional'
         }
       }));
