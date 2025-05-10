@@ -48,6 +48,48 @@ serve(async (req) => {
     }, 25000); // 25 second timeout
 
     try {
+      // Mock response for testing when API quota is an issue
+      // Uncomment the next block and comment out the fetch call to use mock data
+      /*
+      console.log("generate-slides: Using mock data due to API quota issues");
+      const mockSlides = {
+        slides: [
+          {
+            title: "Introduction to " + (profession || "Presentation"),
+            bullets: [
+              "Overview of key concepts",
+              "Background information",
+              "Goals and objectives"
+            ]
+          },
+          {
+            title: "Main Points",
+            bullets: [
+              "First key point from your content",
+              "Second important concept",
+              "Supporting evidence"
+            ]
+          },
+          {
+            title: "Conclusion",
+            bullets: [
+              "Summary of main points",
+              "Recommendations",
+              "Next steps"
+            ]
+          }
+        ]
+      };
+      
+      clearTimeout(timeoutId);
+      console.log("generate-slides: Mock data generated successfully");
+      
+      return new Response(
+        JSON.stringify(mockSlides),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+      */
+
       console.log("generate-slides: Calling OpenAI API");
       // Call OpenAI API with abort controller for timeout
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -108,6 +150,22 @@ serve(async (req) => {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("generate-slides: OpenAI API Error:", errorData);
+        
+        // Special handling for quota errors
+        if (errorData.error?.type === 'insufficient_quota') {
+          console.error("generate-slides: OpenAI quota exceeded");
+          return new Response(
+            JSON.stringify({ 
+              error: 'OpenAI API quota exceeded. Please check your billing details or try again later.',
+              code: 'quota_exceeded'
+            }),
+            { 
+              status: 429, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+        
         throw new Error(`API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 

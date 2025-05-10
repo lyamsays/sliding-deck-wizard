@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -115,6 +116,12 @@ const SlideInput = () => {
       
       if (error) {
         console.error("SlideInput: Function returned error:", error);
+        
+        // Check for OpenAI quota error
+        if (error.message?.includes('quota') || error.message?.includes('exceeded')) {
+          throw new Error('OpenAI API quota exceeded. The service is temporarily unavailable. Please try again later or contact support.');
+        }
+        
         throw error;
       }
       
