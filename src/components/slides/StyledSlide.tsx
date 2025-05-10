@@ -1,14 +1,14 @@
-
 import React, { useState } from 'react';
 import { Slide } from '@/types/deck';
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
-import { Copy, Edit, Download, Image, LayoutGrid, LayoutList, GalleryHorizontal, GalleryVertical, ChevronLeft, ChevronRight, RefreshCw, Trash2, MessageSquare, Wand } from 'lucide-react';
+import { Copy, Edit, Download, Image, LayoutGrid, LayoutList, GalleryHorizontal, GalleryVertical, ChevronLeft, ChevronRight, RefreshCw, Trash2, MessageSquare, Wand, Crop } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { getIconSuggestion } from '@/types/deck';
 import { supabase } from "@/integrations/supabase/client";
 import ImageGenerationDialog from './ImageGenerationDialog';
+import ImageEditor from './ImageEditor';
 import SlideEditDialog from './SlideEditDialog';
 
 interface StyledSlideProps {
@@ -18,11 +18,20 @@ interface StyledSlideProps {
   onRemoveImage?: () => void;
 }
 
+interface CropData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  scale: number;
+}
+
 const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, onRemoveImage }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const { toast } = useToast();
   const backgroundColor = slide.style?.backgroundColor || '#F1F0FB';
   const iconName = slide.style?.iconType || getIconSuggestion(slide.title, slide.visualSuggestion);
@@ -172,6 +181,33 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
   // Handle AI slide edits
   const handleSlideEdit = (updatedSlide: Slide) => {
     onSlideUpdate(index, updatedSlide);
+  };
+
+  // New function to handle editing an image
+  const handleEditImage = () => {
+    if (!slide.imageUrl) {
+      toast({
+        title: "No image to edit",
+        description: "Please add an image first.",
+      });
+      return;
+    }
+    setIsImageEditorOpen(true);
+  };
+
+  // Handle saving edited image
+  const handleSaveEditedImage = (editedImageData: string, cropData: CropData) => {
+    onSlideUpdate(index, {
+      ...slide,
+      imageUrl: editedImageData,
+      // Optionally store the crop data if you need it later
+      cropData: cropData
+    });
+    
+    toast({
+      title: "Image updated",
+      description: "Your image has been successfully edited.",
+    });
   };
 
   // Render the slide content based on layout
@@ -435,6 +471,18 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
             Edit with AI
           </Button>
           
+          {slide.imageUrl && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleEditImage}
+              className="flex-shrink-0"
+            >
+              <Crop className="h-4 w-4 mr-2" />
+              Edit Image
+            </Button>
+          )}
+          
           {slide.imageUrl && onRemoveImage && (
             <Button
               variant="outline"
@@ -483,6 +531,15 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
         slide={slide}
         onSlideUpdate={handleSlideEdit}
       />
+      
+      {slide.imageUrl && (
+        <ImageEditor
+          open={isImageEditorOpen}
+          onOpenChange={setIsImageEditorOpen}
+          imageUrl={slide.imageUrl}
+          onSave={handleSaveEditedImage}
+        />
+      )}
     </Card>
   );
 };

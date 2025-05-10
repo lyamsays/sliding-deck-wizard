@@ -1,4 +1,3 @@
-
 export interface Slide {
   title: string;
   bullets: string[];
@@ -8,9 +7,16 @@ export interface Slide {
   speakerNotes?: string;
   style?: {
     backgroundColor?: string;
-    iconType?: string; 
     layout?: 'left-image' | 'right-image' | 'centered' | 'title-focus';
+    iconType?: string;
     colorScheme?: string;
+  };
+  cropData?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    scale: number;
   };
 }
 
@@ -113,4 +119,3 @@ export const getIconSuggestion = (title: string, visualSuggestion?: string): str
     return defaultIcons[Math.floor(Math.random() * defaultIcons.length)];
   }
 };
-
