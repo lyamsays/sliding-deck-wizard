@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Slide } from '@/types/deck';
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
-import { Copy, Edit, Download, Image, LayoutGrid, LayoutList, GalleryHorizontal, GalleryVertical, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { Copy, Edit, Download, Image, LayoutGrid, LayoutList, GalleryHorizontal, GalleryVertical, ChevronLeft, ChevronRight, RefreshCw, Trash2 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -12,9 +13,10 @@ interface StyledSlideProps {
   slide: Slide;
   index: number;
   onSlideUpdate: (index: number, updatedSlide: Slide) => void;
+  onRemoveImage?: () => void;
 }
 
-const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }) => {
+const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, onRemoveImage }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const { toast } = useToast();
@@ -388,32 +390,45 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }
         {renderSlideContent()}
       </CardContent>
       {(slide.visualSuggestion || slide.revisedPrompt) && (
-        <CardFooter className="border-t border-gray-100 pt-4 mt-4 flex justify-between items-start">
-          <div className="flex items-start text-sm text-gray-600">
+        <CardFooter className="border-t border-gray-100 pt-4 mt-4 flex justify-between items-center">
+          <div className="flex items-start text-sm text-gray-600 max-w-[65%]">
             <Image className="h-4 w-4 mr-2 mt-1 flex-shrink-0" />
-            <span>
+            <span className="line-clamp-2">
               <strong>Visual:</strong> {slide.revisedPrompt || slide.visualSuggestion}
             </span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleGenerateImage}
-            disabled={isGeneratingImage || !slide.visualSuggestion}
-            className="ml-4 flex-shrink-0"
-          >
-            {isGeneratingImage ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Image className="h-4 w-4 mr-2" />
-                {slide.imageUrl ? "Regenerate" : "Generate Image"}
-              </>
+          <div className="flex items-center gap-2">
+            {slide.imageUrl && onRemoveImage && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRemoveImage}
+                className="flex-shrink-0"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Remove
+              </Button>
             )}
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateImage}
+              disabled={isGeneratingImage || !slide.visualSuggestion}
+              className="flex-shrink-0"
+            >
+              {isGeneratingImage ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Image className="h-4 w-4 mr-2" />
+                  {slide.imageUrl ? "Regenerate" : "Generate Image"}
+                </>
+              )}
+            </Button>
+          </div>
         </CardFooter>
       )}
     </Card>

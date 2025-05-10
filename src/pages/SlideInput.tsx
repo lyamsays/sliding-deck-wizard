@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,7 +7,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { AlertCircle, Loader, Save, Copy, Download, Edit, FileText, Image, Sparkles, LayoutGrid, LayoutList } from "lucide-react";
+import { AlertCircle, Loader, Save, Copy, Download, Edit, FileText, Image, Sparkles, LayoutGrid, LayoutList, Trash2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,6 +51,7 @@ const SlideInput = () => {
   const [viewMode, setViewMode] = useState<'outline' | 'slide'>('slide');
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [imageProgress, setImageProgress] = useState(0);
+  const [autoGenerateImages, setAutoGenerateImages] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -75,6 +77,11 @@ const SlideInput = () => {
       }));
       
       setEditedSlides(styledSlides);
+      
+      // If auto-generate images is enabled, generate images for all slides
+      if (autoGenerateImages) {
+        generateAllImages();
+      }
     }
   }, [generatedSlides]);
   
@@ -264,7 +271,19 @@ const SlideInput = () => {
     setEditedSlides(updatedSlides);
   };
   
-  const handleGenerateAllImages = async () => {
+  const handleRemoveImage = (index: number) => {
+    const updatedSlides = [...editedSlides];
+    delete updatedSlides[index].imageUrl;
+    delete updatedSlides[index].revisedPrompt;
+    setEditedSlides(updatedSlides);
+    
+    toast({
+      title: "Image removed",
+      description: "The image has been removed from this slide.",
+    });
+  };
+  
+  const generateAllImages = async () => {
     if (editedSlides.length === 0) {
       toast({
         title: "No slides to generate images for",
@@ -534,7 +553,20 @@ Nudge theory`;
               />
             </div>
             
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="auto-generate-images" 
+                  checked={autoGenerateImages} 
+                  onChange={(e) => setAutoGenerateImages(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-primary"
+                />
+                <label htmlFor="auto-generate-images" className="text-sm text-gray-600">
+                  Automatically generate images for slides
+                </label>
+              </div>
+              
               <Button 
                 type="submit" 
                 size="lg" 
@@ -564,6 +596,15 @@ Nudge theory`;
                      generationProgress < 60 ? "Creating slides with AI..." : 
                      generationProgress < 90 ? "Polishing your presentation..." : 
                      "Finalizing your slides..."}
+                  </p>
+                </div>
+              )}
+              
+              {isGeneratingImages && (
+                <div className="w-full mt-2 space-y-2">
+                  <Progress value={imageProgress} className="h-2 w-full bg-secondary/30" />
+                  <p className="text-sm text-center text-gray-500 italic">
+                    Generating images for your slides... {Math.round(imageProgress)}%
                   </p>
                 </div>
               )}
@@ -656,7 +697,8 @@ Nudge theory`;
                       key={index} 
                       slide={slide} 
                       index={index} 
-                      onSlideUpdate={handleSlideUpdate} 
+                      onSlideUpdate={handleSlideUpdate}
+                      onRemoveImage={() => handleRemoveImage(index)}
                     />
                   )
                 ))}
