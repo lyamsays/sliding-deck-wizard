@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,8 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { AlertCircle, Loader, Save } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { AlertCircle, Loader, Save, Image } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +28,7 @@ import { Label } from "@/components/ui/label";
 interface Slide {
   title: string;
   bullets: string[];
+  visualSuggestion?: string;
 }
 
 interface SlidesResponse {
@@ -427,6 +427,14 @@ const SlideInput = () => {
                         ))}
                       </ul>
                     </CardContent>
+                    {slide.visualSuggestion && (
+                      <CardFooter className="border-t border-gray-100 pt-4 mt-4">
+                        <div className="flex items-start text-sm text-gray-600">
+                          <Image className="h-4 w-4 mr-2 mt-1" />
+                          <span><strong>Visual suggestion:</strong> {slide.visualSuggestion}</span>
+                        </div>
+                      </CardFooter>
+                    )}
                   </Card>
                 ))}
               </div>
