@@ -10,7 +10,7 @@ import {
   CardDescription,
   CardFooter
 } from "@/components/ui/card";
-import { SlideDeck, Slide } from "@/types/deck";
+import { SlideDeck, Slide, prepareDbSlides } from "@/types/deck";
 import * as LucideIcons from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -45,11 +45,11 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
     };
     setCurrentDeck(updatedDeck);
     
-    // Update the database
+    // Update the database - Convert slides to proper JSON format for database
     try {
       const { error } = await supabase
         .from('slide_decks')
-        .update({ slides: updatedSlides })
+        .update({ slides: prepareDbSlides(updatedSlides) })
         .eq('id', deck.id);
       
       if (error) throw error;
