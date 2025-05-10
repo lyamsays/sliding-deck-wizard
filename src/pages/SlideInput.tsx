@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types"; // Added import for Json type
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Slide } from '@/types/deck';
