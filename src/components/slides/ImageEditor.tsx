@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Crop, Move, Resize, Save } from 'lucide-react';
+import { Crop, Move, ArrowsUpDown, Save } from 'lucide-react';
 import { Label } from "@/components/ui/label";
 
 interface ImageEditorProps {
@@ -305,7 +305,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ open, onOpenChange, imageUrl,
               size="sm"
               className="flex items-center gap-1"
             >
-              <Resize className="h-4 w-4" />
+              <ArrowsUpDown className="h-4 w-4" />
               <span>Resize</span>
             </Button>
           </div>
