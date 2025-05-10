@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { 
@@ -7,10 +7,15 @@ import {
   CardHeader, 
   CardContent, 
   CardTitle, 
-  CardDescription 
+  CardDescription,
+  CardFooter
 } from "@/components/ui/card";
-import { SlideDeck } from "@/types/deck";
+import { SlideDeck, Slide } from "@/types/deck";
 import * as LucideIcons from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Edit, Download, Printer } from 'lucide-react';
+import SlideEditDialog from '../slides/SlideEditDialog';
 
 interface DeckViewerProps {
   deck: SlideDeck;
@@ -18,27 +23,102 @@ interface DeckViewerProps {
 }
 
 const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
+  const [currentDeck, setCurrentDeck] = useState<SlideDeck>(deck);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(-1);
+  const { toast } = useToast();
+
+  const handleEditSlide = (index: number) => {
+    setCurrentSlideIndex(index);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSlideUpdate = async (updatedSlide: Slide) => {
+    // Create a new slides array with the updated slide
+    const updatedSlides = [...currentDeck.slides];
+    updatedSlides[currentSlideIndex] = updatedSlide;
+    
+    // Update the local state
+    const updatedDeck = {
+      ...currentDeck,
+      slides: updatedSlides
+    };
+    setCurrentDeck(updatedDeck);
+    
+    // Update the database
+    try {
+      const { error } = await supabase
+        .from('slide_decks')
+        .update({ slides: updatedSlides })
+        .eq('id', deck.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Slide updated",
+        description: "Changes saved successfully.",
+      });
+    } catch (error: any) {
+      console.error("Error updating slide:", error);
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to save changes. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handlePrintDeck = () => {
+    window.print();
+  };
+
+  const handleDownloadPDF = () => {
+    // This is a placeholder - a real PDF download would require a PDF generation library
+    toast({
+      title: "Feature coming soon",
+      description: "PDF download will be available in a future update.",
+    });
+  };
+
   return (
     <Card className="h-full">
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>{deck.title}</CardTitle>
+            <CardTitle>{currentDeck.title}</CardTitle>
             <CardDescription>
-              Created on {format(new Date(deck.created_at), 'MMMM d, yyyy')}
+              Created on {format(new Date(currentDeck.created_at), 'MMMM d, yyyy')}
             </CardDescription>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onClose}
-          >
-            Close
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handlePrintDeck}
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Print
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleDownloadPDF}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onClose}
+            >
+              Close
+            </Button>
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-8 max-h-[700px] overflow-y-auto">
-        {deck.slides.map((slide, index) => {
+      <CardContent className="space-y-8 max-h-[700px] overflow-y-auto print:max-h-none print:overflow-visible">
+        {currentDeck.slides.map((slide, index) => {
           // Get the icon component dynamically
           const iconName = slide.style?.iconType || 'FileText';
           const IconComponent = (LucideIcons as any)[iconName] || LucideIcons.FileText;
@@ -48,13 +128,24 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
           return (
             <Card 
               key={index} 
-              className="overflow-hidden shadow-sm"
+              className="overflow-hidden shadow-sm print:break-inside-avoid print:page-break-after-auto"
               style={{ backgroundColor }}
             >
               <CardHeader className={`bg-primary/5 py-4 ${layout === 'title-focus' ? 'hidden' : ''}`}>
-                <CardTitle className="text-lg">
-                  {slide.title}
-                </CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg">
+                    {slide.title}
+                  </CardTitle>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleEditSlide(index)}
+                    className="print:hidden"
+                  >
+                    <Edit className="h-4 w-4" />
+                    <span className="sr-only">Edit slide</span>
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="pt-4">
                 {layout === 'title-focus' && (
@@ -114,6 +205,20 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
           );
         })}
       </CardContent>
+      <CardFooter className="border-t pt-4 flex justify-between print:hidden">
+        <div className="text-sm text-gray-500">
+          {currentDeck.slides.length} slide{currentDeck.slides.length !== 1 ? 's' : ''}
+        </div>
+      </CardFooter>
+
+      {currentSlideIndex >= 0 && (
+        <SlideEditDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          slide={currentDeck.slides[currentSlideIndex]}
+          onSlideUpdate={handleSlideUpdate}
+        />
+      )}
     </Card>
   );
 };
