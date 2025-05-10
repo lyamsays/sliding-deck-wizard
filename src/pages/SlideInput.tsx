@@ -6,6 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Loader } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Slide {
   title: string;
@@ -20,6 +24,7 @@ const SlideInput = () => {
   const [slideContent, setSlideContent] = useState('');
   const [generatedSlides, setGeneratedSlides] = useState<Slide[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
   const { toast } = useToast();
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +42,18 @@ const SlideInput = () => {
     setIsGenerating(true);
     setGeneratedSlides([]);
     
+    // Set up a progress indicator that simulates the generation process
+    setGenerationProgress(10);
+    const progressInterval = setInterval(() => {
+      setGenerationProgress(prev => {
+        // Don't go past 90% until we actually get the response
+        return prev < 90 ? prev + 10 : prev;
+      });
+    }, 500);
+    
     try {
+      setGenerationProgress(30);
+      
       const { data, error } = await supabase.functions.invoke('generate-slides', {
         body: { content: slideContent }
       });
@@ -50,6 +66,7 @@ const SlideInput = () => {
         throw new Error('Invalid response format');
       }
       
+      setGenerationProgress(100);
       setGeneratedSlides(slidesData.slides);
       
       toast({
@@ -64,6 +81,7 @@ const SlideInput = () => {
         variant: "destructive"
       });
     } finally {
+      clearInterval(progressInterval);
       setIsGenerating(false);
     }
   };
@@ -100,44 +118,79 @@ const SlideInput = () => {
                 className="bg-primary hover:bg-primary/90 transition-all px-8 py-6 text-lg"
                 disabled={isGenerating}
               >
-                {isGenerating ? "Generating..." : "Generate Slides"}
+                {isGenerating ? (
+                  <div className="flex items-center gap-2">
+                    <Loader className="h-4 w-4 animate-spin" />
+                    <span>Generating slides...</span>
+                  </div>
+                ) : (
+                  "Generate Slides"
+                )}
               </Button>
               
-              <p className="mt-4 text-sm text-gray-500 italic">
-                {isGenerating 
-                  ? "Processing your content with AI..." 
-                  : "Slide previews will appear after generation."}
-              </p>
+              {isGenerating && (
+                <div className="w-full mt-6 space-y-2">
+                  <Progress value={generationProgress} className="h-2 w-full" />
+                  <p className="text-sm text-center text-gray-500 italic">
+                    Creating your slides with AI...
+                  </p>
+                </div>
+              )}
+              
+              {!isGenerating && !generatedSlides.length && (
+                <p className="mt-4 text-sm text-gray-500 italic">
+                  Slide previews will appear after generation.
+                </p>
+              )}
             </div>
           </form>
           
-          {generatedSlides.length > 0 && (
+          {isGenerating && (
+            <div className="mt-16 space-y-12 animate-fade-up">
+              <h2 className="text-2xl font-bold text-gray-900 text-center">Preparing Your Slides</h2>
+              
+              <div className="space-y-8">
+                {[1, 2, 3].map(i => (
+                  <Card key={i} className="overflow-hidden border-gray-200">
+                    <CardHeader className="bg-primary/5 pb-3">
+                      <Skeleton className="h-7 w-3/4" />
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      <div className="space-y-4">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                        <Skeleton className="h-4 w-4/6" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {!isGenerating && generatedSlides.length > 0 && (
             <div className="mt-16 space-y-12 animate-fade-up">
               <h2 className="text-2xl font-bold text-gray-900 text-center">Your Generated Slides</h2>
               
               <div className="space-y-8">
                 {generatedSlides.map((slide, index) => (
-                  <div 
-                    key={index} 
-                    className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"
-                  >
-                    <div className="bg-primary/5 p-4 border-b border-gray-200">
-                      <h3 className="font-bold text-xl text-gray-800">
+                  <Card key={index} className="overflow-hidden">
+                    <CardHeader className="bg-primary/5 pb-3">
+                      <CardTitle className="text-xl text-gray-800">
                         {slide.title}
-                      </h3>
-                    </div>
-                    
-                    <div className="p-6">
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
                       <ul className="space-y-3">
                         {slide.bullets.map((bullet, i) => (
-                          <li key={i} className="flex">
-                            <span className="text-primary mr-2">•</span>
+                          <li key={i} className="flex items-start">
+                            <span className="text-primary mr-2 mt-1">•</span>
                             <span>{bullet}</span>
                           </li>
                         ))}
                       </ul>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </div>
