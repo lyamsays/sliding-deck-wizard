@@ -68,6 +68,12 @@ const SlideForm: React.FC<SlideFormProps> = ({
       // Default to Professional if tone is not in the new options
       setTone("Professional");
     }
+    
+    // Also make sure profession is one of the allowed values
+    if (!["Consultant", "Educator", "Student", "Executive", "Other"].includes(profession)) {
+      // Default to Consultant if profession is not in the allowed options
+      setProfession("Consultant");
+    }
   }, []);
   
   const handleNext = () => {

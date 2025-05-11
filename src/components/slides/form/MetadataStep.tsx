@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ChevronRight, HelpCircle } from "lucide-react";
@@ -134,12 +133,9 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
             <SelectContent>
               <SelectGroup>
                 <SelectItem value="Consultant">Consultant</SelectItem>
-                <SelectItem value="Educator">Educator</SelectItem>
-                <SelectItem value="Marketing">Marketing Professional</SelectItem>
+                <SelectItem value="Educator">Professor/Educator</SelectItem>
+                <SelectItem value="Student">Student</SelectItem>
                 <SelectItem value="Executive">Executive</SelectItem>
-                <SelectItem value="Engineer">Engineer</SelectItem>
-                <SelectItem value="Designer">Designer</SelectItem>
-                <SelectItem value="Researcher">Researcher</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
               </SelectGroup>
             </SelectContent>
