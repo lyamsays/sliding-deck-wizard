@@ -60,9 +60,9 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
 
     const analyzeSlideContent = () => {
       const title = slide.title?.toLowerCase() || '';
-      const slideContent = slide.content?.toLowerCase() || '';
+      const slideContent = '';  // Slide type doesn't have content property
       const bullets = Array.isArray(slide.bullets) ? slide.bullets.join(' ').toLowerCase() : '';
-      const combinedContent = title + ' ' + bullets + ' ' + slideContent;
+      const combinedContent = title + ' ' + bullets;
       
       // Keywords that suggest real photos might be better
       const realPhotoKeywords = [
