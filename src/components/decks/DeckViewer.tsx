@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -73,7 +74,7 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
     window.print();
   };
 
-  // Helper function to convert image URLs to base64 format
+  // Improved helper function to convert image URLs to base64 format
   const getBase64FromUrl = async (url: string): Promise<string> => {
     try {
       // If URL is already base64, return it as is
@@ -81,8 +82,16 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
         return url;
       }
       
-      // Otherwise fetch and convert to base64
-      const response = await fetch(url);
+      // For external URLs, use a proxy or direct fetch when possible
+      const response = await fetch(url, { 
+        mode: 'cors',
+        cache: 'no-cache'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status}`);
+      }
+      
       const blob = await response.blob();
       
       return new Promise((resolve, reject) => {
@@ -93,7 +102,7 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
       });
     } catch (error) {
       console.error("Error converting image to base64:", error);
-      throw error;
+      return ''; // Return empty string on error rather than throwing
     }
   };
 
@@ -109,7 +118,8 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
       // PDF dimensions
       const width = pdf.internal.pageSize.getWidth();
       const height = pdf.internal.pageSize.getHeight();
-
+      
+      // Process all slides sequentially
       for (let i = 0; i < currentDeck.slides.length; i++) {
         const slide = currentDeck.slides[i];
         
@@ -117,14 +127,9 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
           pdf.addPage();
         }
         
-        // Add slide background color
-        if (slide.style?.backgroundColor) {
-          pdf.setFillColor(slide.style.backgroundColor);
-          pdf.rect(0, 0, width, height, 'F');
-        } else {
-          pdf.setFillColor('#ffffff');
-          pdf.rect(0, 0, width, height, 'F');
-        }
+        // Add slide background color - use a simple solid color instead of trying to render gradients
+        pdf.setFillColor(240, 240, 245); // Light blue-gray that looks professional
+        pdf.rect(0, 0, width, height, 'F');
         
         // Add slide title
         pdf.setFont('helvetica', 'bold');
@@ -135,26 +140,56 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
         // Add slide content
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(14);
-        let y = 35;
         
+        // Determine layout for content positioning
+        const layout = slide.style?.layout || 'right-image';
+        let textX, textWidth;
+        
+        if (layout === 'left-image') {
+          textX = width / 2;
+          textWidth = width / 2 - 10;
+        } else if (layout === 'right-image') {
+          textX = 20;
+          textWidth = width / 2 - 10;
+        } else {
+          // Centered or title-focus layout
+          textX = 20;
+          textWidth = width - 40;
+        }
+        
+        // Add bullets with better positioning based on layout
+        let y = 35;
         for (const bullet of slide.bullets) {
-          pdf.text('• ' + bullet, 20, y, { maxWidth: width - 40 });
+          pdf.text('• ' + bullet, textX, y, { maxWidth: textWidth });
           y += 10;
         }
         
-        // Add image if available
+        // Add image if available with improved error handling
         if (slide.imageUrl) {
           try {
-            const layout = slide.style?.layout || 'right-image';
-            // Convert image URL to base64 if needed
+            // Convert image URL to base64
             const imgData = await getBase64FromUrl(slide.imageUrl);
-            const imgWidth = 60;
-            const imgHeight = 60;
-            const imgX = layout === 'left-image' ? 20 : width - imgWidth - 20;
             
-            pdf.addImage(imgData, 'JPEG', imgX, height - imgHeight - 20, imgWidth, imgHeight);
+            if (imgData) {
+              const imgWidth = 60;
+              const imgHeight = 60;
+              let imgX;
+              
+              if (layout === 'left-image') {
+                imgX = 20;
+              } else if (layout === 'right-image') {
+                imgX = width - imgWidth - 20;
+              } else if (layout === 'centered') {
+                imgX = (width - imgWidth) / 2;
+              } else {
+                imgX = width - imgWidth - 20;
+              }
+              
+              pdf.addImage(imgData, 'JPEG', imgX, height - imgHeight - 20, imgWidth, imgHeight);
+            }
           } catch (err) {
             console.error('Error adding image to PDF:', err);
+            // Continue with export even if image fails
           }
         }
         

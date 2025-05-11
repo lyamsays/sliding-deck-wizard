@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Loader } from "lucide-react";
@@ -26,7 +27,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  // Helper function to convert image URLs to base64 format
+  // Improved helper function to convert image URLs to base64 format
   const getBase64FromUrl = async (url: string): Promise<string> => {
     try {
       // If URL is already base64, return it as is
@@ -34,8 +35,16 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         return url;
       }
       
-      // Otherwise fetch and convert to base64
-      const response = await fetch(url);
+      // For external URLs, use a proxy or direct fetch when possible
+      const response = await fetch(url, { 
+        mode: 'cors',
+        cache: 'no-cache'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status}`);
+      }
+      
       const blob = await response.blob();
       
       return new Promise((resolve, reject) => {
@@ -46,10 +55,11 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       });
     } catch (error) {
       console.error("Error converting image to base64:", error);
-      throw error;
+      return ''; // Return empty string on error rather than throwing
     }
   };
 
+  // Improved PDF export with better image handling
   const handleExportPDF = async () => {
     try {
       setIsExporting(true);
@@ -62,7 +72,8 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       // PDF dimensions
       const width = pdf.internal.pageSize.getWidth();
       const height = pdf.internal.pageSize.getHeight();
-
+      
+      // Process all slides sequentially
       for (let i = 0; i < editedSlides.length; i++) {
         const slide = editedSlides[i];
         
@@ -72,7 +83,8 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         
         // Add slide background color
         if (slide.style?.backgroundColor) {
-          pdf.setFillColor(slide.style.backgroundColor);
+          // For gradient backgrounds, use a light color
+          pdf.setFillColor(240, 240, 245);
           pdf.rect(0, 0, width, height, 'F');
         } else {
           pdf.setFillColor('#ffffff');
@@ -88,24 +100,53 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         // Add slide content
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(14);
-        let y = 35;
         
+        // Determine layout for content positioning
+        const layout = slide.style?.layout || 'right-image';
+        let textX, textWidth;
+        
+        if (layout === 'left-image') {
+          textX = width / 2;
+          textWidth = width / 2 - 10;
+        } else if (layout === 'right-image') {
+          textX = 20;
+          textWidth = width / 2 - 10;
+        } else {
+          // Centered or title-focus layout
+          textX = 20;
+          textWidth = width - 40;
+        }
+        
+        // Add bullets with better positioning based on layout
+        let y = 35;
         for (const bullet of slide.bullets) {
-          pdf.text('• ' + bullet, 20, y, { maxWidth: width - 40 });
+          pdf.text('• ' + bullet, textX, y, { maxWidth: textWidth });
           y += 10;
         }
         
         // Add image if available
         if (slide.imageUrl) {
           try {
-            const layout = slide.style?.layout || 'right-image';
-            // Convert image URL to base64 if needed
+            // Convert image URL to base64
             const imgData = await getBase64FromUrl(slide.imageUrl);
-            const imgWidth = 60;
-            const imgHeight = 60;
-            const imgX = layout === 'left-image' ? 20 : width - imgWidth - 20;
             
-            pdf.addImage(imgData, 'JPEG', imgX, height - imgHeight - 20, imgWidth, imgHeight);
+            if (imgData) {
+              const imgWidth = 60;
+              const imgHeight = 60;
+              let imgX;
+              
+              if (layout === 'left-image') {
+                imgX = 20;
+              } else if (layout === 'right-image') {
+                imgX = width - imgWidth - 20;
+              } else if (layout === 'centered') {
+                imgX = (width - imgWidth) / 2;
+              } else {
+                imgX = width - imgWidth - 20;
+              }
+              
+              pdf.addImage(imgData, 'JPEG', imgX, height - imgHeight - 20, imgWidth, imgHeight);
+            }
           } catch (err) {
             console.error('Error adding image to PDF:', err);
           }
@@ -134,6 +175,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
     }
   };
 
+  // Improved PowerPoint export with better image handling
   const handleExportPPTX = async () => {
     try {
       setIsExporting(true);
@@ -147,13 +189,12 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       for (let i = 0; i < editedSlides.length; i++) {
         const slide = editedSlides[i];
         const layout = slide.style?.layout || 'right-image';
-        const bgColor = slide.style?.backgroundColor || '#ffffff';
         
         // Create slide
         const pptSlide = pptx.addSlide();
         
-        // Set slide background
-        pptSlide.background = { fill: bgColor };
+        // Set slide background - using a consistent professional background
+        pptSlide.background = { color: "F1F5F9" };
         
         // Add slide title
         pptSlide.addText(slide.title, {
@@ -176,16 +217,28 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           imageWidth = 4;
           contentX = 5;
           contentWidth = 4.5;
-        } else {
-          // right-image or default
+        } else if (layout === 'right-image') {
           contentX = 0.5;
           contentWidth = 4.5;
           imageX = 5.5;
           imageY = 1.5;
           imageWidth = 4;
+        } else if (layout === 'centered') {
+          contentX = 0.5;
+          contentWidth = 9;
+          imageX = 3;
+          imageY = 4.5;
+          imageWidth = 4;
+        } else {
+          // title-focus layout
+          contentX = 0.5;
+          contentWidth = 9;
+          imageX = 7;
+          imageY = 1.5;
+          imageWidth = 2.5;
         }
         
-        // Add bullets
+        // Add bullets with improved formatting
         const bulletPoints = slide.bullets.map(bullet => ({ text: bullet }));
         
         pptSlide.addText(bulletPoints, {
@@ -193,24 +246,28 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           y: 1.5,
           w: contentWidth,
           h: 4,
-          fontSize: 14,
+          fontSize: 16,
           color: '000000',
           bullet: { type: 'bullet' }
         });
         
-        // Add image if available
+        // Add image if available with improved error handling
         if (slide.imageUrl) {
           try {
-            // Convert image URL to base64 if needed
+            // Convert image URL to base64
             const base64Image = await getBase64FromUrl(slide.imageUrl);
             
-            pptSlide.addImage({
-              data: base64Image,
-              x: imageX,
-              y: imageY,
-              w: imageWidth,
-              h: 3
-            });
+            if (base64Image) {
+              pptSlide.addImage({
+                data: base64Image,
+                x: imageX,
+                y: imageY,
+                w: imageWidth,
+                h: 3
+              });
+            } else {
+              throw new Error('Image data is empty');
+            }
           } catch (err) {
             console.error('Error adding image to PPTX:', err);
             
