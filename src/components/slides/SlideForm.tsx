@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader, Sparkles, Palette, ArrowRight, ArrowLeft } from "lucide-react";
+import { Loader, Sparkles, Palette, ArrowRight, ArrowLeft, FileText, Upload } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -70,6 +70,9 @@ const SlideForm: React.FC<SlideFormProps> = ({
   // New state for the two-step process
   const [currentStep, setCurrentStep] = useState<'metadata' | 'content'>('metadata');
   
+  // Toast for notifications
+  const { toast } = useToast();
+  
   // Update the showFrameworkDropdown state when profession changes
   useEffect(() => {
     setShowFrameworkDropdown(profession === "Consultant");
@@ -86,6 +89,62 @@ const SlideForm: React.FC<SlideFormProps> = ({
   const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(e);
+  };
+
+  // Add file handling function
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check file type
+    const fileType = file.name.split('.').pop()?.toLowerCase();
+    if (fileType !== 'pdf' && fileType !== 'docx') {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PDF or DOCX file.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Show loading toast
+    toast({
+      title: "Processing file",
+      description: "Reading content from your file...",
+    });
+    
+    try {
+      // For this demo, we'll just extract some text from the file
+      // In a real implementation, you would use a proper parser library
+      const text = await extractTextFromFile(file);
+      setSlideContent(text);
+      
+      toast({
+        title: "File processed",
+        description: "Content has been extracted from your file.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error processing file",
+        description: "Could not read content from your file. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Basic text extraction from files
+  const extractTextFromFile = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      
+      reader.onload = (event) => {
+        // For this demo, we'll just return a placeholder text based on the filename
+        // In a real implementation, you would use proper PDF/DOCX parsers
+        resolve(`Content extracted from "${file.name}"\n\nThis is a placeholder for the actual content that would be extracted from your ${file.name.split('.').pop()} file. In a production environment, we would use specialized libraries to properly parse the document content.\n\nPlease replace this with your actual content or proceed with this sample text for testing purposes.`);
+      };
+      
+      reader.readAsText(file);
+    });
   };
 
   return (
@@ -292,20 +351,43 @@ const SlideForm: React.FC<SlideFormProps> = ({
               <p className="text-gray-500 mt-1">Now, let's add your presentation content</p>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 w-full">
               <div className="flex justify-between items-center mb-3">
                 <label className="text-sm text-gray-500">Content</label>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={onTryExample}
-                  size="sm"
-                  className="text-xs flex items-center gap-1"
-                  disabled={isGenerating}
-                >
-                  <Sparkles className="h-3 w-3" />
-                  Try Example
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={onTryExample}
+                    size="sm"
+                    className="text-xs flex items-center gap-1"
+                    disabled={isGenerating}
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    Try Example
+                  </Button>
+                  
+                  <div className="relative">
+                    <Input
+                      type="file"
+                      id="file-upload"
+                      accept=".pdf,.docx"
+                      onChange={handleFileUpload}
+                      className="absolute inset-0 opacity-0 w-full cursor-pointer"
+                      disabled={isGenerating}
+                    />
+                    <Button 
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="text-xs flex items-center gap-1"
+                      disabled={isGenerating}
+                    >
+                      <FileText className="h-3 w-3" />
+                      Upload File
+                    </Button>
+                  </div>
+                </div>
               </div>
               <Textarea 
                 className="min-h-[300px] w-full bg-white border-0 resize-none focus-visible:ring-1 focus-visible:ring-primary text-base md:text-lg"
@@ -314,6 +396,10 @@ const SlideForm: React.FC<SlideFormProps> = ({
                 onChange={(e) => setSlideContent(e.target.value)}
                 disabled={isGenerating}
               />
+              
+              <div className="mt-3 text-xs text-gray-500">
+                <p>You can paste text directly or upload a PDF/DOCX file</p>
+              </div>
               
               <div className="flex items-center gap-2 mt-4">
                 <input 
