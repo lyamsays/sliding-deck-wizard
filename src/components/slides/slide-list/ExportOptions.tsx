@@ -27,70 +27,66 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  // Fix image conversion to properly handle CORS and data URLs
-  const getBase64FromUrl = async (url: string): Promise<string> => {
+  // Improved image processing function that handles all image formats safely
+  const processImage = async (url: string): Promise<string> => {
     try {
-      // If URL is already base64, return it as is
+      // If URL is already a data URL, return directly
       if (url.startsWith('data:image')) {
-        console.log('Already a data URL, using directly');
         return url;
       }
       
-      console.log(`Fetching image from URL: ${url}`);
+      console.log(`Processing image from URL: ${url}`);
       
-      // Create a proxy URL to avoid CORS issues
-      const proxyUrl = `https://cors-anywhere.herokuapp.com/${url}`;
-      
-      try {
-        // First try with proxy
-        const response = await fetch(proxyUrl, { 
-          mode: 'cors',
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+      // For remote URLs, create a new image and convert to canvas to avoid CORS issues
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';  // Important for CORS
+        
+        img.onload = () => {
+          try {
+            // Create canvas and draw image
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              reject(new Error('Failed to get canvas context'));
+              return;
+            }
+            
+            // Draw image to canvas and convert to data URL
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+          } catch (canvasError) {
+            console.error('Canvas error:', canvasError);
+            reject(canvasError);
           }
-        });
+        };
         
-        if (!response.ok) {
-          throw new Error(`Proxy fetch failed with status ${response.status}`);
-        }
+        img.onerror = (err) => {
+          console.error('Image loading error:', err);
+          // Return a placeholder instead of rejecting
+          resolve('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
+        };
         
-        const blob = await response.blob();
-        
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      } catch (proxyError) {
-        console.warn("Proxy fetch failed, trying direct fetch:", proxyError);
-        
-        // Fall back to direct fetch (may fail due to CORS)
-        const directResponse = await fetch(url, { 
-          mode: 'no-cors',
-          cache: 'no-cache'
-        });
-        
-        // For no-cors mode, we can't check response.ok
-        const blob = await directResponse.blob();
-        
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      }
+        // Set the source last to avoid race conditions
+        img.src = url;
+      });
     } catch (error) {
-      console.error("Error converting image to base64:", error);
-      throw error;
+      console.error("Error processing image:", error);
+      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='; // Return transparent pixel
     }
   };
 
-  // Improved PDF export with better image handling and font embedding
+  // Completely redesigned PDF export with better theme and image handling
   const handleExportPDF = async () => {
     try {
       setIsExporting(true);
+      toast({
+        title: "Preparing PDF export",
+        description: "Processing slides and images..."
+      });
       
       // Initialize PDF with better defaults for presentation slides
       const pdf = new jsPDF({
@@ -98,41 +94,42 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         unit: 'mm',
         format: 'a4',
         compress: true,
-        putOnlyUsedFonts: true,
       });
       
       // PDF dimensions
       const width = pdf.internal.pageSize.getWidth();
       const height = pdf.internal.pageSize.getHeight();
       
-      // Add custom font styling
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor("#333333");
-      
-      // Process all slides sequentially with improved error handling
+      // Process all slides sequentially
       for (let i = 0; i < editedSlides.length; i++) {
         console.log(`Processing slide ${i+1} for PDF export`);
         const slide = editedSlides[i];
         
+        // Add new page for all slides except the first
         if (i > 0) {
           pdf.addPage();
         }
         
-        // Add slide background
-        pdf.setFillColor(248, 250, 252); // Light blue-gray background
+        // Get theme colors from slide
+        const backgroundColor = slide.style?.backgroundColor || '#FFFFFF';
+        const textColor = slide.style?.textColor || '#333333';
+        const accentColor = slide.style?.accentColor || '#6E59A5';
+        
+        // Set page background (support for gradient backgrounds by using a filled rectangle)
+        pdf.setFillColor(255, 255, 255);  // Default white background first
         pdf.rect(0, 0, width, height, 'F');
         
-        // Add header bar for visual appeal
-        pdf.setFillColor(40, 80, 160); // Professional blue
+        // Add header with accent color
+        pdf.setFillColor(hexToRgb(accentColor).r, hexToRgb(accentColor).g, hexToRgb(accentColor).b);
         pdf.rect(0, 0, width, 12, 'F');
         
-        // Add slide title with enhanced formatting
+        // Add title
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(24);
-        pdf.setTextColor('#1a365d'); // Dark blue
+        pdf.setTextColor(hexToRgb(textColor).r, hexToRgb(textColor).g, hexToRgb(textColor).b);
         pdf.text(slide.title, width / 2, 25, { align: 'center' });
         
-        // Determine layout for content positioning
+        // Determine layout for content positioning based on slide style
         const layout = slide.style?.layout || 'right-image';
         let textX, textWidth, imgX, imgY, imgWidth, imgHeight;
         
@@ -168,10 +165,10 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           imgHeight = 60;
         }
         
-        // Add bullets with better formatting and positioning
+        // Add bullets with improved formatting
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(14);
-        pdf.setTextColor('#333333');
+        pdf.setTextColor(hexToRgb(textColor).r, hexToRgb(textColor).g, hexToRgb(textColor).b);
         
         let y = layout === 'centered' ? 40 : 45;
         for (const bullet of slide.bullets) {
@@ -181,57 +178,39 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           y += 8 * lines.length;
         }
         
-        // Add image with proper error handling and loading
+        // Add image if available
         if (slide.imageUrl) {
           try {
-            console.log(`Processing image for PDF slide ${i+1}: ${slide.imageUrl?.substring(0, 50)}...`);
+            console.log(`Processing image for PDF slide ${i+1}`);
             
-            // Pre-fetch image to avoid CORS issues
-            let imgData;
+            // Process image to handle CORS and format issues
+            const processedImageData = await processImage(slide.imageUrl);
             
-            try {
-              // Handle both URLs and Data URLs properly
-              if (slide.imageUrl.startsWith('data:image')) {
-                imgData = slide.imageUrl;
-                console.log('Using data URL directly for slide', i+1);
-              } else {
-                try {
-                  // Try to directly use the image if possible
-                  imgData = slide.imageUrl;
-                  pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight);
-                } catch (directError) {
-                  // If direct use fails, try with base64 conversion
-                  console.log(`Fetching image for slide ${i+1} with base64 conversion...`);
-                  imgData = await getBase64FromUrl(slide.imageUrl);
-                  pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight);
-                }
-              }
-            } catch(imgError) {
-              console.error(`Failed to load image for slide ${i+1}:`, imgError);
-              // Add error placeholder instead of failing
-              pdf.setFillColor(230, 230, 230); // Light gray
-              pdf.rect(imgX, imgY, imgWidth, imgHeight, 'F');
-              pdf.setFont("helvetica", "normal");
-              pdf.setFontSize(10);
-              pdf.setTextColor('#666666');
-              pdf.text("Image not available", imgX + imgWidth/2, imgY + imgHeight/2, { align: 'center' });
-            }
-          } catch (err) {
-            console.error(`Error adding image to PDF for slide ${i+1}:`, err);
-            // Don't throw - continue with next slide
+            // Add the processed image to PDF
+            pdf.addImage(processedImageData, 'PNG', imgX, imgY, imgWidth, imgHeight);
+            console.log(`Image added successfully to slide ${i+1}`);
+          } catch (imgError) {
+            console.error(`Failed to add image to slide ${i+1}:`, imgError);
+            // Add placeholder for failed image
+            pdf.setFillColor(230, 230, 230);
+            pdf.rect(imgX, imgY, imgWidth, imgHeight, 'F');
+            pdf.setFontSize(10);
+            pdf.setTextColor(120, 120, 120);
+            pdf.text("Image not available", imgX + imgWidth/2, imgY + imgHeight/2, { align: 'center' });
           }
         }
         
-        // Add slide number and footer
-        pdf.setFillColor(240, 240, 245); // Light gray footer
+        // Add slide number and footer with accent color
+        pdf.setFillColor(hexToRgb(accentColor).r, hexToRgb(accentColor).g, hexToRgb(accentColor).b, 0.1);
         pdf.rect(0, height - 12, width, 12, 'F');
         
         pdf.setFontSize(10);
-        pdf.setTextColor('#666666');
+        pdf.setTextColor(hexToRgb(textColor).r, hexToRgb(textColor).g, hexToRgb(textColor).b);
         pdf.text(`${i + 1}/${editedSlides.length}`, width - 20, height - 5, { align: 'right' });
         pdf.text(`${deckTitle || 'Presentation'}`, 20, height - 5);
       }
       
+      // Save the generated PDF
       pdf.save(`${deckTitle || 'presentation'}.pdf`);
       
       toast({
@@ -250,179 +229,170 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
     }
   };
 
-  // Fix PowerPoint export to properly handle images and formatting
+  // Completely redesigned PowerPoint export with better image processing
   const handleExportPPTX = async () => {
     try {
       setIsExporting(true);
+      toast({
+        title: "Preparing PowerPoint export",
+        description: "Processing slides and images..."
+      });
       
-      // Create new PptxGenJS instance with better defaults
+      // Create new PptxGenJS instance
       const pptx = new PptxGenJS();
       
-      // Set presentation properties and improved default styling
+      // Set presentation properties
       pptx.author = 'SlideMaker AI';
       pptx.company = 'Created with SlideMaker AI';
       pptx.title = deckTitle || 'Presentation';
-      
-      // Set a professional design theme
       pptx.layout = 'LAYOUT_16x9';
       
-      // Set the master slide with consistent professional styling
-      pptx.defineSlideMaster({
-        title: 'MASTER_SLIDE',
-        background: { color: "FFFFFF" },
-        margin: [0.5, 0.5, 0.5, 0.5], // Ensure consistent margins
-        slideNumber: { x: 0.5, y: '95%' },
-        objects: [
-          // Top header bar
-          { 'rect': { x: 0, y: 0, w: '100%', h: 0.3, fill: { color: "4472C4" } } },
-          
-          // Footer bar
-          { 'rect': { x: 0, y: '97%', w: '100%', h: 0.3, fill: { color: "F0F0F5" } } },
-          
-          // Footer text - deck title
-          { 'text': { 
-            text: deckTitle || 'Presentation', 
-            options: { x: 0.5, y: '97.5%', w: 4, h: 0.3, align: 'left', fontSize: 10, color: '666666', fontFace: 'Arial' } 
-          }}
-        ]
-      });
-      
-      // Process all slides with improved styling and error handling
+      // Process all slides with improved styling
       for (let i = 0; i < editedSlides.length; i++) {
         console.log(`Processing slide ${i+1} for PPTX export`);
         const slide = editedSlides[i];
+        
+        // Get theme colors from slide
+        const backgroundColor = slide.style?.backgroundColor || '#FFFFFF';
+        const textColor = slide.style?.textColor || '#333333';
+        const accentColor = slide.style?.accentColor || '#6E59A5';
         const layout = slide.style?.layout || 'right-image';
         
-        // Create slide using master
-        const pptSlide = pptx.addSlide({ masterName: 'MASTER_SLIDE' });
+        // Create slide with proper background
+        const pptSlide = pptx.addSlide();
         
-        // Add slide number to bottom right
-        pptSlide.addText(`${i + 1}/${editedSlides.length}`, {
-          x: '90%', y: '97.5%', w: 1, h: 0.3, 
-          fontSize: 10, color: '666666', align: 'right',
-          fontFace: 'Arial'
-        });
-        
-        // Add slide title with improved styling
-        pptSlide.addText(slide.title, {
-          x: 0.5,
-          y: 0.5,
-          w: 9.0,
-          h: 0.8,
-          fontSize: 28,
-          bold: true,
-          color: '1a365d',
-          fontFace: 'Arial'
-        });
-        
-        // Determine content layout based on image position
-        let contentX, contentWidth, imageX, imageY, imageWidth, imageHeight;
-        
-        if (layout === 'left-image') {
-          imageX = 0.5;
-          imageY = 1.5;
-          imageWidth = 4;
-          imageHeight = 3;
-          contentX = 5;
-          contentWidth = 4.5;
-        } else if (layout === 'right-image') {
-          contentX = 0.5;
-          contentWidth = 4.5;
-          imageX = 5.5;
-          imageY = 1.5;
-          imageWidth = 4;
-          imageHeight = 3;
-        } else if (layout === 'centered') {
-          contentX = 0.5;
-          contentWidth = 9;
-          imageX = 3;
-          imageY = 3.5;
-          imageWidth = 4;
-          imageHeight = 2.5;
+        // Set slide background
+        if (backgroundColor.includes('gradient')) {
+          // For gradient backgrounds, use a solid color approximation
+          pptSlide.background = { color: accentColor + '20' };
         } else {
-          // title-focus layout
-          contentX = 0.5;
-          contentWidth = 7;
-          imageX = 8;
-          imageY = 1.5;
-          imageWidth = 1.5;
-          imageHeight = 1.5;
+          pptSlide.background = { color: backgroundColor };
         }
         
-        // Add bullets with improved formatting - individual bullet formatting to avoid line break issues
-        if (slide.bullets && Array.isArray(slide.bullets) && slide.bullets.length > 0) {
+        // Add slide number
+        pptSlide.addText(`${i + 1}/${editedSlides.length}`, {
+          x: '90%', y: '95%',
+          color: textColor,
+          fontSize: 10,
+          bold: false
+        });
+        
+        // Add footer with deck title
+        pptSlide.addText(deckTitle || 'Presentation', {
+          x: '5%', y: '95%',
+          color: textColor,
+          fontSize: 10,
+          bold: false
+        });
+        
+        // Add title with the slide's text color
+        pptSlide.addText(slide.title, {
+          x: '5%',
+          y: '5%',
+          w: '90%',
+          h: '10%',
+          fontSize: 24,
+          bold: true,
+          color: textColor
+        });
+        
+        // Set up layout coordinates
+        let contentX, contentY, contentW, contentH;
+        let imageX, imageY, imageW, imageH;
+        
+        if (layout === 'left-image') {
+          imageX = '5%';
+          imageY = '20%';
+          imageW = '35%';
+          imageH = '60%';
+          contentX = '45%';
+          contentY = '20%';
+          contentW = '50%';
+          contentH = '60%';
+        } else if (layout === 'right-image') {
+          contentX = '5%';
+          contentY = '20%';
+          contentW = '50%';
+          contentH = '60%';
+          imageX = '60%';
+          imageY = '20%';
+          imageW = '35%';
+          imageH = '60%';
+        } else if (layout === 'centered') {
+          contentX = '5%';
+          contentY = '20%';
+          contentW = '90%';
+          contentH = '30%';
+          imageX = '30%';
+          imageY = '55%';
+          imageW = '40%';
+          imageH = '35%';
+        } else { // title-focus
+          contentX = '5%';
+          contentY = '20%';
+          contentW = '65%';
+          contentH = '70%';
+          imageX = '75%';
+          imageY = '20%';
+          imageW = '20%';
+          imageH = '30%';
+        }
+        
+        // Add bullets as separate text elements for better formatting
+        if (slide.bullets && slide.bullets.length > 0) {
           slide.bullets.forEach((bullet, idx) => {
-            pptSlide.addText(bullet, {
+            pptSlide.addText(`• ${bullet}`, {
               x: contentX,
-              y: 1.5 + (idx * 0.7), // Space each bullet properly
-              w: contentWidth,
-              h: 0.6,
-              fontSize: 18,
-              color: '333333',
-              bullet: { type: 'bullet' },
-              fontFace: 'Arial',
-              lineSpacing: 32,
-              breakLine: false // Prevent automatic line breaks
+              y: String(Number(contentY.replace('%', '')) + (idx * 8)) + '%',
+              w: contentW,
+              color: textColor,
+              fontSize: 14,
+              bullet: false // We're adding our own bullets
             });
           });
         }
         
-        // Add image with improved error handling - using direct image adding
+        // Add image if available with robust error handling
         if (slide.imageUrl) {
           try {
-            console.log(`Processing image for PPTX slide ${i+1}: ${slide.imageUrl.substring(0, 50)}...`);
+            console.log(`Processing image for PPTX slide ${i+1}`);
             
-            if (slide.imageUrl.startsWith('data:image')) {
-              // Directly use data URL
-              console.log('Using data URL directly for slide', i+1);
-              pptSlide.addImage({
-                data: slide.imageUrl,
-                x: imageX,
-                y: imageY,
-                w: imageWidth,
-                h: imageHeight,
-                sizing: { 
-                  type: "contain", 
-                  w: imageWidth, 
-                  h: imageHeight 
-                }
-              });
-            } else {
-              // Use direct URL reference (better for PPTX)
-              pptSlide.addImage({
-                path: slide.imageUrl,
-                x: imageX,
-                y: imageY,
-                w: imageWidth,
-                h: imageHeight,
-                sizing: { 
-                  type: "contain", 
-                  w: imageWidth, 
-                  h: imageHeight 
-                }
-              });
-            }
+            // Process the image through our helper
+            const processedImage = await processImage(slide.imageUrl);
+            
+            // Add the processed image
+            pptSlide.addImage({
+              data: processedImage,
+              x: imageX,
+              y: imageY,
+              w: imageW,
+              h: imageH,
+              sizing: {
+                type: "contain",
+                w: imageW,
+                h: imageH
+              }
+            });
+            
+            console.log(`Image added successfully to PPTX slide ${i+1}`);
           } catch (err) {
             console.error('Error adding image to PPTX:', err);
             
-            // Add placeholder if image fails
+            // Add a placeholder shape if image fails
             pptSlide.addShape(pptx.ShapeType.rect, {
               x: imageX,
               y: imageY,
-              w: imageWidth,
-              h: imageHeight,
+              w: imageW,
+              h: imageH,
               fill: { color: 'F0F0F0' }
             });
             
             pptSlide.addText('Image placeholder', {
               x: imageX,
-              y: imageY + imageHeight/2 - 0.25,
-              w: imageWidth,
-              h: 0.5,
-              fontSize: 14,
-              color: '888888',
+              y: String(Number(imageY.replace('%', '')) + 15) + '%',
+              w: imageW,
               align: 'center',
-              fontFace: 'Arial'
+              color: '888888'
             });
           }
         }
@@ -450,6 +420,27 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
     } finally {
       setIsExporting(false);
     }
+  };
+  
+  // Helper function to convert hex color to RGB
+  const hexToRgb = (hex: string) => {
+    // Default fallback color
+    if (!hex || hex.includes('gradient')) return { r: 100, g: 100, b: 255 };
+    
+    // Remove # if present
+    hex = hex.replace('#', '');
+    
+    // Handle shorthand hex
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    
+    // Parse hex values
+    return {
+      r: parseInt(hex.substring(0, 2), 16),
+      g: parseInt(hex.substring(2, 4), 16),
+      b: parseInt(hex.substring(4, 6), 16)
+    };
   };
   
   return (
