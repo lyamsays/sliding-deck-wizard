@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Navbar from '../components/Navbar';
@@ -85,11 +84,14 @@ const SlideInput = () => {
   useEffect(() => {
     // When generatedSlides updates, update editedSlides
     if (generatedSlides.length > 0) {
+      // Define a consistent professional background
+      const professionalBackground = 'linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%)';
+      
       // Add style properties to each slide
       const styledSlides = generatedSlides.map(slide => ({
         ...slide,
         style: {
-          backgroundColor: getRandomPastelColor(),
+          backgroundColor: professionalBackground,
           iconType: getIconSuggestion(slide.title, slide.visualSuggestion),
           // Explicitly cast to one of the allowed layout types
           layout: Math.random() > 0.5 ? 'right-image' : 'left-image' as 'right-image' | 'left-image',
@@ -99,10 +101,10 @@ const SlideInput = () => {
       
       setEditedSlides(styledSlides);
       
-      // If auto-generate images is enabled, generate images for all slides
-      if (autoGenerateImages) {
+      // Always generate images automatically for all slides
+      setTimeout(() => {
         generateAllImages();
-      }
+      }, 500);
     }
   }, [generatedSlides]);
   
@@ -155,7 +157,8 @@ const SlideInput = () => {
           profession: profession,
           purpose: purpose,
           tone: tone,
-          framework: profession === "Consultant" ? framework : undefined
+          framework: profession === "Consultant" ? framework : undefined,
+          autoGenerateImages: true // Add flag to indicate images should be auto-generated
         }
       });
       
@@ -354,8 +357,8 @@ const SlideInput = () => {
           continue;
         }
         
-        // Create a refined prompt for image generation
-        const imagePrompt = `Create a professional presentation slide visual about "${slide.title}". ${slide.visualSuggestion}. Make it suitable for a business presentation, clean and minimal style, no text in the image.`;
+        // Create a refined prompt for image generation with more emphasis on professional design
+        const imagePrompt = `Create a professional presentation slide visual about "${slide.title}". ${slide.visualSuggestion}. Make it suitable for a business presentation, clean and minimal style with ample white space, no text in the image, elegant professional look, high-quality visual.`;
         
         const { data, error } = await supabase.functions.invoke('generate-image', {
           body: { prompt: imagePrompt }

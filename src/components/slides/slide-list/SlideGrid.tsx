@@ -18,18 +18,18 @@ const SlideGrid: React.FC<SlideGridProps> = ({
   handleSlideUpdate, 
   handleRemoveImage 
 }) => {
-  // Generate visually appealing background colors if not already set
+  // Use a consistent professional background color for all slides
+  const professionalBackground = 'linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%)';
+  
+  // Apply the consistent background to all slides
   editedSlides = editedSlides.map(slide => {
-    if (!slide.style?.backgroundColor) {
-      return {
-        ...slide,
-        style: {
-          ...slide.style,
-          backgroundColor: getRandomGradientBackground()
-        }
-      };
-    }
-    return slide;
+    return {
+      ...slide,
+      style: {
+        ...slide.style,
+        backgroundColor: professionalBackground
+      }
+    };
   });
 
   // Masonry grid container style for visual interest
@@ -93,24 +93,6 @@ const SlideGrid: React.FC<SlideGridProps> = ({
       ))}
     </motion.div>
   );
-};
-
-// Function to generate visually appealing gradient backgrounds
-const getRandomGradientBackground = (): string => {
-  const gradients = [
-    'linear-gradient(120deg, #f6d365 0%, #fda085 100%)',
-    'linear-gradient(to right, #fa709a 0%, #fee140 100%)',
-    'linear-gradient(to top, #a8edea 0%, #fed6e3 100%)',
-    'linear-gradient(to top, #d299c2 0%, #fef9d7 100%)',
-    'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-    'linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%)',
-    'linear-gradient(to right, #ebc0fd 0%, #d9ded8 100%)',
-    'linear-gradient(to top, #accbee 0%, #e7f0fd 100%)',
-    'linear-gradient(to top, #c1dfc4 0%, #deecdd 100%)',
-    'linear-gradient(to right, #d4fc79 0%, #96e6a1 100%)'
-  ];
-  
-  return gradients[Math.floor(Math.random() * gradients.length)];
 };
 
 export default SlideGrid;

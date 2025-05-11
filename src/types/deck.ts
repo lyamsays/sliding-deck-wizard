@@ -31,6 +31,9 @@ export interface SlideDeck {
 
 // Helper function to convert database slides (Json) to strongly typed Slide[]
 export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
+  // Define a consistent professional background
+  const professionalBackground = 'linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%)';
+  
   if (Array.isArray(dbSlides)) {
     return dbSlides.map(slide => ({
       title: slide.title || '',
@@ -40,7 +43,7 @@ export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
       revisedPrompt: slide.revisedPrompt || undefined,
       speakerNotes: slide.speakerNotes || undefined,
       style: slide.style || {
-        backgroundColor: getRandomPastelColor(),
+        backgroundColor: professionalBackground,
         layout: 'right-image',
         colorScheme: 'professional'
       }
@@ -58,7 +61,7 @@ export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
         revisedPrompt: slide.revisedPrompt || undefined,
         speakerNotes: slide.speakerNotes || undefined,
         style: slide.style || {
-          backgroundColor: getRandomPastelColor(),
+          backgroundColor: professionalBackground,
           layout: 'right-image',
           colorScheme: 'professional'
         }
@@ -76,20 +79,10 @@ export const prepareDbSlides = (slides: Slide[]): any => {
   return slides;
 };
 
-// Helper function to generate pastel colors for slides
+// Helper function to generate pastel colors for slides (keeping for compatibility)
 export const getRandomPastelColor = (): string => {
-  const pastelColors = [
-    '#F2FCE2', // Soft Green
-    '#FEF7CD', // Soft Yellow
-    '#FEC6A1', // Soft Orange
-    '#E5DEFF', // Soft Purple
-    '#FFDEE2', // Soft Pink
-    '#FDE1D3', // Soft Peach
-    '#D3E4FD', // Soft Blue
-    '#F1F0FB', // Soft Gray
-  ];
-  
-  return pastelColors[Math.floor(Math.random() * pastelColors.length)];
+  // Return our consistent professional background instead
+  return 'linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%)';
 };
 
 // Get icon suggestion based on keywords in title or visual suggestion
