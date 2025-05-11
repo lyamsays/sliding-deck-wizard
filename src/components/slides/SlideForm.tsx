@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
+import { extractTextFromFile } from '@/utils/fileExtractors';
 
 interface SlideFormProps {
   isGenerating: boolean;
@@ -114,8 +114,7 @@ const SlideForm: React.FC<SlideFormProps> = ({
     });
     
     try {
-      // For this demo, we'll just extract some text from the file
-      // In a real implementation, you would use a proper parser library
+      // Use our new utility function to extract text
       const text = await extractTextFromFile(file);
       setSlideContent(text);
       
@@ -123,30 +122,15 @@ const SlideForm: React.FC<SlideFormProps> = ({
         title: "File processed",
         description: "Content has been extracted from your file.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error processing file",
-        description: "Could not read content from your file. Please try again.",
+        description: error.message || "Could not read content from your file. Please try again.",
         variant: "destructive"
       });
     }
   };
   
-  // Basic text extraction from files
-  const extractTextFromFile = (file: File): Promise<string> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      
-      reader.onload = (event) => {
-        // For this demo, we'll just return a placeholder text based on the filename
-        // In a real implementation, you would use proper PDF/DOCX parsers
-        resolve(`Content extracted from "${file.name}"\n\nThis is a placeholder for the actual content that would be extracted from your ${file.name.split('.').pop()} file. In a production environment, we would use specialized libraries to properly parse the document content.\n\nPlease replace this with your actual content or proceed with this sample text for testing purposes.`);
-      };
-      
-      reader.readAsText(file);
-    });
-  };
-
   return (
     <>
       {error && (
