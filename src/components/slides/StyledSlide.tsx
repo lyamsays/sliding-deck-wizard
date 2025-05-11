@@ -399,7 +399,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
       onMouseLeave={() => setIsHovering(false)}
       style={{ backgroundColor }}
     >
-      <CardHeader className={`pb-3 flex flex-row justify-between items-center border-b border-gray-100 ${layout === 'title-focus' ? 'hidden' : ''}`}>
+      <CardHeader className={`pb-3 flex flex-row justify-between items-center border-b border-gray-100`}>
         <h3 
           className="text-xl font-bold text-gray-800"
           contentEditable
