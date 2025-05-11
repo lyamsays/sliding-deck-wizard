@@ -43,7 +43,7 @@ const WebSearchTab: React.FC<WebSearchTabProps> = ({
               placeholder="E.g., 'business meeting' or 'team collaboration'"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => {
+              onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSearchImages();
               }}
             />

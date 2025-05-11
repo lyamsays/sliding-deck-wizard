@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Loader } from "lucide-react";
@@ -27,43 +26,60 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  // Improved helper function to convert image URLs to base64 format
+  // Fix image conversion to properly handle CORS and data URLs
   const getBase64FromUrl = async (url: string): Promise<string> => {
     try {
       // If URL is already base64, return it as is
       if (url.startsWith('data:image')) {
+        console.log('Already a data URL, using directly');
         return url;
       }
       
       console.log(`Fetching image from URL: ${url}`);
       
-      // For external URLs, fetch the image with proper CORS handling
-      const response = await fetch(url, { 
-        mode: 'no-cors', // Try with no-cors to prevent CORS issues
-        cache: 'no-cache',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'Expires': '0',
+      // Create a proxy URL to avoid CORS issues
+      const proxyUrl = `https://cors-anywhere.herokuapp.com/${url}`;
+      
+      try {
+        // First try with proxy
+        const response = await fetch(proxyUrl, { 
+          mode: 'cors',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Proxy fetch failed with status ${response.status}`);
         }
-      }).catch(async (error) => {
-        console.error("Error in first fetch attempt:", error);
-        // Fall back to regular fetch if no-cors fails
-        return fetch(url);
-      });
-      
-      if (!response.ok && response.type !== 'opaque') {
-        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+        
+        const blob = await response.blob();
+        
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (proxyError) {
+        console.warn("Proxy fetch failed, trying direct fetch:", proxyError);
+        
+        // Fall back to direct fetch (may fail due to CORS)
+        const directResponse = await fetch(url, { 
+          mode: 'no-cors',
+          cache: 'no-cache'
+        });
+        
+        // For no-cors mode, we can't check response.ok
+        const blob = await directResponse.blob();
+        
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
       }
-      
-      const blob = await response.blob();
-      
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
     } catch (error) {
       console.error("Error converting image to base64:", error);
       throw error;
@@ -82,7 +98,6 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         format: 'a4',
         compress: true,
         putOnlyUsedFonts: true,
-        hotfixes: ['px_scaling'], // Fix for better image handling
       });
       
       // PDF dimensions
@@ -168,19 +183,27 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         // Add image with proper error handling and loading
         if (slide.imageUrl) {
           try {
-            console.log(`Processing image for PDF slide ${i+1}: ${slide.imageUrl.substring(0, 50)}...`);
+            console.log(`Processing image for PDF slide ${i+1}: ${slide.imageUrl?.substring(0, 50)}...`);
             
-            // Handle image conversion with proper error handling
+            // Pre-fetch image to avoid CORS issues
             let imgData;
+            
             try {
               // Handle both URLs and Data URLs properly
               if (slide.imageUrl.startsWith('data:image')) {
                 imgData = slide.imageUrl;
                 console.log('Using data URL directly for slide', i+1);
               } else {
-                console.log(`Fetching image for slide ${i+1}...`);
-                imgData = await getBase64FromUrl(slide.imageUrl);
-                console.log(`Successfully converted image to base64 for slide ${i+1}`);
+                try {
+                  // Try to directly use the image if possible
+                  imgData = slide.imageUrl;
+                  pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight);
+                } catch (directError) {
+                  // If direct use fails, try with base64 conversion
+                  console.log(`Fetching image for slide ${i+1} with base64 conversion...`);
+                  imgData = await getBase64FromUrl(slide.imageUrl);
+                  pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight);
+                }
               }
             } catch(imgError) {
               console.error(`Failed to load image for slide ${i+1}:`, imgError);
@@ -191,18 +214,6 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
               pdf.setFontSize(10);
               pdf.setTextColor('#666666');
               pdf.text("Image not available", imgX + imgWidth/2, imgY + imgHeight/2, { align: 'center' });
-              continue;
-            }
-            
-            if (imgData) {
-              console.log(`Adding image to PDF for slide ${i+1}`);
-              // For centered layout, place image below text
-              if (layout === 'centered') {
-                pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight, undefined, 'FAST');
-              } else {
-                // For other layouts, place image to the side
-                pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight, undefined, 'FAST');
-              }
             }
           } catch (err) {
             console.error(`Error adding image to PDF for slide ${i+1}:`, err);
@@ -238,7 +249,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
     }
   };
 
-  // Improved PowerPoint export with better image handling and formatting
+  // Fix PowerPoint export to properly handle images and formatting
   const handleExportPPTX = async () => {
     try {
       setIsExporting(true);
@@ -251,37 +262,26 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       pptx.company = 'Created with SlideMaker AI';
       pptx.title = deckTitle || 'Presentation';
       
-      // Set a professional design theme - Fixed by removing colorScheme
-      pptx.theme = {
-        headFontFace: 'Arial',
-        bodyFontFace: 'Arial'
-      };
-      
-      // Note: pptx.background and pptx.textColor are not valid properties
-      // Instead, we'll set colors in the master slide definition
+      // Set a professional design theme
+      pptx.layout = 'LAYOUT_16x9';
       
       // Set the master slide with consistent professional styling
       pptx.defineSlideMaster({
         title: 'MASTER_SLIDE',
         background: { color: "FFFFFF" },
+        margin: [0.5, 0.5, 0.5, 0.5], // Ensure consistent margins
+        slideNumber: { x: 0.5, y: '95%' },
         objects: [
           // Top header bar
           { 'rect': { x: 0, y: 0, w: '100%', h: 0.3, fill: { color: "4472C4" } } },
           
           // Footer bar
-          { 'rect': { x: 0, y: 6.8, w: '100%', h: 0.3, fill: { color: "F0F0F5" } } },
+          { 'rect': { x: 0, y: '97%', w: '100%', h: 0.3, fill: { color: "F0F0F5" } } },
           
           // Footer text - deck title
           { 'text': { 
             text: deckTitle || 'Presentation', 
-            options: { x: 0.5, y: 6.85, w: 4, h: 0.3, align: 'left', fontSize: 10, color: '666666', fontFace: 'Arial' } 
-          }},
-          
-          // Background subtle effect
-          { 'rect': { 
-            x: 0, y: 0.3, w: '100%', h: 6.5, 
-            fill: { color: "FCFCFF" },
-            line: { color: "F5F5F5", width: 1 }
+            options: { x: 0.5, y: '97.5%', w: 4, h: 0.3, align: 'left', fontSize: 10, color: '666666', fontFace: 'Arial' } 
           }}
         ]
       });
@@ -297,7 +297,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         
         // Add slide number to bottom right
         pptSlide.addText(`${i + 1}/${editedSlides.length}`, {
-          x: 9, y: 6.85, w: 0.5, h: 0.3, 
+          x: '90%', y: '97.5%', w: 1, h: 0.3, 
           fontSize: 10, color: '666666', align: 'right',
           fontFace: 'Arial'
         });
@@ -321,7 +321,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           imageX = 0.5;
           imageY = 1.5;
           imageWidth = 4;
-          imageHeight = 3.5;
+          imageHeight = 3;
           contentX = 5;
           contentWidth = 4.5;
         } else if (layout === 'right-image') {
@@ -330,7 +330,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           imageX = 5.5;
           imageY = 1.5;
           imageWidth = 4;
-          imageHeight = 3.5;
+          imageHeight = 3;
         } else if (layout === 'centered') {
           contentX = 0.5;
           contentWidth = 9;
@@ -348,73 +348,49 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           imageHeight = 1.5;
         }
         
-        // Add bullets with improved formatting
-        const bulletPoints = slide.bullets.map(bullet => ({ text: bullet }));
+        // Add bullets with improved formatting - individual bullet formatting to avoid line break issues
+        if (slide.bullets && Array.isArray(slide.bullets) && slide.bullets.length > 0) {
+          slide.bullets.forEach((bullet, idx) => {
+            pptSlide.addText(bullet, {
+              x: contentX,
+              y: 1.5 + (idx * 0.7), // Space each bullet properly
+              w: contentWidth,
+              h: 0.6,
+              fontSize: 18,
+              color: '333333',
+              bullet: { type: 'bullet' },
+              fontFace: 'Arial',
+              lineSpacing: 32,
+              breakLine: false // Prevent automatic line breaks
+            });
+          });
+        }
         
-        pptSlide.addText(bulletPoints, {
-          x: contentX,
-          y: 1.5,
-          w: contentWidth,
-          h: layout === 'centered' ? 1.8 : 4.5,
-          fontSize: 18,
-          color: '333333',
-          bullet: { type: 'bullet' },
-          fontFace: 'Arial',
-          lineSpacing: 32
-        });
-        
-        // Add image with improved error handling
+        // Add image with improved error handling - using direct image adding
         if (slide.imageUrl) {
           try {
             console.log(`Processing image for PPTX slide ${i+1}: ${slide.imageUrl.substring(0, 50)}...`);
             
-            // Convert image URL to base64
-            let base64Image;
-            try {
-              // Handle both URLs and Data URLs properly
-              if (slide.imageUrl.startsWith('data:image')) {
-                base64Image = slide.imageUrl;
-                console.log('Using data URL directly for slide', i+1);
-              } else {
-                console.log(`Fetching image for slide ${i+1}...`);
-                base64Image = await getBase64FromUrl(slide.imageUrl);
-                console.log(`Successfully converted image to base64 for PPTX slide ${i+1}`);
-              }
-            } catch(imgError) {
-              console.error(`Failed to load image for PPTX slide ${i+1}:`, imgError);
-              
-              // Add placeholder rectangle instead
-              pptSlide.addShape(pptx.ShapeType.rect, {
-                x: imageX,
-                y: imageY,
-                w: imageWidth,
-                h: imageHeight,
-                fill: { color: 'F0F0F0' }
-              });
-              
-              pptSlide.addText('Image not available', {
-                x: imageX,
-                y: imageY + imageHeight/2 - 0.25,
-                w: imageWidth,
-                h: 0.5,
-                fontSize: 14,
-                color: '888888',
-                align: 'center',
-                fontFace: 'Arial'
-              });
-              
-              continue;
-            }
-            
-            if (base64Image) {
-              console.log(`Adding image to PPTX for slide ${i+1}`);
+            if (slide.imageUrl.startsWith('data:image')) {
+              // Directly use data URL
+              console.log('Using data URL directly for slide', i+1);
               pptSlide.addImage({
-                data: base64Image,
+                data: slide.imageUrl,
                 x: imageX,
                 y: imageY,
                 w: imageWidth,
                 h: imageHeight,
-                sizing: { type: 'contain', w: imageWidth, h: imageHeight }
+                sizing: { type: 'contain' }
+              });
+            } else {
+              // Use direct URL reference (better for PPTX)
+              pptSlide.addImage({
+                path: slide.imageUrl,
+                x: imageX,
+                y: imageY,
+                w: imageWidth,
+                h: imageHeight,
+                sizing: { type: 'contain' }
               });
             }
           } catch (err) {
@@ -503,4 +479,3 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
 };
 
 export default ExportOptions;
-

@@ -93,6 +93,10 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
         
         if (titleWords) {
           setSearchQuery(titleWords);
+          // Trigger search after a short delay
+          setTimeout(() => {
+            handleSearchImages();
+          }, 300);
         }
       }
     }
@@ -170,21 +174,30 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
     setApiKeyMissing(false);
     
     try {
+      console.log("Searching images with query:", searchQuery);
+      
       const { data, error } = await supabase.functions.invoke('search-images', {
         body: { searchQuery: searchQuery }
       });
       
-      if (error) throw new Error(error.message);
+      console.log("Search results:", data, "Error:", error);
+      
+      if (error) {
+        console.error("Function error:", error);
+        throw new Error(error.message || "An error occurred while searching for images");
+      }
       
       if (data.error) {
         // Check if the error is due to missing API key
         if (data.apiKeyMissing) {
           setApiKeyMissing(true);
+          console.error("API key missing:", data.error);
         }
         throw new Error(data.error);
       }
       
       if (data.images && Array.isArray(data.images)) {
+        console.log("Found images:", data.images.length);
         setWebImages(data.images);
         
         if (data.images.length === 0) {
@@ -212,8 +225,25 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
     
     // Convert the web image to a blob/file
     try {
+      console.log("Selected image URL:", selectedWebImage.url);
+      
+      try {
+        // Check if image is accessible with CORS
+        const testResponse = await fetch(selectedWebImage.url, { method: 'HEAD' });
+        console.log("Image HEAD response:", testResponse.status, testResponse.ok);
+      } catch (testError) {
+        console.warn("HEAD request failed, might have CORS issues:", testError);
+      }
+      
       const response = await fetch(selectedWebImage.url);
+      console.log("Image fetch response:", response.status, response.ok);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status}`);
+      }
+      
       const blob = await response.blob();
+      console.log("Image blob created:", blob.type, blob.size);
       
       // Create a file from the blob
       const filename = `unsplash-${selectedWebImage.id}.jpg`;
@@ -231,11 +261,43 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
       }
     } catch (error: any) {
       console.error("Error using web image:", error);
-      toast({
-        title: "Failed to use image",
-        description: error.message || "Failed to use the selected image. Please try again.",
-        variant: "destructive"
-      });
+      
+      // Fallback to direct URL if blob method fails
+      try {
+        console.log("Trying fallback method with direct URL");
+        
+        if (onUploadImage && selectedWebImage.url) {
+          // Create a temporary File object with the URL reference
+          const response = await fetch('/api/proxy-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl: selectedWebImage.url })
+          });
+          
+          if (!response.ok) {
+            throw new Error("Proxy fetch failed");
+          }
+          
+          const data = await response.blob();
+          const file = new File([data], `unsplash-${selectedWebImage.id}.jpg`, { type: 'image/jpeg' });
+          
+          await onUploadImage(file);
+          setSelectedWebImage(null);
+          onOpenChange(false);
+          
+          toast({
+            title: "Image added",
+            description: `Photo by ${selectedWebImage.authorName} on Unsplash`,
+          });
+        }
+      } catch (fallbackError) {
+        console.error("Fallback method also failed:", fallbackError);
+        toast({
+          title: "Failed to use image",
+          description: "We couldn't download this image. Please try another image or upload your own.",
+          variant: "destructive"
+        });
+      }
     }
   };
   

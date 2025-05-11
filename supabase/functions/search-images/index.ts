@@ -21,7 +21,7 @@ async function searchUnsplashImages(query: string, page = 1, perPage = 9) {
     throw new Error('UNSPLASH_ACCESS_KEY is empty. Please provide a valid key in your Supabase Edge Function secrets.');
   }
   
-  console.log(`search-images: Searching Unsplash with key ${accessKey.substring(0, 5)}... for query "${query}"`);
+  console.log(`search-images: Searching Unsplash with key starting with ${accessKey.substring(0, 5)}... for query "${query}"`);
 
   const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`;
   
