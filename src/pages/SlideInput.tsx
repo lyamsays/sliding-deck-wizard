@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Navbar from '../components/Navbar';
@@ -26,11 +25,30 @@ import { HelpCircle, Settings } from 'lucide-react';
 import { themes } from '@/components/themes/theme-data';
 import { Theme } from '@/components/themes/theme-types';
 
+// Add error boundary
+const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) => {
+  return (
+    <div className="p-4 m-4 bg-red-100 border border-red-400 text-red-700 rounded">
+      <p className="font-bold">Something went wrong:</p>
+      <pre className="mt-2 text-sm overflow-auto">{error.message}</pre>
+      <Button 
+        className="mt-4" 
+        onClick={resetErrorBoundary}
+        variant="destructive"
+      >
+        Try again
+      </Button>
+    </div>
+  );
+};
+
 interface SlidesResponse {
   slides: Slide[];
 }
 
 const SlideInput = () => {
+  console.log("SlideInput component rendering"); // Debug log
+  
   // Original state variables
   const [slideContent, setSlideContent] = useState('');
   const [generatedSlides, setGeneratedSlides] = useState<Slide[]>([]);
@@ -516,67 +534,104 @@ Nudge theory`;
     }
   };
 
-  return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-secondary/20">
-      <Navbar />
-      
-      {/* Help button */}
-      <div className="fixed bottom-5 right-5 z-10">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button size="icon" variant="secondary" className="rounded-full h-12 w-12 shadow-lg hover:shadow-xl transition-all">
-              <HelpCircle className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <div className="space-y-6 pt-6">
-              <h2 className="text-2xl font-semibold">Help & Settings</h2>
-              
-              <div className="space-y-4">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start" 
-                  onClick={() => setShowOnboarding(true)}
-                >
-                  <HelpCircle className="mr-2 h-4 w-4" />
-                  Show Tutorial
-                </Button>
+  // Add console logging to track component lifecycle
+  useEffect(() => {
+    console.log("SlideInput: Component mounted, user status:", user ? "Logged in" : "Not logged in");
+    
+    // Return cleanup function
+    return () => {
+      console.log("SlideInput: Component unmounting");
+    };
+  }, [user]);
+
+  // Add error handling wrapper
+  try {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-secondary/20">
+        <Navbar />
+        
+        {/* Help button */}
+        <div className="fixed bottom-5 right-5 z-10">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button size="icon" variant="secondary" className="rounded-full h-12 w-12 shadow-lg hover:shadow-xl transition-all">
+                <HelpCircle className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <div className="space-y-6 pt-6">
+                <h2 className="text-2xl font-semibold">Help & Settings</h2>
                 
-                <Button 
-                  variant={showTips ? "default" : "outline"} 
-                  className="w-full justify-start" 
-                  onClick={toggleTips}
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  {showTips ? "Disable Tips" : "Enable Tips"}
-                </Button>
+                <div className="space-y-4">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start" 
+                    onClick={() => setShowOnboarding(true)}
+                  >
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    Show Tutorial
+                  </Button>
+                  
+                  <Button 
+                    variant={showTips ? "default" : "outline"} 
+                    className="w-full justify-start" 
+                    onClick={toggleTips}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    {showTips ? "Disable Tips" : "Enable Tips"}
+                  </Button>
+                </div>
               </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+        
+        <main className="flex-1 py-12 md:py-16 px-4 container-enhanced">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8 animate-fade-in">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">
+                Turn Your Ideas Into Slides
+              </h1>
+              <p className="mt-3 text-lg text-gray-600">
+                Paste your notes or bullet points below. We'll handle the rest.
+              </p>
             </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-      
-      <main className="flex-1 py-12 md:py-16 px-4 container-enhanced">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8 animate-fade-in">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">
-              Turn Your Ideas Into Slides
-            </h1>
-            <p className="mt-3 text-lg text-gray-600">
-              Paste your notes or bullet points below. We'll handle the rest.
-            </p>
-          </div>
-          
-          {/* Wizard steps */}
-          <CreationSteps currentStep={currentCreationStep} />
-          
-          <div className="section-card animate-fade-up">
-            {showTips && (
-              <FeatureTooltip 
-                title="Create Your Presentation"
-                description="Enter your content, select your preferences, and let our AI do the work!"
-                position="right"
-              >
+            
+            {/* Wizard steps */}
+            <CreationSteps currentStep={currentCreationStep} />
+            
+            <div className="section-card animate-fade-up">
+              {showTips && (
+                <FeatureTooltip 
+                  title="Create Your Presentation"
+                  description="Enter your content, select your preferences, and let our AI do the work!"
+                  position="right"
+                >
+                  <SlideForm
+                    isGenerating={isGenerating}
+                    error={error}
+                    slideContent={slideContent}
+                    profession={profession}
+                    purpose={purpose}
+                    tone={tone}
+                    framework={framework}
+                    generationProgress={generationProgress}
+                    autoGenerateImages={autoGenerateImages}
+                    selectedTheme={selectedTheme}
+                    setSlideContent={setSlideContent}
+                    setProfession={setProfession}
+                    setPurpose={setPurpose}
+                    setTone={setTone}
+                    setFramework={setFramework}
+                    setAutoGenerateImages={setAutoGenerateImages}
+                    setSelectedTheme={setSelectedTheme}
+                    onSubmit={handleSubmit}
+                    onTryExample={handleTryExample}
+                  />
+                </FeatureTooltip>
+              )}
+              
+              {!showTips && (
                 <SlideForm
                   isGenerating={isGenerating}
                   error={error}
@@ -598,54 +653,43 @@ Nudge theory`;
                   onSubmit={handleSubmit}
                   onTryExample={handleTryExample}
                 />
-              </FeatureTooltip>
+              )}
+            </div>
+            
+            <ImageGenerationProgress
+              isGeneratingImages={isGeneratingImages}
+              imageProgress={imageProgress}
+            />
+            
+            {!isGenerating && !generatedSlides.length && !error && (
+              <p className="mt-6 text-sm text-gray-500 italic text-center">
+                Slide previews will appear here after generation.
+              </p>
             )}
             
-            {!showTips && (
-              <SlideForm
-                isGenerating={isGenerating}
-                error={error}
-                slideContent={slideContent}
-                profession={profession}
-                purpose={purpose}
-                tone={tone}
-                framework={framework}
-                generationProgress={generationProgress}
-                autoGenerateImages={autoGenerateImages}
-                selectedTheme={selectedTheme}
-                setSlideContent={setSlideContent}
-                setProfession={setProfession}
-                setPurpose={setPurpose}
-                setTone={setTone}
-                setFramework={setFramework}
-                setAutoGenerateImages={setAutoGenerateImages}
-                setSelectedTheme={setSelectedTheme}
-                onSubmit={handleSubmit}
-                onTryExample={handleTryExample}
-              />
-            )}
-          </div>
-          
-          <ImageGenerationProgress
-            isGeneratingImages={isGeneratingImages}
-            imageProgress={imageProgress}
-          />
-          
-          {!isGenerating && !generatedSlides.length && !error && (
-            <p className="mt-6 text-sm text-gray-500 italic text-center">
-              Slide previews will appear here after generation.
-            </p>
-          )}
-          
-          <GenerationProgress isGenerating={isGenerating} />
-          
-          <div ref={slidePreviewRef}>
-            {showTips && editedSlides.length > 0 ? (
-              <FeatureTooltip 
-                title="Edit Your Slides"
-                description="Click on any text to edit directly. Change view modes and customize your presentation."
-                position="top"
-              >
+            <GenerationProgress isGenerating={isGenerating} />
+            
+            <div ref={slidePreviewRef}>
+              {showTips && editedSlides.length > 0 ? (
+                <FeatureTooltip 
+                  title="Edit Your Slides"
+                  description="Click on any text to edit directly. Change view modes and customize your presentation."
+                  position="top"
+                >
+                  <SlideList
+                    editedSlides={editedSlides}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
+                    deckTitle={deckTitle}
+                    setDeckTitle={setDeckTitle}
+                    handleSave={handleSave}
+                    handleSlideUpdate={handleSlideUpdate}
+                    handleRemoveImage={handleRemoveImage}
+                    handleDownloadSlides={handleDownloadSlides}
+                    isSaving={isSaving}
+                  />
+                </FeatureTooltip>
+              ) : (
                 <SlideList
                   editedSlides={editedSlides}
                   viewMode={viewMode}
@@ -658,34 +702,24 @@ Nudge theory`;
                   handleDownloadSlides={handleDownloadSlides}
                   isSaving={isSaving}
                 />
-              </FeatureTooltip>
-            ) : (
-              <SlideList
-                editedSlides={editedSlides}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                deckTitle={deckTitle}
-                setDeckTitle={setDeckTitle}
-                handleSave={handleSave}
-                handleSlideUpdate={handleSlideUpdate}
-                handleRemoveImage={handleRemoveImage}
-                handleDownloadSlides={handleDownloadSlides}
-                isSaving={isSaving}
-              />
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </main>
-      
-      <Footer />
-      
-      {/* Onboarding modal */}
-      <OnboardingModal 
-        open={showOnboarding} 
-        onOpenChange={setShowOnboarding} 
-      />
-    </div>
-  );
+        </main>
+        
+        <Footer />
+        
+        {/* Onboarding modal */}
+        <OnboardingModal 
+          open={showOnboarding} 
+          onOpenChange={setShowOnboarding} 
+        />
+      </div>
+    );
+  } catch (err) {
+    console.error("Error in SlideInput render:", err);
+    return <ErrorFallback error={err instanceof Error ? err : new Error("Unknown error occurred")} resetErrorBoundary={() => window.location.reload()} />;
+  }
 };
 
 export default SlideInput;
