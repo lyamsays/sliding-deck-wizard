@@ -46,7 +46,7 @@ const SlideGrid: React.FC<SlideGridProps> = ({
     return 'right-image';
   };
   
-  // Enhance slides with theme information if not already present
+  // Enhance slides with theme information if not already present and ensure readability
   const optimizedSlides = editedSlides.map((slide, index) => {
     // Get theme data if a theme is specified
     const slideTheme = slide.style?.colorScheme ? 
@@ -67,11 +67,16 @@ const SlideGrid: React.FC<SlideGridProps> = ({
     
     // Apply theme styles if a theme is specified
     if (slideTheme) {
-      // Only override properties that aren't already set
+      // Set theme properties but ensure text contrast is good
+      const isLightBg = isLightBackground(slideTheme.background);
+      
       optimizedSlide.style = {
         ...optimizedSlide.style,
         backgroundColor: optimizedSlide.style.backgroundColor || slideTheme.background,
-        textColor: optimizedSlide.style.textColor || slideTheme.textColor,
+        textColor: ensureReadableTextColor(
+          optimizedSlide.style.backgroundColor || slideTheme.background,
+          optimizedSlide.style.textColor || slideTheme.textColor
+        ),
         accentColor: optimizedSlide.style.accentColor || slideTheme.accentColor,
         titleFont: optimizedSlide.style.titleFont || slideTheme.titleFont,
         bodyFont: optimizedSlide.style.bodyFont || slideTheme.bodyFont,
@@ -81,6 +86,57 @@ const SlideGrid: React.FC<SlideGridProps> = ({
     
     return optimizedSlide;
   });
+  
+  // Helper function to determine if a background color is light
+  function isLightBackground(bgColor: string): boolean {
+    // For gradients or complex backgrounds, make a best guess
+    if (bgColor.includes('gradient') || bgColor.includes('rgba')) {
+      // Check for predominantly dark colors in the string
+      const hasDarkColors = [
+        'black', '#000', '#111', '#222', '#333', '#444',
+        'rgb(0,', 'rgb(1,', 'rgb(2,', 'rgb(3,', 'rgb(4,',
+        'rgba(0,', 'rgba(1,', 'rgba(2,', 'rgba(3,', 'rgba(4,'
+      ].some(dark => bgColor.includes(dark));
+      
+      return !hasDarkColors;
+    }
+    
+    // For hex colors
+    if (bgColor.startsWith('#')) {
+      const hex = bgColor.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16) || 200;
+      const g = parseInt(hex.substring(2, 4), 16) || 200;
+      const b = parseInt(hex.substring(4, 6), 16) || 200;
+      
+      // Calculate perceived brightness using the formula: (R * 299 + G * 587 + B * 114) / 1000
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 125; // threshold for light/dark
+    }
+    
+    // Default to assuming light background
+    return true;
+  }
+
+  // Helper function to ensure text is readable on the background
+  function ensureReadableTextColor(bgColor: string, textColor: string): string {
+    // Default text colors based on background
+    const isLight = isLightBackground(bgColor);
+    
+    // If no text color specified, pick appropriate default
+    if (!textColor) {
+      return isLight ? '#333333' : '#FFFFFF';
+    }
+    
+    // Simple check for dark text on dark background or light text on light background
+    const isTextDark = !isLightBackground(textColor);
+    
+    // If both background and text are light or both are dark, fix it
+    if ((isLight && isTextDark === false) || (!isLight && isTextDark === true)) {
+      return isLight ? '#333333' : '#FFFFFF';
+    }
+    
+    return textColor;
+  }
 
   // Masonry grid container style for visual interest
   const containerClass = viewMode === 'outline' 

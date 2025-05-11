@@ -15,8 +15,8 @@ const Features = () => {
       description: "Our AI automatically recommends the perfect layout and visual theme based on your content type and purpose."
     },
     {
-      title: "Professional templates for any presentation",
-      description: "We use a collection of professional templates to ensure your presentations always look polished and well-designed."
+      title: "Professional templates for slide creation",
+      description: "We use professional templates to ensure your presentations always look polished and well-designed."
     },
     {
       title: "Simple export to PDF and PowerPoint",
@@ -39,18 +39,18 @@ const Features = () => {
           </p>
         </div>
 
-        <div className="mt-16">
+        <div className="mt-16 space-y-16">
           {featureItems.map((feature, index) => (
-            <div key={index} className="mb-16 border-b border-gray-200 pb-12 last:border-0">
-              <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-                <div className="lg:col-span-12">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-start">
-                    <Check className="text-primary mr-2 h-6 w-6 flex-shrink-0 mt-1" />
-                    {feature.title}
-                  </h2>
-                  <p className="text-lg text-gray-600">
-                    {feature.description}
-                  </p>
+            <div key={index} className="bg-white rounded-lg shadow-lg p-8 border border-gray-100">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Check className="text-primary h-6 w-6" />
+                  </div>
+                </div>
+                <div className="ml-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{feature.title}</h2>
+                  <p className="text-lg text-gray-600">{feature.description}</p>
                 </div>
               </div>
             </div>

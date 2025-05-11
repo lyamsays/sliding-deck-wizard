@@ -18,6 +18,54 @@ const SlideContent: React.FC<SlideContentProps> = ({
   textColor = '#333333',
   accentColor = '#6E59A5'
 }) => {
+  // Ensure text is readable by enforcing contrast with background
+  const ensureReadableText = (bgColor: string, txtColor: string) => {
+    // Default to dark text for light backgrounds and light text for dark backgrounds
+    if (!txtColor) {
+      // Simple brightness calculation (0-255)
+      const isLightBg = getBrightness(bgColor) > 160;
+      return isLightBg ? '#333333' : '#FFFFFF';
+    }
+    
+    // If contrast is poor, enforce better defaults
+    if (getContrast(bgColor, txtColor) < 4.5) {
+      const isLightBg = getBrightness(bgColor) > 160;
+      return isLightBg ? '#333333' : '#FFFFFF';
+    }
+    
+    return txtColor;
+  };
+  
+  // Calculate brightness (0-255) - higher values are lighter
+  const getBrightness = (color: string) => {
+    // Handle background colors like linear gradients
+    if (color.includes('linear-gradient') || color.includes('rgba')) {
+      return 200; // Assume light background for gradients
+    }
+    
+    // Convert hex to RGB
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) || 200;
+    const g = parseInt(hex.substring(2, 4), 16) || 200;
+    const b = parseInt(hex.substring(4, 6), 16) || 200;
+    
+    return (r * 299 + g * 587 + b * 114) / 1000;
+  };
+  
+  // Calculate contrast ratio
+  const getContrast = (bg: string, txt: string) => {
+    const bgBrightness = getBrightness(bg);
+    const txtBrightness = getBrightness(txt);
+    
+    return Math.abs((bgBrightness - txtBrightness) / 255);
+  };
+  
+  // Get background color
+  const backgroundColor = slide.style?.backgroundColor || '#F1F0FB';
+  
+  // Enforce readable colors
+  const readableTextColor = ensureReadableText(backgroundColor, textColor);
+  
   // If we have an image, display it instead of the icon
   const iconName = slide.style?.iconType || "FileText";
   const IconComponent = (LucideIcons as any)[iconName] || LucideIcons.FileText;
@@ -27,8 +75,13 @@ const SlideContent: React.FC<SlideContentProps> = ({
       <img 
         src={slide.imageUrl} 
         alt={slide.title} 
-        className="object-cover w-full h-full"
+        className="object-cover w-full h-full rounded-lg border border-gray-200"
         crossOrigin="anonymous"
+        onError={(e) => {
+          // Fallback for image errors
+          e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpolyline points='21 15 16 10 5 21'%3E%3C/polyline%3E%3C/svg%3E";
+          e.currentTarget.classList.add("bg-gray-100");
+        }}
       />
     </div>
   ) : (
@@ -39,7 +92,7 @@ const SlideContent: React.FC<SlideContentProps> = ({
   
   // Style for bullet points
   const bulletStyle = {
-    color: textColor,
+    color: readableTextColor,
   };
   
   // Style for bullet markers
@@ -50,8 +103,8 @@ const SlideContent: React.FC<SlideContentProps> = ({
   // Add speaker notes display if available - now with proper export hiding
   const speakerNotesElement = slide.speakerNotes ? (
     <div className="mt-4 pt-4 border-t border-dashed border-gray-200 slide-ui-elements-not-for-export">
-      <p className="text-sm font-medium" style={{ color: textColor }}>Speaker Notes:</p>
-      <p className="text-sm italic" style={{ color: textColor }}>
+      <p className="text-sm font-medium" style={{ color: readableTextColor }}>Speaker Notes:</p>
+      <p className="text-sm italic" style={{ color: readableTextColor }}>
         {slide.speakerNotes}
       </p>
     </div>
