@@ -82,18 +82,24 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
         return url;
       }
       
-      // For external URLs, fetch the image
-      const response = await fetch(url, {
-        mode: 'cors',
+      console.log(`Fetching image from URL: ${url}`);
+      
+      // For external URLs, fetch the image with proper CORS handling
+      const response = await fetch(url, { 
+        mode: 'no-cors', // Try with no-cors to prevent CORS issues
         cache: 'no-cache',
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache',
           'Expires': '0',
         }
+      }).catch(async (error) => {
+        console.error("Error in first fetch attempt:", error);
+        // Fall back to regular fetch if no-cors fails
+        return fetch(url);
       });
       
-      if (!response.ok) {
+      if (!response.ok && response.type !== 'opaque') {
         throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
       }
       
@@ -213,9 +219,15 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
             // Handle image conversion with proper error handling
             let imgData;
             try {
-              console.log(`Fetching image for slide ${i+1}...`);
-              imgData = await getBase64FromUrl(slide.imageUrl);
-              console.log(`Successfully converted image to base64 for slide ${i+1}`);
+              // Handle both URLs and Data URLs properly
+              if (slide.imageUrl.startsWith('data:image')) {
+                imgData = slide.imageUrl;
+                console.log('Using data URL directly for slide', i+1);
+              } else {
+                console.log(`Fetching image for slide ${i+1}...`);
+                imgData = await getBase64FromUrl(slide.imageUrl);
+                console.log(`Successfully converted image to base64 for slide ${i+1}`);
+              }
             } catch(imgError) {
               console.error(`Failed to load image for slide ${i+1}:`, imgError);
               // Add error placeholder instead of failing
@@ -229,6 +241,7 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
             }
             
             if (imgData) {
+              console.log(`Adding image to PDF for slide ${i+1}`);
               // For centered layout, place image below text
               if (layout === 'centered') {
                 pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight, undefined, 'FAST');
