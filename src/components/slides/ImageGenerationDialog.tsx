@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -53,6 +52,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
   const [selectedWebImage, setSelectedWebImage] = useState<WebImage | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [recommendedTab, setRecommendedTab] = useState<string | null>(null);
+  const [apiKeyMissing, setApiKeyMissing] = useState(false);
 
   // Logic to determine recommended tab based on slide content
   useEffect(() => {
@@ -60,8 +60,9 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
 
     const analyzeSlideContent = () => {
       const title = slide.title?.toLowerCase() || '';
-      const content = slide.content?.toLowerCase() || '';
-      const combinedContent = title + ' ' + content;
+      const slideContent = slide.content?.toLowerCase() || '';
+      const bullets = Array.isArray(slide.bullets) ? slide.bullets.join(' ').toLowerCase() : '';
+      const combinedContent = title + ' ' + bullets + ' ' + slideContent;
       
       // Keywords that suggest real photos might be better
       const realPhotoKeywords = [
@@ -214,6 +215,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
     setIsSearching(true);
     setWebImages([]);
     setSelectedWebImage(null);
+    setApiKeyMissing(false);
     
     try {
       const { data, error } = await supabase.functions.invoke('search-images', {
@@ -222,7 +224,13 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
       
       if (error) throw new Error(error.message);
       
-      if (data.error) throw new Error(data.error);
+      if (data.error) {
+        // Check if the error is due to missing API key
+        if (data.error.includes('API key is not configured')) {
+          setApiKeyMissing(true);
+        }
+        throw new Error(data.error);
+      }
       
       if (data.images && Array.isArray(data.images)) {
         setWebImages(data.images);
@@ -293,6 +301,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
       setSearchQuery('');
       setWebImages([]);
       setSelectedWebImage(null);
+      setApiKeyMissing(false);
     }
     onOpenChange(open);
   };
@@ -470,6 +479,20 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
                   </div>
                 )}
                 
+                {apiKeyMissing && (
+                  <div className="p-4 mt-2 bg-amber-50 text-amber-700 rounded-md border border-amber-200">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-5 w-5 mt-0.5 text-amber-500" />
+                      <div>
+                        <p className="font-medium">Unsplash API key is missing</p>
+                        <p className="text-sm mt-1">
+                          The administrator needs to set up the Unsplash API key in the Supabase Edge Function secrets.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {!isSearching && webImages.length > 0 && (
                   <div className="grid grid-cols-3 gap-2 mt-4">
                     {webImages.map((image) => (
@@ -493,7 +516,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
                   </div>
                 )}
                 
-                {!isSearching && webImages.length === 0 && searchQuery.trim() !== '' && (
+                {!isSearching && webImages.length === 0 && searchQuery.trim() !== '' && !apiKeyMissing && (
                   <div className="text-center py-8">
                     <p className="text-gray-500">No images found. Try a different search term.</p>
                   </div>
@@ -538,7 +561,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
                 disabled={!selectedWebImage}
                 className="w-full"
               >
-                <ImageIcon className="h-4 w-4 mr-2" />
+                <FileImage className="h-4 w-4 mr-2" />
                 Use Selected Image
               </Button>
             </DialogFooter>

@@ -3,3 +3,6 @@ project_id = "awlelfnpflmbuiflcntr"
 
 [functions.generate-slides]
 verify_jwt = false
+
+[functions.search-images]
+verify_jwt = false
