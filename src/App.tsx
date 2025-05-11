@@ -14,6 +14,19 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 
+// New page imports
+import Features from "./pages/Features";
+import HowItWorksPage from "./pages/HowItWorksPage";
+import PricingPage from "./pages/PricingPage";
+import FAQPage from "./pages/FAQPage";
+import AboutPage from "./pages/AboutPage";
+import BlogPage from "./pages/BlogPage";
+import CareersPage from "./pages/CareersPage";
+import ContactPage from "./pages/ContactPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsOfServicePage from "./pages/TermsOfServicePage";
+import SecurityPage from "./pages/SecurityPage";
+
 // Create a new QueryClient with more conservative settings
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,6 +60,24 @@ const App = () => {
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/my-decks" element={<MyDecks />} />
                 <Route path="/themes" element={<Themes />} />
+                
+                {/* Product routes */}
+                <Route path="/features" element={<Features />} />
+                <Route path="/how-it-works" element={<HowItWorksPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/faq" element={<FAQPage />} />
+                
+                {/* Company routes */}
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/blog" element={<BlogPage />} />
+                <Route path="/careers" element={<CareersPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                
+                {/* Legal routes */}
+                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+                <Route path="/security" element={<SecurityPage />} />
+                
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
