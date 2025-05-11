@@ -32,7 +32,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const getSlideElements = (): HTMLElement[] => {
     console.log("Looking for slide elements to export...");
     
-    // First, try to find elements with the preferred ID format
+    // First, try to find elements with the id format 'slide-{index}'
     const slideElements = Array.from(editedSlides.keys())
       .map(index => document.getElementById(`slide-${index}`))
       .filter(element => element !== null) as HTMLElement[];
@@ -42,74 +42,56 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       return slideElements;
     }
     
-    // If that fails, look for StyledSlide components which are the cards containing our slides
-    console.log("No slide-{index} IDs found, looking for card elements...");
-    const slideCards = Array.from(document.querySelectorAll('.card-enhanced'));
+    // As a backup, try finding by data attribute
+    console.log("No slide-{index} IDs found, looking for data-slide-index attributes...");
+    const slidesByData = Array.from(document.querySelectorAll('[data-slide-index]')) as HTMLElement[];
     
-    if (slideCards.length > 0) {
-      console.log(`Found ${slideCards.length} slide cards`);
-      return slideCards as HTMLElement[];
+    if (slidesByData.length > 0) {
+      console.log(`Found ${slidesByData.length} slides with data-slide-index attributes`);
+      // Sort them by index
+      slidesByData.sort((a, b) => {
+        const indexA = parseInt(a.getAttribute('data-slide-index') || '0');
+        const indexB = parseInt(b.getAttribute('data-slide-index') || '0');
+        return indexA - indexB;
+      });
+      return slidesByData;
     }
-
+    
     // Last resort: look for any card elements that might contain our slides
-    console.log("Looking for any card elements...");
-    const cards = Array.from(document.querySelectorAll('.card'));
+    console.log("Looking for card-enhanced elements...");
+    const cards = Array.from(document.querySelectorAll('.card-enhanced')) as HTMLElement[];
     
     if (cards.length > 0) {
-      console.log(`Found ${cards.length} generic card elements`);
-      return cards as HTMLElement[];
+      console.log(`Found ${cards.length} card-enhanced elements`);
+      return cards;
     }
     
     console.warn("No slide elements found in the DOM!");
     return [];
   };
   
-  // Capture a DOM element as canvas
+  // Capture a DOM element as canvas with improved settings
   const captureElement = async (element: HTMLElement): Promise<HTMLCanvasElement> => {
     console.log(`Capturing element: ${element.id || 'unnamed element'}`);
+    
     try {
-      // Clone the element to avoid modifying the original
-      const clonedElement = element.cloneNode(true) as HTMLElement;
-      
-      // Create a temporary container with proper dimensions
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.top = '-9999px';
-      container.style.width = `${element.offsetWidth}px`;
-      container.style.height = `${element.offsetHeight}px`;
-      
-      // Append cloned element to maintain styles
-      container.appendChild(clonedElement);
-      document.body.appendChild(container);
-      
-      // Capture with html2canvas
-      const canvas = await html2canvas(clonedElement, {
+      // Use html2canvas with optimized settings for better quality
+      const canvas = await html2canvas(element, {
         allowTaint: true,
-        useCORS: true,
+        useCORS: true, // Important for cross-origin images
         scale: 2, // Higher quality
         logging: true,
         backgroundColor: null,
-        onclone: (clonedDoc) => {
-          // Find and fix any elements that might cause issues
-          const imgs = clonedDoc.querySelectorAll('img');
-          imgs.forEach(img => {
-            img.crossOrigin = 'anonymous';
-            // Force image to be loaded by setting src again
-            const currentSrc = img.src;
-            if (currentSrc) {
-              img.src = currentSrc;
-            }
-          });
-        }
+        scrollX: -window.scrollX,
+        scrollY: -window.scrollY,
+        windowWidth: document.documentElement.offsetWidth,
+        windowHeight: document.documentElement.offsetHeight
       });
-      
-      // Clean up
-      document.body.removeChild(container);
       
       return canvas;
     } catch (error) {
       console.error('Error capturing element:', error);
+      
       // Create a simple canvas with error message as fallback
       const canvas = document.createElement('canvas');
       canvas.width = element.offsetWidth || 800;
@@ -326,7 +308,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
     }
   };
   
-  // Helper function to convert hex color to RGB (reused from original)
+  // Helper function to convert hex color to RGB
   const hexToRgb = (hex: string) => {
     // Default fallback color
     if (!hex || hex.includes('gradient')) return { r: 100, g: 100, b: 255 };
