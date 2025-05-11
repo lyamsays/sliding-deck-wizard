@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader, Sparkles, Palette, ArrowRight, ArrowLeft } from "lucide-react";
+import { Loader, Sparkles, Palette, ArrowRight, ArrowLeft, Upload } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -291,25 +291,28 @@ const SlideForm: React.FC<SlideFormProps> = ({
             className="space-y-6"
           >
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-semibold">Step 2: Content Input</h2>
+              <h2 className="text-2xl font-semibold text-center">Step 2: Content Input</h2>
               <p className="text-gray-500 mt-1">Now, let's add your presentation content</p>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 w-full">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 w-full max-w-3xl mx-auto">
               <div className="flex justify-between items-center mb-3">
                 <label className="text-sm text-gray-500">Content</label>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={onTryExample}
-                  size="sm"
-                  className="text-xs flex items-center gap-1"
-                  disabled={isGenerating}
-                >
-                  <Sparkles className="h-3 w-3" />
-                  Try Example
-                </Button>
+                <div className="flex space-x-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={onTryExample}
+                    size="sm"
+                    className="text-xs flex items-center gap-1"
+                    disabled={isGenerating}
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    Try Example
+                  </Button>
+                </div>
               </div>
+
               <Textarea 
                 className="min-h-[300px] w-full bg-white border-0 resize-none focus-visible:ring-1 focus-visible:ring-primary text-base md:text-lg"
                 placeholder="Paste your content here... (bullet points, notes, or paragraphs)"
@@ -318,11 +321,11 @@ const SlideForm: React.FC<SlideFormProps> = ({
                 disabled={isGenerating}
               />
               
-              <div className="mt-3 text-xs text-gray-500">
-                <p>Enter your presentation content here</p>
+              <div className="mt-3 text-xs text-gray-500 text-center">
+                <p>You can paste text directly or upload a PDF/DOCX file</p>
               </div>
               
-              <div className="flex items-center gap-2 mt-4">
+              <div className="flex items-center gap-2 mt-4 justify-center">
                 <input 
                   type="checkbox" 
                   id="auto-generate-images" 
@@ -336,7 +339,7 @@ const SlideForm: React.FC<SlideFormProps> = ({
               </div>
             </div>
             
-            <div className="flex justify-between pt-4">
+            <div className="flex justify-between pt-4 max-w-3xl mx-auto">
               <Button 
                 type="button" 
                 variant="outline" 
