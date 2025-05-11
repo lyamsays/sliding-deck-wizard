@@ -27,7 +27,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  // Improved helper function to convert image URLs to base64 format
+  // Enhanced helper function to convert image URLs to base64 format
   const getBase64FromUrl = async (url: string): Promise<string> => {
     try {
       // If URL is already base64, return it as is
@@ -35,10 +35,10 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         return url;
       }
       
-      // For external URLs, use a proxy or direct fetch when possible
+      // For external URLs, use a direct fetch
       const response = await fetch(url, { 
-        mode: 'cors',
-        cache: 'no-cache'
+        mode: 'no-cors',
+        cache: 'force-cache'
       });
       
       if (!response.ok) {
@@ -63,11 +63,18 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const handleExportPDF = async () => {
     try {
       setIsExporting(true);
+      
+      // Initialize jsPDF with higher quality settings
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true
       });
+      
+      // Add a professional font
+      pdf.addFont("helvetica", "helvetica", "normal");
+      pdf.setFont("helvetica");
       
       // PDF dimensions
       const width = pdf.internal.pageSize.getWidth();
@@ -81,80 +88,81 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           pdf.addPage();
         }
         
-        // Add slide background color
-        if (slide.style?.backgroundColor) {
-          // For gradient backgrounds, use a light color
-          pdf.setFillColor(240, 240, 245);
-          pdf.rect(0, 0, width, height, 'F');
-        } else {
-          pdf.setFillColor('#ffffff');
-          pdf.rect(0, 0, width, height, 'F');
-        }
+        // Add slide background color (use a professional light blue background)
+        pdf.setFillColor(245, 248, 252);  // Light blue-gray background
+        pdf.rect(0, 0, width, height, 'F');
         
-        // Add slide title
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(24);
-        pdf.setTextColor('#000000');
+        // Add slide title with enhanced formatting
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(26);
+        pdf.setTextColor('#1a365d'); // Dark blue color for title
         pdf.text(slide.title, width / 2, 20, { align: 'center' });
-        
-        // Add slide content
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(14);
         
         // Determine layout for content positioning
         const layout = slide.style?.layout || 'right-image';
-        let textX, textWidth;
+        let textX, textWidth, imgX, imgWidth = 70, imgHeight = 50;
         
         if (layout === 'left-image') {
-          textX = width / 2;
-          textWidth = width / 2 - 10;
+          imgX = 20;
+          textX = width / 2 + 5;
+          textWidth = width / 2 - 25;
         } else if (layout === 'right-image') {
           textX = 20;
-          textWidth = width / 2 - 10;
-        } else {
-          // Centered or title-focus layout
+          textWidth = width / 2 - 25;
+          imgX = width / 2 + 10;
+        } else if (layout === 'centered') {
           textX = 20;
           textWidth = width - 40;
+          imgX = (width - imgWidth) / 2;
+        } else {
+          // title-focus layout
+          textX = 20;
+          textWidth = width - 40;
+          imgX = width - imgWidth - 20;
         }
         
-        // Add bullets with better positioning based on layout
-        let y = 35;
+        // Add bullets with better formatting and positioning
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(14);
+        pdf.setTextColor('#333333'); // Dark gray for better readability
+        
+        let y = 40; // Start bullets further down
         for (const bullet of slide.bullets) {
-          pdf.text('• ' + bullet, textX, y, { maxWidth: textWidth });
-          y += 10;
+          const bulletText = '• ' + bullet;
+          const lines = pdf.splitTextToSize(bulletText, textWidth);
+          pdf.text(lines, textX, y);
+          y += 8 * lines.length; // Dynamic spacing based on text wrapping
         }
         
-        // Add image if available
+        // Add image with improved positioning and error handling
         if (slide.imageUrl) {
           try {
-            // Convert image URL to base64
+            // Pre-load image to ensure it's fully loaded
             const imgData = await getBase64FromUrl(slide.imageUrl);
             
             if (imgData) {
-              const imgWidth = 60;
-              const imgHeight = 60;
-              let imgX;
-              
-              if (layout === 'left-image') {
-                imgX = 20;
-              } else if (layout === 'right-image') {
-                imgX = width - imgWidth - 20;
-              } else if (layout === 'centered') {
-                imgX = (width - imgWidth) / 2;
+              // For centered layout, place image below text
+              if (layout === 'centered') {
+                pdf.addImage(imgData, 'JPEG', imgX, y + 10, imgWidth, imgHeight, undefined, 'FAST');
               } else {
-                imgX = width - imgWidth - 20;
+                // For other layouts, place image to the side
+                pdf.addImage(imgData, 'JPEG', imgX, 40, imgWidth, imgHeight, undefined, 'FAST');
               }
-              
-              pdf.addImage(imgData, 'JPEG', imgX, height - imgHeight - 20, imgWidth, imgHeight);
             }
           } catch (err) {
             console.error('Error adding image to PDF:', err);
+            // Continue with export even if image fails
           }
         }
         
         // Add slide number
         pdf.setFontSize(10);
-        pdf.text(`Slide ${i + 1}/${editedSlides.length}`, width - 20, height - 10, { align: 'right' });
+        pdf.setTextColor('#666666');
+        pdf.text(`${i + 1}/${editedSlides.length}`, width - 20, height - 10, { align: 'right' });
+        
+        // Add footer with deck title
+        pdf.setFontSize(8);
+        pdf.text(`${deckTitle || 'Presentation'}`, 20, height - 10);
       }
       
       pdf.save(`${deckTitle || 'presentation'}.pdf`);
@@ -175,46 +183,63 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
     }
   };
 
-  // Improved PowerPoint export with better image handling
+  // Improved PowerPoint export with better image handling and formatting
   const handleExportPPTX = async () => {
     try {
       setIsExporting(true);
       const pptx = new PptxGenJS();
       
-      // Set presentation properties
+      // Set presentation properties and improved default styling
       pptx.author = 'SlideMaker AI';
+      pptx.company = 'Created with SlideMaker AI';
       pptx.title = deckTitle || 'Presentation';
       
-      // Process all slides
+      // Set the master slide with consistent professional styling
+      pptx.defineSlideMaster({
+        title: 'MASTER_SLIDE',
+        background: { color: "F5F8FC" },
+        objects: [
+          { 'rect': { x: 0, y: 0, w: '100%', h: '100%', fill: { color: "F5F8FC" } } },
+          { 'text': { 
+            text: deckTitle || 'Presentation', 
+            options: { x: 0.5, y: 6.8, w: '100%', align: 'left', fontSize: 10, color: '666666' } 
+          }}
+        ]
+      });
+      
+      // Process all slides with improved styling
       for (let i = 0; i < editedSlides.length; i++) {
         const slide = editedSlides[i];
         const layout = slide.style?.layout || 'right-image';
         
-        // Create slide
-        const pptSlide = pptx.addSlide();
+        // Create slide using master
+        const pptSlide = pptx.addSlide({ masterName: 'MASTER_SLIDE' });
         
-        // Set slide background - using a consistent professional background
-        pptSlide.background = { color: "F1F5F9" };
+        // Add slide number to bottom right
+        pptSlide.addText(`${i + 1}/${editedSlides.length}`, {
+          x: 9.5, y: 6.8, w: 0.5, h: 0.3, fontSize: 10, color: '666666', align: 'right'
+        });
         
-        // Add slide title
+        // Add slide title with improved styling
         pptSlide.addText(slide.title, {
           x: 0.5,
           y: 0.5,
-          w: '90%',
+          w: 9.0,
           h: 0.8,
-          fontSize: 24,
+          fontSize: 28,
           bold: true,
-          align: 'left',
-          color: '000000'
+          color: '1a365d', // Dark blue for title
+          fontFace: 'Arial'
         });
         
         // Determine content layout based on image position
-        let contentX, contentWidth, imageX, imageY, imageWidth;
+        let contentX, contentWidth, imageX, imageY, imageWidth, imageHeight;
         
         if (layout === 'left-image') {
           imageX = 0.5;
           imageY = 1.5;
           imageWidth = 4;
+          imageHeight = 3;
           contentX = 5;
           contentWidth = 4.5;
         } else if (layout === 'right-image') {
@@ -223,12 +248,14 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           imageX = 5.5;
           imageY = 1.5;
           imageWidth = 4;
+          imageHeight = 3;
         } else if (layout === 'centered') {
           contentX = 0.5;
           contentWidth = 9;
           imageX = 3;
-          imageY = 4.5;
+          imageY = 3.5;
           imageWidth = 4;
+          imageHeight = 2.5;
         } else {
           // title-focus layout
           contentX = 0.5;
@@ -236,6 +263,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           imageX = 7;
           imageY = 1.5;
           imageWidth = 2.5;
+          imageHeight = 2;
         }
         
         // Add bullets with improved formatting
@@ -245,13 +273,15 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           x: contentX,
           y: 1.5,
           w: contentWidth,
-          h: 4,
+          h: layout === 'centered' ? 1.8 : 4,
           fontSize: 16,
-          color: '000000',
-          bullet: { type: 'bullet' }
+          color: '333333', // Dark gray text for readability
+          bullet: { type: 'bullet' },
+          fontFace: 'Arial',
+          lineSpacing: 28 // Increased line spacing for readability
         });
         
-        // Add image if available with improved error handling
+        // Add image with improved error handling
         if (slide.imageUrl) {
           try {
             // Convert image URL to base64
@@ -263,57 +293,33 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
                 x: imageX,
                 y: imageY,
                 w: imageWidth,
-                h: 3
+                h: imageHeight,
+                sizing: { type: 'contain', w: imageWidth, h: imageHeight }
               });
-            } else {
-              throw new Error('Image data is empty');
             }
           } catch (err) {
             console.error('Error adding image to PPTX:', err);
             
-            // If image fails, add a placeholder with icon
+            // If image fails, add a placeholder text
             pptSlide.addShape(pptx.ShapeType.rect, {
               x: imageX,
               y: imageY,
               w: imageWidth,
-              h: 3,
-              fill: { color: 'F2F2F2' }
+              h: imageHeight,
+              fill: { color: 'F0F0F0' }
             });
             
-            // Add icon suggestion as text
-            if (slide.style?.iconType) {
-              pptSlide.addText(slide.style.iconType, {
-                x: imageX,
-                y: imageY + 1,
-                w: imageWidth,
-                h: 1,
-                fontSize: 12,
-                color: '666666',
-                align: 'center',
-                valign: 'middle'
-              });
-            }
+            pptSlide.addText('Image placeholder', {
+              x: imageX,
+              y: imageY + imageHeight/2 - 0.5,
+              w: imageWidth,
+              h: 1,
+              fontSize: 14,
+              color: '888888',
+              align: 'center',
+              fontFace: 'Arial'
+            });
           }
-        } else if (slide.style?.iconType) {
-          // Add a placeholder with icon type text
-          pptSlide.addShape(pptx.ShapeType.rect, {
-            x: imageX,
-            y: imageY,
-            w: imageWidth,
-            h: 3,
-            fill: { color: 'F2F2F2' }
-          });
-          
-          pptSlide.addText(slide.style.iconType, {
-            x: imageX,
-            y: imageY + 1,
-            w: imageWidth,
-            h: 1,
-            fontSize: 12,
-            color: '666666',
-            align: 'center',
-            valign: 'middle'
-          });
         }
         
         // Add speaker notes if available

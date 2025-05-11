@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -74,7 +73,7 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
     window.print();
   };
 
-  // Improved helper function to convert image URLs to base64 format
+  // Enhanced helper function to convert image URLs to base64 format
   const getBase64FromUrl = async (url: string): Promise<string> => {
     try {
       // If URL is already base64, return it as is
@@ -82,10 +81,10 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
         return url;
       }
       
-      // For external URLs, use a proxy or direct fetch when possible
+      // For external URLs, use a direct fetch with cache
       const response = await fetch(url, { 
-        mode: 'cors',
-        cache: 'no-cache'
+        mode: 'no-cors',
+        cache: 'force-cache'
       });
       
       if (!response.ok) {
@@ -109,11 +108,18 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
   const handleDownloadPDF = async () => {
     try {
       setIsPdfExporting(true);
+      
+      // Initialize jsPDF with higher quality settings
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true
       });
+      
+      // Add a professional font
+      pdf.addFont("helvetica", "helvetica", "normal");
+      pdf.setFont("helvetica");
       
       // PDF dimensions
       const width = pdf.internal.pageSize.getWidth();
@@ -127,65 +133,66 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
           pdf.addPage();
         }
         
-        // Add slide background color - use a simple solid color instead of trying to render gradients
-        pdf.setFillColor(240, 240, 245); // Light blue-gray that looks professional
+        // Add slide background color (use a professional light blue background)
+        pdf.setFillColor(245, 248, 252);  // Light blue-gray background
         pdf.rect(0, 0, width, height, 'F');
         
-        // Add slide title
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(24);
-        pdf.setTextColor('#000000');
+        // Add slide title with enhanced formatting
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(26);
+        pdf.setTextColor('#1a365d'); // Dark blue color for title
         pdf.text(slide.title, width / 2, 20, { align: 'center' });
-        
-        // Add slide content
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(14);
         
         // Determine layout for content positioning
         const layout = slide.style?.layout || 'right-image';
-        let textX, textWidth;
+        let textX, textWidth, imgX, imgWidth = 70, imgHeight = 50;
         
         if (layout === 'left-image') {
-          textX = width / 2;
-          textWidth = width / 2 - 10;
+          imgX = 20;
+          textX = width / 2 + 5;
+          textWidth = width / 2 - 25;
         } else if (layout === 'right-image') {
           textX = 20;
-          textWidth = width / 2 - 10;
-        } else {
-          // Centered or title-focus layout
+          textWidth = width / 2 - 25;
+          imgX = width / 2 + 10;
+        } else if (layout === 'centered') {
           textX = 20;
           textWidth = width - 40;
+          imgX = (width - imgWidth) / 2;
+        } else {
+          // title-focus layout
+          textX = 20;
+          textWidth = width - 40;
+          imgX = width - imgWidth - 20;
         }
         
-        // Add bullets with better positioning based on layout
-        let y = 35;
+        // Add bullets with better formatting and positioning
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(14);
+        pdf.setTextColor('#333333'); // Dark gray for better readability
+        
+        let y = 40; // Start bullets further down
         for (const bullet of slide.bullets) {
-          pdf.text('• ' + bullet, textX, y, { maxWidth: textWidth });
-          y += 10;
+          const bulletText = '• ' + bullet;
+          const lines = pdf.splitTextToSize(bulletText, textWidth);
+          pdf.text(lines, textX, y);
+          y += 8 * lines.length; // Dynamic spacing based on text wrapping
         }
         
-        // Add image if available with improved error handling
+        // Add image with improved positioning and error handling
         if (slide.imageUrl) {
           try {
-            // Convert image URL to base64
+            // Pre-load image to ensure it's fully loaded
             const imgData = await getBase64FromUrl(slide.imageUrl);
             
             if (imgData) {
-              const imgWidth = 60;
-              const imgHeight = 60;
-              let imgX;
-              
-              if (layout === 'left-image') {
-                imgX = 20;
-              } else if (layout === 'right-image') {
-                imgX = width - imgWidth - 20;
-              } else if (layout === 'centered') {
-                imgX = (width - imgWidth) / 2;
+              // For centered layout, place image below text
+              if (layout === 'centered') {
+                pdf.addImage(imgData, 'JPEG', imgX, y + 10, imgWidth, imgHeight, undefined, 'FAST');
               } else {
-                imgX = width - imgWidth - 20;
+                // For other layouts, place image to the side
+                pdf.addImage(imgData, 'JPEG', imgX, 40, imgWidth, imgHeight, undefined, 'FAST');
               }
-              
-              pdf.addImage(imgData, 'JPEG', imgX, height - imgHeight - 20, imgWidth, imgHeight);
             }
           } catch (err) {
             console.error('Error adding image to PDF:', err);
@@ -195,7 +202,12 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
         
         // Add slide number
         pdf.setFontSize(10);
-        pdf.text(`Slide ${i + 1}/${currentDeck.slides.length}`, width - 20, height - 10, { align: 'right' });
+        pdf.setTextColor('#666666');
+        pdf.text(`${i + 1}/${currentDeck.slides.length}`, width - 20, height - 10, { align: 'right' });
+        
+        // Add footer with deck title
+        pdf.setFontSize(8);
+        pdf.text(`${currentDeck.title || 'Presentation'}`, 20, height - 10);
       }
       
       pdf.save(`${currentDeck.title || 'presentation'}.pdf`);
@@ -323,6 +335,7 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
                             src={slide.imageUrl} 
                             alt={slide.title} 
                             className={`object-cover ${layout === 'centered' ? 'w-64 h-64' : 'max-w-xs'}`}
+                            crossOrigin="anonymous"
                           />
                         </div>
                       ) : (
