@@ -3,7 +3,7 @@ import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Button } from "@/components/ui/button";
-import { Flask } from 'lucide-react';
+import { Beaker } from 'lucide-react';
 
 const AboutPage = () => {
   return (
@@ -37,12 +37,12 @@ const AboutPage = () => {
             <div className="my-12 bg-white rounded-xl shadow-sm p-6">
               <div className="flex flex-col items-center md:flex-row md:items-start md:space-x-6">
                 <div className="bg-purple-50 rounded-lg p-4 flex items-center justify-center mb-4 md:mb-0">
-                  <Flask className="h-10 w-10 text-purple-600" />
+                  <Beaker className="h-10 w-10 text-purple-600" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-xl mb-2">No Templates or Drag-and-Drop</h3>
+                  <h3 className="font-bold text-xl mb-2">Professional Templates Available</h3>
                   <p className="text-gray-600">
-                    Unlike traditional tools, there's no need to wrestle with templates or spend time on manual layout adjustments.
+                    Choose from our collection of professional templates to create stunning presentations quickly and efficiently.
                   </p>
                 </div>
               </div>
