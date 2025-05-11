@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Slide } from '@/types/deck';
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
@@ -38,6 +37,10 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const { toast } = useToast();
   const backgroundColor = slide.style?.backgroundColor || '#F1F0FB';
+  const textColor = slide.style?.textColor || '#333333';
+  const accentColor = slide.style?.accentColor || '#6E59A5';
+  const titleFont = slide.style?.titleFont || '"Inter", sans-serif';
+  const bodyFont = slide.style?.bodyFont || '"Inter", sans-serif';
   
   // Ensure layout is one of the allowed types
   const layout = slide.style?.layout || 'right-image';
@@ -241,12 +244,25 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
     });
   };
 
+  // Create a style object for the slide container
+  const slideStyle = {
+    backgroundColor,
+    color: textColor,
+    fontFamily: bodyFont
+  };
+  
+  // Create a style object for the slide title
+  const titleStyle = {
+    color: textColor,
+    fontFamily: titleFont
+  };
+
   return (
     <Card 
       className="overflow-hidden border border-gray-200 transition-shadow hover:shadow-md"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      style={{ backgroundColor }}
+      style={slideStyle}
     >
       <CardHeader className="p-0">
         <SlideHeader
@@ -256,6 +272,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
           onTitleChange={handleTitleChange}
           onLayoutChange={handleLayoutChange}
           onCopySlide={handleCopySlide}
+          titleStyle={titleStyle}
         />
       </CardHeader>
       <CardContent className="pt-6">
@@ -263,12 +280,14 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
           slide={slide}
           layout={layout as any}
           handleBulletChange={handleBulletChange}
+          textColor={textColor}
+          accentColor={accentColor}
         />
       </CardContent>
       
       <CardFooter className="border-t border-gray-100 pt-4 mt-4 flex justify-between items-center flex-wrap gap-2">
-        <div className="flex items-start text-sm text-gray-600 max-w-[55%]">
-          <Image className="h-4 w-4 mr-2 mt-1 flex-shrink-0" />
+        <div className="flex items-start text-sm max-w-[55%]" style={{ color: textColor }}>
+          <Image className="h-4 w-4 mr-2 mt-1 flex-shrink-0" style={{ color: accentColor }} />
           <span className="line-clamp-2">
             <strong>Visual:</strong> {slide.revisedPrompt || slide.visualSuggestion || "Add an image to this slide"}
           </span>
@@ -281,6 +300,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
           onOpenEditDialog={() => setIsEditDialogOpen(true)}
           onEditImage={handleEditImage}
           onRemoveImage={onRemoveImage}
+          accentColor={accentColor}
         />
       </CardFooter>
       

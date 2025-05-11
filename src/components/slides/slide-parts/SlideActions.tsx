@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Image, Trash2, Crop, RefreshCw, Wand } from "lucide-react";
 import { Slide } from '@/types/deck';
+import { Button } from "@/components/ui/button";
+import { Wand2, Image, MessageSquare, PencilRuler, Trash2 } from 'lucide-react';
 
 interface SlideActionsProps {
   slide: Slide;
@@ -11,6 +11,7 @@ interface SlideActionsProps {
   onOpenEditDialog: () => void;
   onEditImage: () => void;
   onRemoveImage?: () => void;
+  accentColor?: string;
 }
 
 const SlideActions: React.FC<SlideActionsProps> = ({
@@ -19,63 +20,56 @@ const SlideActions: React.FC<SlideActionsProps> = ({
   onOpenImageDialog,
   onOpenEditDialog,
   onEditImage,
-  onRemoveImage
+  onRemoveImage,
+  accentColor = '#6E59A5'
 }) => {
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex gap-2">
       <Button
-        variant="outline"
         size="sm"
+        variant="outline"
+        className="flex gap-1 items-center text-xs h-8"
         onClick={onOpenEditDialog}
-        className="flex-shrink-0"
       >
-        <Wand className="h-4 w-4 mr-2" />
-        Edit with AI
+        <Wand2 className="h-3.5 w-3.5" style={{ color: accentColor }} />
+        <span>Edit with AI</span>
       </Button>
       
-      {slide.imageUrl && (
+      {slide.imageUrl ? (
+        <>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex gap-1 items-center text-xs h-8"
+            onClick={onEditImage}
+          >
+            <PencilRuler className="h-3.5 w-3.5" style={{ color: accentColor }} />
+            <span>Edit Image</span>
+          </Button>
+          
+          {onRemoveImage && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex gap-1 items-center text-xs h-8"
+              onClick={onRemoveImage}
+            >
+              <Trash2 className="h-3.5 w-3.5 text-red-500" />
+            </Button>
+          )}
+        </>
+      ) : (
         <Button
-          variant="outline"
           size="sm"
-          onClick={onEditImage}
-          className="flex-shrink-0"
+          variant="outline"
+          className="flex gap-1 items-center text-xs h-8"
+          onClick={onOpenImageDialog}
+          disabled={isGeneratingImage}
         >
-          <Crop className="h-4 w-4 mr-2" />
-          Edit Image
+          <Image className="h-3.5 w-3.5" style={{ color: accentColor }} />
+          <span>{isGeneratingImage ? 'Generating...' : 'Change Image'}</span>
         </Button>
       )}
-      
-      {slide.imageUrl && onRemoveImage && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onRemoveImage}
-          className="flex-shrink-0"
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Remove Image
-        </Button>
-      )}
-      
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onOpenImageDialog}
-        disabled={isGeneratingImage}
-        className="flex-shrink-0"
-      >
-        {isGeneratingImage ? (
-          <>
-            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-            Generating...
-          </>
-        ) : (
-          <>
-            <Image className="h-4 w-4 mr-2" />
-            {slide.imageUrl ? "Change Image" : "Add Image"}
-          </>
-        )}
-      </Button>
     </div>
   );
 };

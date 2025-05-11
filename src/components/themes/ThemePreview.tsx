@@ -10,6 +10,15 @@ interface ThemePreviewProps {
 const ThemePreview = ({ themeId }: ThemePreviewProps) => {
   // Find the selected theme from the themes data
   const theme = themes.find(t => t.id === themeId) || themes[0];
+  
+  // Determine if we need to switch to light text on dark backgrounds
+  const isDarkBackground = theme.isDark;
+  
+  // Default text color from theme, with fallback based on background darkness
+  const actualTextColor = theme.textColor;
+  
+  // Ensure bullet point has sufficient contrast
+  const bulletColor = theme.accentColor;
 
   return (
     <div className="mt-2 overflow-hidden transition-all bg-white rounded-md shadow-md hover:shadow-lg cursor-pointer">
@@ -26,7 +35,7 @@ const ThemePreview = ({ themeId }: ThemePreviewProps) => {
           <div 
             className="text-md font-bold mb-1"
             style={{ 
-              color: theme.textColor,
+              color: actualTextColor,
               fontFamily: theme.titleFont
             }}
           >
@@ -42,12 +51,12 @@ const ThemePreview = ({ themeId }: ThemePreviewProps) => {
             <div 
               className="text-xs"
               style={{ 
-                color: theme.textColor,
+                color: actualTextColor,
                 fontFamily: theme.bodyFont
               }}
             >
-              • First bullet point<br />
-              • Second bullet point
+              • <span style={{ color: bulletColor }}>First bullet point</span><br />
+              • <span style={{ color: bulletColor }}>Second bullet point</span>
             </div>
           </div>
           

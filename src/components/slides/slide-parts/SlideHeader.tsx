@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Copy, ChevronLeft, ChevronRight, GalleryVertical, GalleryHorizontal, LayoutGrid, LayoutList } from "lucide-react";
-import * as LucideIcons from 'lucide-react';
+import { ChevronLeftCircle, ChevronRightCircle, Copy } from 'lucide-react';
 
 interface SlideHeaderProps {
   title: string;
@@ -11,6 +9,7 @@ interface SlideHeaderProps {
   onTitleChange: (e: React.FormEvent<HTMLHeadingElement>) => void;
   onLayoutChange: (direction: 'next' | 'previous') => void;
   onCopySlide: () => void;
+  titleStyle?: React.CSSProperties;
 }
 
 const SlideHeader: React.FC<SlideHeaderProps> = ({
@@ -19,74 +18,55 @@ const SlideHeader: React.FC<SlideHeaderProps> = ({
   isHovering,
   onTitleChange,
   onLayoutChange,
-  onCopySlide
+  onCopySlide,
+  titleStyle = {}
 }) => {
-  // Get the layout icon based on current layout
-  const getLayoutIcon = () => {
-    switch(layout) {
-      case 'left-image':
-        return <GalleryVertical className="h-4 w-4" />;
-      case 'right-image':
-        return <GalleryHorizontal className="h-4 w-4" />;
-      case 'centered':
-        return <LayoutGrid className="h-4 w-4" />;
-      case 'title-focus':
-        return <LayoutList className="h-4 w-4" />;
-      default:
-        return <LayoutGrid className="h-4 w-4" />;
-    }
-  };
-  
   return (
-    <div className={`pb-3 flex flex-row justify-between items-center border-b border-gray-100`}>
-      <h3 
-        className="text-xl font-bold text-gray-800"
-        contentEditable
-        suppressContentEditableWarning
-        onBlur={onTitleChange}
-        role="textbox"
-        aria-label="Slide title"
-      >
-        {title}
-      </h3>
-      <div className="flex items-center space-x-2">
-        <div className={`flex items-center transition-opacity ${isHovering ? 'opacity-100' : 'opacity-0'}`}>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => onLayoutChange('previous')}
-            title="Previous layout"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">Previous layout</span>
-          </Button>
-          
-          <div className="flex items-center px-1">
-            {getLayoutIcon()}
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => onLayoutChange('next')}
-            title="Next layout"
-          >
-            <ChevronRight className="h-4 w-4" />
-            <span className="sr-only">Next layout</span>
-          </Button>
-        </div>
-        
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={onCopySlide}
-          className={`transition-opacity ${isHovering ? 'opacity-100' : 'opacity-0'}`}
-          title="Copy slide content"
+    <div className="relative">
+      <div className="relative px-6 py-6">
+        <h3
+          className="text-xl font-bold focus:outline-none"
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={onTitleChange}
+          role="textbox"
+          aria-label="Slide title"
+          style={titleStyle}
         >
-          <Copy className="h-4 w-4" />
-          <span className="sr-only">Copy slide</span>
-        </Button>
+          {title}
+        </h3>
+
+        {/* Layout controls - visible when hovering */}
+        {isHovering && (
+          <div className="absolute top-6 right-6 flex gap-1.5">
+            <button
+              onClick={() => onLayoutChange('previous')}
+              className="bg-white/90 p-1 rounded-full hover:bg-gray-100 transition-colors"
+              title="Previous layout"
+            >
+              <ChevronLeftCircle className="h-5 w-5 text-gray-700" />
+            </button>
+            <button
+              onClick={() => onCopySlide()}
+              className="bg-white/90 p-1 rounded-full hover:bg-gray-100 transition-colors"
+              title="Copy slide content"
+            >
+              <Copy className="h-5 w-5 text-gray-700" />
+            </button>
+            <button
+              onClick={() => onLayoutChange('next')}
+              className="bg-white/90 p-1 rounded-full hover:bg-gray-100 transition-colors"
+              title="Next layout"
+            >
+              <ChevronRightCircle className="h-5 w-5 text-gray-700" />
+            </button>
+          </div>
+        )}
       </div>
+      <div 
+        className="absolute top-0 left-0 right-0 h-1.5 z-10" 
+        style={{ background: 'linear-gradient(to right, #6e59a5, #9b87f5)' }} 
+      />
     </div>
   );
 };

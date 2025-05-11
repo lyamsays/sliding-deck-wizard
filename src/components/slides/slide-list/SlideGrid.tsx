@@ -4,6 +4,7 @@ import { Slide } from '@/types/deck';
 import OutlineSlide from '@/components/slides/OutlineSlide';
 import StyledSlide from '@/components/slides/StyledSlide';
 import { motion } from 'framer-motion';
+import { themes } from '@/components/themes/theme-data';
 
 interface SlideGridProps {
   editedSlides: Slide[];
@@ -45,20 +46,40 @@ const SlideGrid: React.FC<SlideGridProps> = ({
     return 'right-image';
   };
   
-  // Use the slides directly without transforming them
-  // This is important - we want to respect the style settings from SlideInput.tsx
+  // Enhance slides with theme information if not already present
   const optimizedSlides = editedSlides.map((slide, index) => {
+    // Get theme data if a theme is specified
+    const slideTheme = slide.style?.colorScheme ? 
+      themes.find(t => t.id === slide.style?.colorScheme) : null;
+    
+    // Create a new slide object with optimized style settings
+    const optimizedSlide = { ...slide };
+    
+    // Initialize style object if it doesn't exist
+    if (!optimizedSlide.style) {
+      optimizedSlide.style = {};
+    }
+    
     // Only set layout if not already manually set by user
-    if (!slide.style?.layout) {
-      return {
-        ...slide,
-        style: {
-          ...slide.style,
-          layout: optimizeSlideLayout(slide, index),
-        }
+    if (!optimizedSlide.style.layout) {
+      optimizedSlide.style.layout = optimizeSlideLayout(slide, index);
+    }
+    
+    // Apply theme styles if a theme is specified
+    if (slideTheme) {
+      // Only override properties that aren't already set
+      optimizedSlide.style = {
+        ...optimizedSlide.style,
+        backgroundColor: optimizedSlide.style.backgroundColor || slideTheme.background,
+        textColor: optimizedSlide.style.textColor || slideTheme.textColor,
+        accentColor: optimizedSlide.style.accentColor || slideTheme.accentColor,
+        titleFont: optimizedSlide.style.titleFont || slideTheme.titleFont,
+        bodyFont: optimizedSlide.style.bodyFont || slideTheme.bodyFont,
+        cardDesign: optimizedSlide.style.cardDesign || slideTheme.cardDesign
       };
     }
-    return slide;
+    
+    return optimizedSlide;
   });
 
   // Masonry grid container style for visual interest
