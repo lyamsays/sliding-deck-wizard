@@ -18,9 +18,6 @@ const SlideGrid: React.FC<SlideGridProps> = ({
   handleSlideUpdate, 
   handleRemoveImage 
 }) => {
-  // Use a consistent professional background color for all slides
-  const professionalBackground = 'linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%)';
-  
   // Determine optimal layout for each slide based on content
   const optimizeSlideLayout = (slide: Slide, index: number): 'left-image' | 'right-image' | 'centered' | 'title-focus' => {
     // If slide has image, optimize layout based on content
@@ -48,20 +45,18 @@ const SlideGrid: React.FC<SlideGridProps> = ({
     return 'right-image';
   };
   
-  // Apply the consistent background and intelligent layout to all slides
+  // Apply intelligent layout to slides while preserving theme settings
   const optimizedSlides = editedSlides.map((slide, index) => {
     // Only set layout if not already manually set by user
     const layout = slide.style?.layout || optimizeSlideLayout(slide, index);
     
     // Make sure all slides have a style object with necessary properties
+    // but preserve existing style properties from the theme
     return {
       ...slide,
       style: {
         ...slide.style,
-        backgroundColor: professionalBackground,
         layout: layout,
-        // Ensure we have a color scheme for exports
-        colorScheme: slide.style?.colorScheme || 'professional'
       }
     };
   });

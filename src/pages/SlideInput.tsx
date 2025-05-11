@@ -110,13 +110,15 @@ const SlideInput = () => {
   }, [user]);
   
   useEffect(() => {
-    // When generatedSlides updates, update editedSlides
+    // When generatedSlides updates, update editedSlides and apply selected theme
     if (generatedSlides.length > 0) {
+      console.log("SlideInput: Applying theme to slides. Selected theme:", selectedTheme);
       // Find the selected theme from themes array
       const themeData = themes.find(theme => theme.id === selectedTheme) || themes.find(theme => theme.id === 'creme')!;
+      console.log("SlideInput: Theme data found:", themeData.name);
       
       // Add style properties to each slide based on the selected theme
-      const styledSlides = generatedSlides.map(slide => ({
+      const styledSlides = generatedSlides.map((slide, index) => ({
         ...slide,
         style: {
           backgroundColor: themeData.background,
@@ -132,11 +134,15 @@ const SlideInput = () => {
       }));
       
       setEditedSlides(styledSlides);
+      console.log("SlideInput: Styled slides set with theme properties");
       
-      // Always generate images automatically for all slides
-      setTimeout(() => {
-        generateAllImages();
-      }, 500);
+      // Call image generation if autoGenerateImages is enabled
+      if (autoGenerateImages) {
+        console.log("SlideInput: Auto image generation is enabled, will generate images after delay");
+        setTimeout(() => {
+          generateAllImages();
+        }, 500);
+      }
     }
   }, [generatedSlides, selectedTheme]);
   
@@ -145,6 +151,7 @@ const SlideInput = () => {
     console.log("SlideInput: Form submitted for slide generation");
     console.log("SlideInput: Selected options - Profession:", profession, "Purpose:", purpose, "Tone:", tone, "Framework:", framework);
     console.log("SlideInput: Selected theme:", selectedTheme);
+    console.log("SlideInput: Auto-generate images:", autoGenerateImages);
     
     // Save the selected theme to localStorage
     localStorage.setItem('selectedTheme', selectedTheme);
@@ -195,7 +202,7 @@ const SlideInput = () => {
           tone: tone,
           framework: profession === "Consultant" ? framework : undefined,
           themeId: selectedTheme,
-          autoGenerateImages: true // Add flag to indicate images should be auto-generated
+          autoGenerateImages: autoGenerateImages // This flag explicitly sent to the function
         }
       });
       
@@ -361,6 +368,7 @@ const SlideInput = () => {
       return;
     }
     
+    console.log("SlideInput: Starting automatic image generation for all slides");
     const slidesWithSuggestions = editedSlides.filter(slide => slide.visualSuggestion);
     
     if (slidesWithSuggestions.length === 0) {
@@ -394,6 +402,8 @@ const SlideInput = () => {
           continue;
         }
         
+        console.log(`SlideInput: Generating image for slide ${i}: ${slide.title}`);
+        
         // Create a refined prompt for image generation with more emphasis on professional design
         const imagePrompt = `Create a professional presentation slide visual about "${slide.title}". ${slide.visualSuggestion}. Make it suitable for a business presentation, clean and minimal style with ample white space, no text in the image, elegant professional look, high-quality visual.`;
         
@@ -412,6 +422,7 @@ const SlideInput = () => {
         }
         
         const { imageUrl, revisedPrompt } = data;
+        console.log(`SlideInput: Successfully generated image for slide ${i}`);
         
         updatedSlides[i] = {
           ...slide,

@@ -11,6 +11,11 @@ export interface Slide {
     layout?: 'left-image' | 'right-image' | 'centered' | 'title-focus';
     iconType?: string;
     colorScheme?: string;
+    accentColor?: string;
+    textColor?: string;
+    titleFont?: string;
+    bodyFont?: string;
+    cardDesign?: string;
   };
   cropData?: {
     x: number;
