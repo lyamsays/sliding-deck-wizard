@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Slide } from '@/types/deck';
 import OutlineSlide from '@/components/slides/OutlineSlide';
@@ -123,23 +124,31 @@ const SlideGrid: React.FC<SlideGridProps> = ({
           className="card-enhanced hover-lift transition-all duration-300 overflow-hidden"
           variants={slideVariants}
           whileHover={{ scale: 1.02, boxShadow: "0 10px 25px rgba(0,0,0,0.08)" }}
-          id={`slide-${index}`} // Explicit ID added for export capture
+          id={`slide-${index}`} // Explicit ID for export capture
           data-slide-index={index} // Additional data attribute for backup
         >
-          {viewMode === 'outline' ? (
-            <OutlineSlide 
-              slide={slide} 
-              index={index} 
-              onSlideUpdate={handleSlideUpdate} 
-            />
-          ) : (
-            <StyledSlide 
-              slide={slide} 
-              index={index} 
-              onSlideUpdate={handleSlideUpdate}
-              onRemoveImage={() => handleRemoveImage(index)}
-            />
-          )}
+          {/* The slide content itself, which will be exported */}
+          <div className="slide-content-for-export">
+            {viewMode === 'outline' ? (
+              <OutlineSlide 
+                slide={slide} 
+                index={index} 
+                onSlideUpdate={handleSlideUpdate} 
+              />
+            ) : (
+              <StyledSlide 
+                slide={slide} 
+                index={index} 
+                onSlideUpdate={handleSlideUpdate}
+                onRemoveImage={() => handleRemoveImage(index)}
+              />
+            )}
+          </div>
+          
+          {/* UI elements that should not be exported */}
+          <div className="slide-ui-elements-not-for-export">
+            {/* Any UI controls or recommendations would go here */}
+          </div>
         </motion.div>
       ))}
     </motion.div>

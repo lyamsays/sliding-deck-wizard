@@ -36,7 +36,7 @@ const SlideList: React.FC<SlideListProps> = ({
   }
   
   return (
-    <div className="mt-12 md:mt-16 space-y-6 animate-fade-up">
+    <div className="mt-12 md:mt-16 space-y-6 animate-fade-up" id="slide-list-container">
       <SlideHeader 
         viewMode={viewMode}
         setViewMode={setViewMode}

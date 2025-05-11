@@ -28,69 +28,83 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  // Improved function to find slide elements to export
-  const getSlideElements = (): HTMLElement[] => {
-    console.log("Looking for slide elements to export...");
+  // Enhanced function to find slide elements for export
+  // This now targets only the actual slide content, not UI elements
+  const getSlideContentElements = (): {element: HTMLElement, slide: Slide}[] => {
+    console.log("Looking for slide content to export...");
     
-    // First, try to find elements with the id format 'slide-{index}'
-    const slideElements = Array.from(editedSlides.keys())
-      .map(index => document.getElementById(`slide-${index}`))
-      .filter(element => element !== null) as HTMLElement[];
+    // First, try to find slide elements by ID
+    const slideElements = editedSlides.map((slide, index) => {
+      const slideElement = document.getElementById(`slide-${index}`);
+      if (!slideElement) return null;
       
+      // Find the slide content within the slide (exclude UI elements)
+      // Either get specific slide-content-for-export or the StyledSlide/OutlineSlide directly
+      const slideContentElement = 
+        slideElement.querySelector('.slide-content-for-export') || 
+        slideElement;
+      
+      if (!slideContentElement) return null;
+      
+      return {
+        element: slideContentElement as HTMLElement,
+        slide: slide
+      };
+    }).filter(item => item !== null) as {element: HTMLElement, slide: Slide}[];
+    
     if (slideElements.length > 0) {
-      console.log(`Found ${slideElements.length} slides with ID format 'slide-{index}'`);
+      console.log(`Found ${slideElements.length} slide content elements to export`);
       return slideElements;
     }
     
-    // As a backup, try finding by data attribute
-    console.log("No slide-{index} IDs found, looking for data-slide-index attributes...");
-    const slidesByData = Array.from(document.querySelectorAll('[data-slide-index]')) as HTMLElement[];
-    
-    if (slidesByData.length > 0) {
-      console.log(`Found ${slidesByData.length} slides with data-slide-index attributes`);
-      // Sort them by index
-      slidesByData.sort((a, b) => {
-        const indexA = parseInt(a.getAttribute('data-slide-index') || '0');
-        const indexB = parseInt(b.getAttribute('data-slide-index') || '0');
-        return indexA - indexB;
-      });
-      return slidesByData;
-    }
-    
-    // Last resort: look for any card elements that might contain our slides
-    console.log("Looking for card-enhanced elements...");
-    const cards = Array.from(document.querySelectorAll('.card-enhanced')) as HTMLElement[];
-    
-    if (cards.length > 0) {
-      console.log(`Found ${cards.length} card-enhanced elements`);
-      return cards;
-    }
-    
-    console.warn("No slide elements found in the DOM!");
+    console.warn("No slide content elements found in the DOM!");
     return [];
   };
   
-  // Capture a DOM element as canvas with improved settings
-  const captureElement = async (element: HTMLElement): Promise<HTMLCanvasElement> => {
-    console.log(`Capturing element: ${element.id || 'unnamed element'}`);
+  // Improved capture function to create clean slide images
+  const captureSlideContent = async (element: HTMLElement): Promise<HTMLCanvasElement> => {
+    console.log(`Capturing slide content`);
     
     try {
+      // Before capturing, hide any UI elements that shouldn't be in the export
+      const uiElementsToHide = element.querySelectorAll('.slide-ui-elements-not-for-export, .recommendation-ui, button, .slide-actions');
+      const originalDisplayValues: { element: Element; value: string }[] = [];
+      
+      // Store original display values and hide elements
+      uiElementsToHide.forEach(el => {
+        originalDisplayValues.push({
+          element: el,
+          value: (el as HTMLElement).style.display
+        });
+        (el as HTMLElement).style.display = 'none';
+      });
+      
       // Use html2canvas with optimized settings for better quality
       const canvas = await html2canvas(element, {
         allowTaint: true,
         useCORS: true, // Important for cross-origin images
         scale: 2, // Higher quality
-        logging: true,
         backgroundColor: null,
-        scrollX: -window.scrollX,
-        scrollY: -window.scrollY,
-        windowWidth: document.documentElement.offsetWidth,
-        windowHeight: document.documentElement.offsetHeight
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: element.offsetWidth || 800,
+        windowHeight: element.offsetHeight || 600,
+        // Don't include UI elements like recommendation buttons
+        ignoreElements: (el) => {
+          return el.classList.contains('slide-ui-elements-not-for-export') || 
+                 el.classList.contains('recommendation-ui') ||
+                 el.tagName === 'BUTTON';
+        }
+      });
+      
+      // Restore original display values
+      originalDisplayValues.forEach(item => {
+        (item.element as HTMLElement).style.display = item.value;
       });
       
       return canvas;
     } catch (error) {
-      console.error('Error capturing element:', error);
+      console.error('Error capturing slide content:', error);
       
       // Create a simple canvas with error message as fallback
       const canvas = document.createElement('canvas');
@@ -114,17 +128,17 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       setIsExporting(true);
       toast({
         title: "Preparing PDF export",
-        description: "Capturing slides from preview..."
+        description: "Capturing slides for export..."
       });
       
-      // Find all slide elements
-      const slideElements = getSlideElements();
+      // Find all slide content elements
+      const slideContentItems = getSlideContentElements();
       
-      if (slideElements.length === 0) {
-        throw new Error("No slide elements found to export");
+      if (slideContentItems.length === 0) {
+        throw new Error("No slide content found to export");
       }
       
-      console.log(`Found ${slideElements.length} slide elements to export as PDF`);
+      console.log(`Found ${slideContentItems.length} slides to export as PDF`);
       
       // Initialize PDF with presentation formatting
       const pdf = new jsPDF({
@@ -139,7 +153,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       const pageHeight = pdf.internal.pageSize.getHeight();
       
       // Process all slides
-      for (let i = 0; i < slideElements.length; i++) {
+      for (let i = 0; i < slideContentItems.length; i++) {
         // Add new page for all slides except the first
         if (i > 0) {
           pdf.addPage();
@@ -148,12 +162,12 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         // Notify progress
         toast({
           title: "Exporting slides",
-          description: `Processing slide ${i + 1} of ${slideElements.length}...`,
+          description: `Processing slide ${i + 1} of ${slideContentItems.length}...`,
         });
         
         try {
-          // Capture the slide as a canvas
-          const canvas = await captureElement(slideElements[i]);
+          // Capture the slide content as a canvas (excluding UI elements)
+          const canvas = await captureSlideContent(slideContentItems[i].element);
           
           // Convert to image data
           const imgData = canvas.toDataURL('image/png');
@@ -174,6 +188,12 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
             imgWidth * ratio,
             imgHeight * ratio
           );
+          
+          // Add slide title at bottom as reference if needed
+          const slideTitle = slideContentItems[i].slide?.title || `Slide ${i + 1}`;
+          pdf.setFontSize(8);
+          pdf.setTextColor(150, 150, 150);
+          pdf.text(slideTitle, pageWidth - 10, pageHeight - 5, { align: 'right' });
           
           console.log(`Added slide ${i + 1} to PDF`);
           
@@ -211,17 +231,17 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       setIsExporting(true);
       toast({
         title: "Preparing PowerPoint export",
-        description: "Capturing slides from preview..."
+        description: "Capturing slides for export..."
       });
       
-      // Find all slide elements
-      const slideElements = getSlideElements();
+      // Find all slide content elements
+      const slideContentItems = getSlideContentElements();
       
-      if (slideElements.length === 0) {
-        throw new Error("No slide elements found to export");
+      if (slideContentItems.length === 0) {
+        throw new Error("No slide content found to export");
       }
       
-      console.log(`Found ${slideElements.length} slide elements to export as PPTX`);
+      console.log(`Found ${slideContentItems.length} slides to export as PPTX`);
       
       // Create new PptxGenJS instance
       const pptx = new PptxGenJS();
@@ -233,16 +253,16 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       pptx.layout = 'LAYOUT_16x9';
       
       // Process all slides
-      for (let i = 0; i < slideElements.length; i++) {
+      for (let i = 0; i < slideContentItems.length; i++) {
         // Notify progress
         toast({
           title: "Exporting slides",
-          description: `Processing slide ${i + 1} of ${slideElements.length}...`,
+          description: `Processing slide ${i + 1} of ${slideContentItems.length}...`,
         });
         
         try {
-          // Capture the slide as a canvas
-          const canvas = await captureElement(slideElements[i]);
+          // Capture the slide content as a canvas (excluding UI elements)
+          const canvas = await captureSlideContent(slideContentItems[i].element);
           
           // Convert to image data
           const imgData = canvas.toDataURL('image/png');
@@ -260,13 +280,13 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           });
           
           // Add slide title and number as notes
-          const slideTitle = editedSlides[i]?.title || `Slide ${i + 1}`;
+          const slideTitle = slideContentItems[i].slide?.title || `Slide ${i + 1}`;
           pptSlide.addNotes(`Title: ${slideTitle}`);
-          pptSlide.addNotes(`Slide ${i + 1} of ${slideElements.length}`);
+          pptSlide.addNotes(`Slide ${i + 1} of ${slideContentItems.length}`);
           
           // Add speaker notes if available
-          if (editedSlides[i]?.speakerNotes) {
-            pptSlide.addNotes(`Speaker Notes: ${editedSlides[i].speakerNotes}`);
+          if (slideContentItems[i].slide?.speakerNotes) {
+            pptSlide.addNotes(`Speaker Notes: ${slideContentItems[i].slide.speakerNotes}`);
           }
           
           console.log(`Added slide ${i + 1} to PPTX`);
