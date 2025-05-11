@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { 
@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label";
 import { themes } from '@/components/themes/theme-data';
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import ThemePreview from '@/components/themes/ThemePreview';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface MetadataStepProps {
   profession: string;
@@ -52,6 +54,7 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
 }) => {
   const navigate = useNavigate();
   const showFrameworkOption = profession === "Consultant";
+  const [showThemePreview, setShowThemePreview] = useState(true);
 
   // Framework options for consultants
   const frameworkOptions = [
@@ -127,29 +130,40 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
         
         <div className="space-y-3">
           <label className="text-sm font-medium">Theme</label>
-          <div className="flex gap-2">
-            <Select value={selectedTheme} onValueChange={setSelectedTheme}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select theme" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {themes.map((theme) => (
-                    <SelectItem key={theme.id} value={theme.id}>
-                      {theme.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <Button 
-              variant="outline" 
-              type="button" 
-              onClick={() => navigate('/themes')}
-              className="whitespace-nowrap"
+          <div className="flex flex-col space-y-2">
+            <Collapsible
+              open={showThemePreview}
+              onOpenChange={setShowThemePreview}
+              className="w-full"
             >
-              Browse Themes
-            </Button>
+              <div className="flex gap-2">
+                <Select value={selectedTheme} onValueChange={setSelectedTheme}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {themes.map((theme) => (
+                        <SelectItem key={theme.id} value={theme.id}>
+                          {theme.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  type="button" 
+                  onClick={() => navigate('/themes')}
+                  className="whitespace-nowrap"
+                >
+                  Browse Themes
+                </Button>
+              </div>
+              <CollapsibleContent className="mt-2">
+                <ThemePreview themeId={selectedTheme} />
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         </div>
         
