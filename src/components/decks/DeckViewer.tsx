@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -73,7 +74,7 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
     window.print();
   };
 
-  // Enhanced helper function to convert image URLs to base64 format
+  // Improved helper function to convert image URLs to base64 format
   const getBase64FromUrl = async (url: string): Promise<string> => {
     try {
       // If URL is already base64, return it as is
@@ -81,16 +82,8 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
         return url;
       }
       
-      // For external URLs, use a direct fetch with cache
-      const response = await fetch(url, { 
-        mode: 'no-cors',
-        cache: 'force-cache'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.status}`);
-      }
-      
+      // For external URLs, fetch the image
+      const response = await fetch(url);
       const blob = await response.blob();
       
       return new Promise((resolve, reject) => {
@@ -101,7 +94,7 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
       });
     } catch (error) {
       console.error("Error converting image to base64:", error);
-      return ''; // Return empty string on error rather than throwing
+      throw error;
     }
   };
 
@@ -109,16 +102,16 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
     try {
       setIsPdfExporting(true);
       
-      // Initialize jsPDF with higher quality settings
+      // Import fonts for better text rendering
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
         format: 'a4',
-        compress: true
+        compress: true,
+        putOnlyUsedFonts: true,
       });
       
-      // Add a professional font
-      pdf.addFont("helvetica", "helvetica", "normal");
+      // Add professional looking fonts
       pdf.setFont("helvetica");
       
       // PDF dimensions
@@ -133,14 +126,14 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
           pdf.addPage();
         }
         
-        // Add slide background color (use a professional light blue background)
-        pdf.setFillColor(245, 248, 252);  // Light blue-gray background
+        // Add slide background color
+        pdf.setFillColor(245, 248, 252);
         pdf.rect(0, 0, width, height, 'F');
         
         // Add slide title with enhanced formatting
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(26);
-        pdf.setTextColor('#1a365d'); // Dark blue color for title
+        pdf.setTextColor('#1a365d');
         pdf.text(slide.title, width / 2, 20, { align: 'center' });
         
         // Determine layout for content positioning
@@ -169,34 +162,42 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
         // Add bullets with better formatting and positioning
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(14);
-        pdf.setTextColor('#333333'); // Dark gray for better readability
+        pdf.setTextColor('#333333');
         
         let y = 40; // Start bullets further down
         for (const bullet of slide.bullets) {
           const bulletText = '• ' + bullet;
           const lines = pdf.splitTextToSize(bulletText, textWidth);
           pdf.text(lines, textX, y);
-          y += 8 * lines.length; // Dynamic spacing based on text wrapping
+          y += 8 * lines.length;
         }
         
-        // Add image with improved positioning and error handling
+        // Add image with proper error handling and loading
         if (slide.imageUrl) {
           try {
-            // Pre-load image to ensure it's fully loaded
-            const imgData = await getBase64FromUrl(slide.imageUrl);
+            console.log(`Processing image for PDF slide ${i+1}: ${slide.imageUrl.substring(0, 50)}...`);
+            
+            // Handle image conversion with proper error handling
+            let imgData;
+            try {
+              imgData = await getBase64FromUrl(slide.imageUrl);
+              console.log(`Successfully converted image to base64 for PDF slide ${i+1}`);
+            } catch(imgError) {
+              console.error(`Failed to load image for PDF slide ${i+1}:`, imgError);
+              continue;
+            }
             
             if (imgData) {
               // For centered layout, place image below text
               if (layout === 'centered') {
-                pdf.addImage(imgData, 'JPEG', imgX, y + 10, imgWidth, imgHeight, undefined, 'FAST');
+                pdf.addImage(imgData, 'JPEG', imgX, y + 10, imgWidth, imgHeight);
               } else {
                 // For other layouts, place image to the side
-                pdf.addImage(imgData, 'JPEG', imgX, 40, imgWidth, imgHeight, undefined, 'FAST');
+                pdf.addImage(imgData, 'JPEG', imgX, 40, imgWidth, imgHeight);
               }
             }
           } catch (err) {
-            console.error('Error adding image to PDF:', err);
-            // Continue with export even if image fails
+            console.error(`Error adding image to PDF for slide ${i+1}:`, err);
           }
         }
         

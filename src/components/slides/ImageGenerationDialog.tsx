@@ -85,6 +85,9 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
       await onUploadImage(selectedFile);
       setSelectedFile(null);
       setPreviewUrl(null);
+      
+      // Close dialog upon successful upload
+      onOpenChange(false);
     } catch (error) {
       console.error("Upload failed:", error);
       toast({
