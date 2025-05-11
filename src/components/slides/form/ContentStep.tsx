@@ -12,6 +12,8 @@ interface ContentStepProps {
   onSubmit: (e: React.FormEvent) => void;
   onBack: () => void;
   onTryExample: () => void;
+  autoGenerateImages?: boolean;
+  setAutoGenerateImages?: (autoGenerate: boolean) => void;
 }
 
 const ContentStep: React.FC<ContentStepProps> = ({
@@ -21,7 +23,9 @@ const ContentStep: React.FC<ContentStepProps> = ({
   generationProgress,
   onSubmit,
   onBack,
-  onTryExample
+  onTryExample,
+  autoGenerateImages,
+  setAutoGenerateImages
 }) => {
   return (
     <div className="space-y-6">

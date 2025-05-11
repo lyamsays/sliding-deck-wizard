@@ -75,36 +75,22 @@ const SlideFormSteps: React.FC<SlideFormStepsProps> = ({
           transition={{ duration: 0.3 }}
           className="space-y-6"
         >
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-semibold">Step 1: Presentation Setup</h2>
-            <p className="text-gray-500 mt-1">Let's start by setting up your presentation details</p>
-          </div>
-
           <MetadataStep 
             profession={profession}
             purpose={purpose}
             tone={tone}
             selectedTheme={selectedTheme}
             framework={framework}
+            autoGenerateImages={autoGenerateImages}
             setProfession={setProfession}
             setPurpose={setPurpose}
             setTone={setTone}
             setSelectedTheme={setSelectedTheme}
             setFramework={setFramework}
+            setAutoGenerateImages={setAutoGenerateImages}
+            onNext={handleNext}
             isGenerating={isGenerating}
           />
-          
-          <div className="flex justify-end pt-4">
-            <Button 
-              type="button" 
-              onClick={handleNext} 
-              disabled={isGenerating || !profession || !tone}
-              className="text-white bg-primary hover:bg-primary/90"
-            >
-              Continue to Content
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-          </div>
         </motion.div>
       )}
 
@@ -117,46 +103,17 @@ const SlideFormSteps: React.FC<SlideFormStepsProps> = ({
           transition={{ duration: 0.3 }}
           className="space-y-6"
         >
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-semibold text-center">Step 2: Content Input</h2>
-            <p className="text-gray-500 mt-1">Now, let's add your presentation content</p>
-          </div>
-
           <ContentStep 
             slideContent={slideContent}
             setSlideContent={setSlideContent}
+            isGenerating={isGenerating}
+            generationProgress={generationProgress}
+            onSubmit={handleNext}
+            onBack={handleBack}
+            onTryExample={onTryExample}
             autoGenerateImages={autoGenerateImages}
             setAutoGenerateImages={setAutoGenerateImages}
-            isGenerating={isGenerating}
-            onTryExample={onTryExample}
           />
-          
-          <div className="flex justify-between pt-4 max-w-3xl mx-auto">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleBack}
-              disabled={isGenerating}
-            >
-              <ArrowLeft className="mr-1 h-4 w-4" />
-              Back to Setup
-            </Button>
-            
-            <Button 
-              type="submit" 
-              disabled={isGenerating || !slideContent.trim()}
-              className="text-white bg-primary hover:bg-primary/90"
-            >
-              {isGenerating ? (
-                <div className="flex items-center gap-2">
-                  <span className="h-4 w-4 animate-spin" />
-                  <span>Generating slides...</span>
-                </div>
-              ) : (
-                "Generate Slides"
-              )}
-            </Button>
-          </div>
         </motion.div>
       )}
       

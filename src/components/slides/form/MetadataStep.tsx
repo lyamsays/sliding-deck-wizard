@@ -29,6 +29,7 @@ interface MetadataStepProps {
   setAutoGenerateImages: (autoGenerate: boolean) => void;
   setSelectedTheme: (theme: string) => void;
   onNext: () => void;
+  isGenerating: boolean;
 }
 
 const MetadataStep: React.FC<MetadataStepProps> = ({
@@ -44,7 +45,8 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
   setFramework,
   setAutoGenerateImages,
   setSelectedTheme,
-  onNext
+  onNext,
+  isGenerating
 }) => {
   const showFrameworkOption = profession === "Consultant";
 
@@ -180,6 +182,7 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
         <Button 
           onClick={onNext} 
           className="btn-enhanced"
+          disabled={isGenerating}
         >
           Next Step <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
