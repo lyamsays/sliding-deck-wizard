@@ -117,6 +117,7 @@ const SlideGrid: React.FC<SlideGridProps> = ({
       variants={containerVariants}
       initial="hidden"
       animate="show"
+      id="slides-grid-container"
     >
       {optimizedSlides.map((slide, index) => (
         <motion.div 
@@ -128,9 +129,12 @@ const SlideGrid: React.FC<SlideGridProps> = ({
           data-slide-index={index} // Additional data attribute for backup
         >
           {/* The slide content itself, which will be exported */}
-          <div className="slide-content-for-export relative overflow-hidden rounded-lg" style={{
-            backgroundColor: slide.style?.backgroundColor || '#ffffff',
-          }}>
+          <div className="slide-content-for-export relative overflow-hidden rounded-lg" 
+            style={{
+              backgroundColor: slide.style?.backgroundColor || '#ffffff',
+            }}
+            id={`slide-content-${index}`} // Add specific ID for content area
+          >
             {viewMode === 'outline' ? (
               <OutlineSlide 
                 slide={slide} 

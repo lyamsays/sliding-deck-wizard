@@ -111,7 +111,7 @@ const SlideActions: React.FC<SlideActionsProps> = ({
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 slide-actions slide-ui-elements-not-for-export">
       <Button
         size="sm"
         variant="outline"

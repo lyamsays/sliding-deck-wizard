@@ -286,9 +286,9 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
       </CardContent>
       
       <CardFooter className="border-t border-gray-100 pt-4 mt-4 flex justify-between items-center flex-wrap gap-2">
-        <div className="flex items-start text-sm max-w-[55%]" style={{ color: textColor }}>
+        <div className="flex items-start text-sm max-w-[55%] visual-label-wrapper" style={{ color: textColor }}>
           <Image className="h-4 w-4 mr-2 mt-1 flex-shrink-0" style={{ color: accentColor }} />
-          <span className="line-clamp-2">
+          <span className="line-clamp-2 recommendation-ui">
             <strong>Visual:</strong> {slide.revisedPrompt || slide.visualSuggestion || "Add an image to this slide"}
           </span>
         </div>

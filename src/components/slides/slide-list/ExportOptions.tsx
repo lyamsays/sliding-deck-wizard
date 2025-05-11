@@ -28,19 +28,26 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  // Enhanced function to find slide elements for export
+  // Get slide elements with a better selection method
   const getSlideElements = (): HTMLElement[] => {
     console.log("Looking for slide content to export...");
     
-    // Method 1: Find by slide IDs directly
+    // Find all slide contents by specific ID pattern
     const slideElements: HTMLElement[] = [];
     for (let i = 0; i < editedSlides.length; i++) {
+      // Look first by content-specific ID
+      const slideContent = document.getElementById(`slide-content-${i}`) as HTMLElement;
+      if (slideContent) {
+        slideElements.push(slideContent);
+        continue;
+      }
+      
+      // Fallback to slide wrapper and find content div
       const slideWrapper = document.getElementById(`slide-${i}`);
       if (slideWrapper) {
-        // Get the content part that should be exported (without UI elements)
-        const slideContent = slideWrapper.querySelector('.slide-content-for-export') as HTMLElement;
-        if (slideContent) {
-          slideElements.push(slideContent);
+        const contentElement = slideWrapper.querySelector('.slide-content-for-export') as HTMLElement;
+        if (contentElement) {
+          slideElements.push(contentElement);
           continue;
         }
       }
@@ -51,7 +58,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       return slideElements;
     }
     
-    // Fallback method: Get all slides from container
+    // Last resort fallback method
     const slideContainer = document.getElementById('slides-for-export-container');
     if (slideContainer) {
       const contentElements = Array.from(slideContainer.querySelectorAll('.slide-content-for-export')) as HTMLElement[];
@@ -65,48 +72,31 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
     return [];
   };
   
-  // Improved capture function to create clean slide images
+  // Enhanced capture function to create clean slide images
   const captureSlideContent = async (element: HTMLElement): Promise<HTMLCanvasElement> => {
     console.log(`Capturing slide content`);
     
     try {
-      // Before capturing, hide UI elements that shouldn't be in the export
-      const uiElements = element.querySelectorAll('.slide-ui-elements-not-for-export, .recommendation-ui, .slide-actions');
-      const visualLabels = element.querySelectorAll('[class*="visual-label"]');
-      
-      // Store original states to restore later
-      const originalDisplayStates: { element: HTMLElement, display: string }[] = [];
-      
-      // Hide UI elements
-      uiElements.forEach(el => {
-        const htmlEl = el as HTMLElement;
-        originalDisplayStates.push({ element: htmlEl, display: htmlEl.style.display });
-        htmlEl.style.display = 'none';
-      });
-      
-      // Hide visual labels
-      visualLabels.forEach(el => {
-        const htmlEl = el as HTMLElement;
-        originalDisplayStates.push({ element: htmlEl, display: htmlEl.style.display });
-        htmlEl.style.display = 'none';
-      });
+      // Add exporting class to the container to trigger CSS rules
+      const container = document.getElementById('slides-for-export-container');
+      if (container) {
+        container.classList.add('exporting');
+      }
       
       // Create a temporary clone for capture to prevent DOM manipulation issues
       const clone = element.cloneNode(true) as HTMLElement;
       clone.style.position = 'absolute';
       clone.style.top = '-9999px';
       clone.style.left = '-9999px';
+      clone.style.width = '1200px'; // Fixed width for more consistent rendering
+      clone.style.height = 'auto';
+      
+      // Important: manually remove UI elements from the clone
+      clone.querySelectorAll('.visual-label-wrapper, .recommendation-ui, .slide-ui-elements-not-for-export, .slide-actions, [class*="visual-label"]').forEach(el => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+      
       document.body.appendChild(clone);
-      
-      // Remove any unwanted elements from the clone
-      clone.querySelectorAll('.slide-ui-elements-not-for-export, .recommendation-ui, .slide-actions').forEach(el => {
-        if (el.parentNode) el.parentNode.removeChild(el);
-      });
-      
-      // Remove visual labels from clone
-      clone.querySelectorAll('[class*="visual-label"]').forEach(el => {
-        if (el.parentNode) el.parentNode.removeChild(el);
-      });
       
       // Use html2canvas with optimized settings for better quality
       const canvas = await html2canvas(clone, {
@@ -116,16 +106,22 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         backgroundColor: null,
         logging: false,
         imageTimeout: 15000, // Longer timeout for images
-        removeContainer: true // Clean up the container it creates
+        removeContainer: true, // Clean up the container it creates
+        onclone: (clonedDoc) => {
+          // Additional cleanup in the cloned document
+          const clonedElements = clonedDoc.querySelectorAll('.visual-label-wrapper, .recommendation-ui, .slide-ui-elements-not-for-export, .slide-actions, [class*="visual-label"]');
+          clonedElements.forEach(el => {
+            (el as HTMLElement).style.display = 'none';
+            (el as HTMLElement).style.visibility = 'hidden';
+          });
+        }
       });
       
       // Clean up
       document.body.removeChild(clone);
-      
-      // Restore original display states
-      originalDisplayStates.forEach(state => {
-        state.element.style.display = state.display;
-      });
+      if (container) {
+        container.classList.remove('exporting');
+      }
       
       return canvas;
     } catch (error) {
@@ -138,17 +134,24 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       
       // Create a simple canvas with error message as fallback
       const canvas = document.createElement('canvas');
-      canvas.width = 800;
-      canvas.height = 450;
+      canvas.width = 1200;
+      canvas.height = 675; // 16:9 aspect ratio
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.fillStyle = '#f9f9f9';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.font = '20px Arial';
+        ctx.font = '24px Arial';
         ctx.fillStyle = '#ff0000';
         ctx.textAlign = 'center';
         ctx.fillText('Error capturing slide', canvas.width / 2, canvas.height / 2);
       }
+      
+      // Remove exporting class
+      const container = document.getElementById('slides-for-export-container');
+      if (container) {
+        container.classList.remove('exporting');
+      }
+      
       return canvas;
     }
   };

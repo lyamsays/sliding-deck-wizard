@@ -173,10 +173,25 @@
   }
   
   /* Hide UI elements during export */
-  .slide-content-for-export .slide-ui-elements-not-for-export,
-  .slide-content-for-export .recommendation-ui,
-  .slide-content-for-export [class*="visual-label"] {
+  .visual-label-wrapper,
+  .recommendation-ui {
     @apply print:hidden;
+  }
+  
+  /* Visual label specific styling for export control */
+  [class*="visual-label"] {
+    @apply print:hidden;
+  }
+  
+  /* Explicitly hide during export process */
+  .exporting .visual-label-wrapper,
+  .exporting .slide-ui-elements-not-for-export,
+  .exporting .recommendation-ui,
+  .exporting [class*="visual-label"],
+  .exporting .slide-actions {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
   }
 }
 

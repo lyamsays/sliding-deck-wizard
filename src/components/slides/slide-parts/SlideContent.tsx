@@ -28,6 +28,7 @@ const SlideContent: React.FC<SlideContentProps> = ({
         src={slide.imageUrl} 
         alt={slide.title} 
         className="object-cover w-full h-full"
+        crossOrigin="anonymous"
       />
     </div>
   ) : (
@@ -46,9 +47,9 @@ const SlideContent: React.FC<SlideContentProps> = ({
     color: accentColor,
   };
   
-  // Add speaker notes display if available
+  // Add speaker notes display if available - now with proper export hiding
   const speakerNotesElement = slide.speakerNotes ? (
-    <div className="mt-4 pt-4 border-t border-dashed border-gray-200">
+    <div className="mt-4 pt-4 border-t border-dashed border-gray-200 slide-ui-elements-not-for-export">
       <p className="text-sm font-medium" style={{ color: textColor }}>Speaker Notes:</p>
       <p className="text-sm italic" style={{ color: textColor }}>
         {slide.speakerNotes}

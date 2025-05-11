@@ -48,7 +48,20 @@ const SlideList: React.FC<SlideListProps> = ({
       
       <HelpMessage />
       
+      {/* Wrapper with explicit ID for finding export elements */}
       <div id="slides-for-export-container" className="slides-for-export-wrapper">
+        <style id="export-styles" type="text/css">{`
+          /* Hide UI elements during export */
+          .exporting .visual-label-wrapper,
+          .exporting .slide-ui-elements-not-for-export,
+          .exporting .recommendation-ui,
+          .exporting [class*="visual-label"],
+          .exporting .slide-actions {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+          }
+        `}</style>
         <SlideGrid 
           editedSlides={editedSlides}
           viewMode={viewMode}
