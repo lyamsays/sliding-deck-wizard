@@ -43,7 +43,7 @@ const Features = () => {
           {featureItems.map((feature, index) => (
             <div key={index} className="mb-16 border-b border-gray-200 pb-12 last:border-0">
               <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-                <div className="lg:col-span-6">
+                <div className="lg:col-span-12">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-start">
                     <Check className="text-primary mr-2 h-6 w-6 flex-shrink-0 mt-1" />
                     {feature.title}
@@ -51,11 +51,6 @@ const Features = () => {
                   <p className="text-lg text-gray-600">
                     {feature.description}
                   </p>
-                </div>
-                <div className="mt-8 lg:mt-0 lg:col-span-6">
-                  <div className="bg-gray-100 h-64 rounded-lg flex items-center justify-center">
-                    <p className="text-gray-500 italic">Feature visualization</p>
-                  </div>
                 </div>
               </div>
             </div>
