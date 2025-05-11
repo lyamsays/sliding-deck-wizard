@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, HelpCircle } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -18,6 +18,18 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import ThemePreview from '@/components/themes/ThemePreview';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface MetadataStepProps {
   profession: string;
@@ -34,6 +46,12 @@ interface MetadataStepProps {
   setSelectedTheme: (theme: string) => void;
   onNext: () => void;
   isGenerating: boolean;
+}
+
+interface ToneOption {
+  value: string;
+  label: string;
+  description: string;
 }
 
 const MetadataStep: React.FC<MetadataStepProps> = ({
@@ -66,6 +84,35 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
     { value: "ValueChain", label: "Value Chain Analysis" },
     { value: "FourPs", label: "Marketing Mix (4Ps)" },
     { value: "BalancedScorecard", label: "Balanced Scorecard" }
+  ];
+
+  // Tone options with descriptions
+  const toneOptions: ToneOption[] = [
+    { 
+      value: "Professional", 
+      label: "Professional", 
+      description: "Clear, concise slides with formal language and corporate-friendly visuals" 
+    },
+    { 
+      value: "Persuasive", 
+      label: "Persuasive", 
+      description: "Action-oriented slides with compelling visuals and strong, motivating language" 
+    },
+    { 
+      value: "Academic", 
+      label: "Academic", 
+      description: "Detail-rich slides with data-driven content and scientific/educational visuals" 
+    },
+    { 
+      value: "Creative", 
+      label: "Creative", 
+      description: "Bold, innovative slides with unique layouts and imaginative visuals" 
+    },
+    { 
+      value: "Minimalist", 
+      label: "Minimalist", 
+      description: "Clean, spacious slides with essential content and elegant, simple visuals" 
+    }
   ];
 
   return (
@@ -111,18 +158,48 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
         </div>
         
         <div className="space-y-3">
-          <label className="text-sm font-medium">Preferred tone?</label>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            Preferred tone
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="w-80 p-4">
+                  <p className="font-medium mb-2">Tone affects your presentation style:</p>
+                  <ul className="text-xs space-y-1">
+                    {toneOptions.map(option => (
+                      <li key={option.value} className="flex">
+                        <span className="font-medium w-24">{option.label}:</span> 
+                        <span className="text-muted-foreground">{option.description}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </label>
+          
           <Select value={tone} onValueChange={setTone}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select tone" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem value="Formal">Formal / Professional</SelectItem>
-                <SelectItem value="Friendly">Friendly / Conversational</SelectItem>
-                <SelectItem value="Technical">Technical / Detailed</SelectItem>
-                <SelectItem value="Persuasive">Persuasive / Compelling</SelectItem>
-                <SelectItem value="Creative">Creative / Innovative</SelectItem>
+                {toneOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="block w-full">{option.label}</span>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-xs">
+                          <p className="text-sm">{option.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </SelectItem>
+                ))}
               </SelectGroup>
             </SelectContent>
           </Select>

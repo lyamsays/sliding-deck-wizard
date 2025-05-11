@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -105,9 +106,60 @@ serve(async (req) => {
           
           ADAPTATION:
           - Adapt the design style for the user's profession (${profession}) and purpose (${purpose})
-          - Maintain a consistent ${tone} tone throughout the presentation
-          - Consider the purpose (${purpose}) when determining visual emphasis
         `;
+        
+        // Add tone-specific instructions based on the new options
+        if (tone === "Professional") {
+          systemPrompt += `
+          TONE - PROFESSIONAL:
+          - Maintain a formal, clean, and corporate style
+          - Use concise, straightforward language with industry-standard terminology
+          - Focus on clarity and precision in both text and visuals
+          - Suggest professional color schemes (blues, grays, subdued tones)
+          - Recommend structured layouts with clear hierarchy and organization
+          - Suggest business-appropriate imagery and icons
+          `;
+        } else if (tone === "Persuasive") {
+          systemPrompt += `
+          TONE - PERSUASIVE:
+          - Use action-oriented, motivational language with strong calls-to-action
+          - Create high-contrast slides with bold visual elements that draw attention
+          - Suggest imagery and visuals that evoke emotion and inspire action
+          - Recommend dynamic layouts that guide the viewer through a compelling journey
+          - Use color psychology to influence the audience (reds, oranges for urgency, etc.)
+          - Focus on benefits and results in both text and visual elements
+          `;
+        } else if (tone === "Academic") {
+          systemPrompt += `
+          TONE - ACADEMIC:
+          - Use precise, scholarly language with proper terminology
+          - Include more detailed text when necessary for explaining complex concepts
+          - Suggest data visualization approaches for communicating research or findings
+          - Recommend clean, information-focused layouts that prioritize clarity
+          - Focus on evidence, sources, and supporting data in visual suggestions
+          - Suggest neutral color schemes that don't distract from the information
+          `;
+        } else if (tone === "Creative") {
+          systemPrompt += `
+          TONE - CREATIVE:
+          - Use imaginative, expressive language that inspires
+          - Suggest unexpected or innovative visual metaphors and imagery
+          - Recommend bold color combinations and artistic visual elements
+          - Create unconventional slide layouts that surprise and engage
+          - Focus on originality and visual interest in all aspects of design
+          - Suggest modern, trendy design aesthetics that feel fresh and innovative
+          `;
+        } else if (tone === "Minimalist") {
+          systemPrompt += `
+          TONE - MINIMALIST:
+          - Use extremely concise language with only essential words
+          - Create abundant white space in all slide layouts
+          - Suggest simple, elegant visuals with minimal elements
+          - Recommend restrained color palettes (1-2 colors maximum)
+          - Focus on essential information only, removing all decorative elements
+          - Suggest clean typography with ample spacing and breathing room
+          `;
+        }
         
         // Add framework specific instructions for consultants
         if (profession === "Consultant" && framework && framework !== "None") {

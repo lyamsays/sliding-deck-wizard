@@ -30,8 +30,8 @@ const SlideActions: React.FC<SlideActionsProps> = ({
     // Logic to determine if real images would be more appropriate based on slide content
     const analyzeSlideContent = () => {
       const title = slide.title?.toLowerCase() || '';
-      const content = slide.content?.toLowerCase() || '';
-      const combinedContent = title + ' ' + content;
+      const bulletContent = slide.bullets?.join(' ')?.toLowerCase() || '';
+      const combinedContent = title + ' ' + bulletContent;
       
       // Keywords that suggest real photos might be better
       const realPhotoKeywords = [
@@ -69,7 +69,7 @@ const SlideActions: React.FC<SlideActionsProps> = ({
     };
     
     setRecommendedImageType(analyzeSlideContent());
-  }, [slide.title, slide.content]);
+  }, [slide.title, slide.bullets]);
 
   const renderAddImageButton = () => {
     // Base button that will be wrapped in tooltip if needed

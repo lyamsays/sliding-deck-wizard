@@ -49,6 +49,27 @@ const SlideForm: React.FC<SlideFormProps> = ({
   // New state for the two-step process
   const [currentStep, setCurrentStep] = useState<'metadata' | 'content'>('metadata');
   
+  // Add mapping logic for tone conversion if the user has a saved preference with the old values
+  useEffect(() => {
+    // Map old tone values to new ones if needed
+    if (tone === "Formal") {
+      setTone("Professional");
+    } else if (tone === "Friendly") {
+      setTone("Creative");
+    } else if (tone === "Technical") {
+      setTone("Academic");
+    } else if (tone === "Persuasive" || tone === "Compelling") {
+      setTone("Persuasive");
+    } else if (tone === "Creative" || tone === "Innovative") {
+      setTone("Creative");
+    } else if (tone === "Minimalist") {
+      setTone("Minimalist");
+    } else if (!["Professional", "Persuasive", "Academic", "Creative", "Minimalist"].includes(tone)) {
+      // Default to Professional if tone is not in the new options
+      setTone("Professional");
+    }
+  }, []);
+  
   const handleNext = () => {
     setCurrentStep('content');
   };
