@@ -40,9 +40,9 @@ const AboutPage = () => {
                   <Beaker className="h-10 w-10 text-purple-600" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-xl mb-2">No Templates Required</h3>
+                  <h3 className="font-bold text-xl mb-2">Professional Templates</h3>
                   <p className="text-gray-600">
-                    Unlike traditional tools, there's no need to wrestle with templates or spend time on manual layout adjustments.
+                    We use a collection of professional templates to ensure your presentations always look polished and well-designed.
                   </p>
                 </div>
               </div>
