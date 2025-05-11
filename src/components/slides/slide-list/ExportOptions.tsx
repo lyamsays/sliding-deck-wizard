@@ -296,46 +296,46 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           color: textColor
         });
         
-        // Set up layout coordinates
-        let contentX, contentY, contentW, contentH;
-        let imageX, imageY, imageW, imageH;
+        // Set up layout coordinates - convert string percentages to numbers for PptxGenJS
+        // PptxGenJS uses numbers from 0-100 for percentages or specific units
+        let contentX = 5; // 5%
+        let contentY = 20; // 20%
+        let contentW = 50; // 50%
+        let contentH = 60; // 60%
+        let imageX = 60; // 60%
+        let imageY = 20; // 20%
+        let imageW = 35; // 35%
+        let imageH = 60; // 60%
         
         if (layout === 'left-image') {
-          imageX = '5%';
-          imageY = '20%';
-          imageW = '35%';
-          imageH = '60%';
-          contentX = '45%';
-          contentY = '20%';
-          contentW = '50%';
-          contentH = '60%';
+          imageX = 5;
+          imageY = 20;
+          imageW = 35;
+          imageH = 60;
+          contentX = 45;
+          contentY = 20;
+          contentW = 50;
+          contentH = 60;
         } else if (layout === 'right-image') {
-          contentX = '5%';
-          contentY = '20%';
-          contentW = '50%';
-          contentH = '60%';
-          imageX = '60%';
-          imageY = '20%';
-          imageW = '35%';
-          imageH = '60%';
+          // Default values above are already for right-image
         } else if (layout === 'centered') {
-          contentX = '5%';
-          contentY = '20%';
-          contentW = '90%';
-          contentH = '30%';
-          imageX = '30%';
-          imageY = '55%';
-          imageW = '40%';
-          imageH = '35%';
+          contentX = 5;
+          contentY = 20;
+          contentW = 90;
+          contentH = 30;
+          imageX = 30;
+          imageY = 55;
+          imageW = 40;
+          imageH = 35;
         } else { // title-focus
-          contentX = '5%';
-          contentY = '20%';
-          contentW = '65%';
-          contentH = '70%';
-          imageX = '75%';
-          imageY = '20%';
-          imageW = '20%';
-          imageH = '30%';
+          contentX = 5;
+          contentY = 20;
+          contentW = 65;
+          contentH = 70;
+          imageX = 75;
+          imageY = 20;
+          imageW = 20;
+          imageH = 30;
         }
         
         // Add bullets as separate text elements for better formatting
@@ -343,7 +343,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           slide.bullets.forEach((bullet, idx) => {
             pptSlide.addText(`• ${bullet}`, {
               x: contentX,
-              y: String(Number(contentY.replace('%', '')) + (idx * 8)) + '%',
+              y: contentY + (idx * 8),
               w: contentW,
               color: textColor,
               fontSize: 14,
@@ -360,7 +360,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
             // Process the image through our helper
             const processedImage = await processImage(slide.imageUrl);
             
-            // Add the processed image
+            // Add the processed image with proper sizing parameters
             pptSlide.addImage({
               data: processedImage,
               x: imageX,
@@ -389,7 +389,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
             
             pptSlide.addText('Image placeholder', {
               x: imageX,
-              y: String(Number(imageY.replace('%', '')) + 15) + '%',
+              y: imageY + 15,
               w: imageW,
               align: 'center',
               color: '888888'
