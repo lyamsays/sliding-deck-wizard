@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Loader } from "lucide-react";
@@ -380,7 +381,11 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
                 y: imageY,
                 w: imageWidth,
                 h: imageHeight,
-                sizing: { type: 'contain' }
+                sizing: { 
+                  type: "contain", 
+                  w: imageWidth, 
+                  h: imageHeight 
+                }
               });
             } else {
               // Use direct URL reference (better for PPTX)
@@ -390,7 +395,11 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
                 y: imageY,
                 w: imageWidth,
                 h: imageHeight,
-                sizing: { type: 'contain' }
+                sizing: { 
+                  type: "contain", 
+                  w: imageWidth, 
+                  h: imageHeight 
+                }
               });
             }
           } catch (err) {
