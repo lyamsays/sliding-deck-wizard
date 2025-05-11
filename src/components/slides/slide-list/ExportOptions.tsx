@@ -19,6 +19,12 @@ interface ExportOptionsProps {
   handleDownloadSlides: () => void;
 }
 
+interface ProcessedImage {
+  data: string;
+  width: number;
+  height: number;
+}
+
 const ExportOptions: React.FC<ExportOptionsProps> = ({ 
   editedSlides, 
   deckTitle, 
@@ -27,20 +33,30 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  // Improved image processing function that handles all image formats safely
-  const processImage = async (url: string): Promise<string> => {
+  // Enhanced image processing function with better error handling
+  const processImage = async (url: string): Promise<ProcessedImage> => {
     try {
-      // If URL is already a data URL, return directly
+      // Return a transparent pixel if URL is empty
+      if (!url) {
+        console.log("No image URL provided, returning placeholder");
+        return {
+          data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+          width: 100,
+          height: 100
+        };
+      }
+      
+      // If URL is already a data URL, process it directly
       if (url.startsWith('data:image')) {
-        return url;
+        return await loadImage(url);
       }
       
       console.log(`Processing image from URL: ${url}`);
       
-      // For remote URLs, create a new image and convert to canvas to avoid CORS issues
+      // For remote URLs, fetch with CORS handling
       return new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = 'anonymous';  // Important for CORS
+        img.crossOrigin = 'anonymous';
         
         img.onload = () => {
           try {
@@ -55,9 +71,15 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
               return;
             }
             
-            // Draw image to canvas and convert to data URL
+            // Draw image to canvas
             ctx.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
+            
+            // Return the processed image data
+            resolve({
+              data: canvas.toDataURL('image/png'),
+              width: img.width,
+              height: img.height
+            });
           } catch (canvasError) {
             console.error('Canvas error:', canvasError);
             reject(canvasError);
@@ -67,19 +89,44 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         img.onerror = (err) => {
           console.error('Image loading error:', err);
           // Return a placeholder instead of rejecting
-          resolve('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
+          resolve({
+            data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+            width: 100,
+            height: 100
+          });
         };
         
-        // Set the source last to avoid race conditions
         img.src = url;
       });
     } catch (error) {
       console.error("Error processing image:", error);
-      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='; // Return transparent pixel
+      // Return a placeholder on error
+      return {
+        data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+        width: 100,
+        height: 100
+      };
     }
   };
+  
+  // Helper function to load an image and get its dimensions
+  const loadImage = (src: string): Promise<ProcessedImage> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({
+          data: src,
+          width: img.width,
+          height: img.height
+        });
+      };
+      img.onerror = () => {
+        reject(new Error('Failed to load image'));
+      };
+      img.src = src;
+    });
+  };
 
-  // Completely redesigned PDF export with better theme and image handling
   const handleExportPDF = async () => {
     try {
       setIsExporting(true);
@@ -184,10 +231,10 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
             console.log(`Processing image for PDF slide ${i+1}`);
             
             // Process image to handle CORS and format issues
-            const processedImageData = await processImage(slide.imageUrl);
+            const processedImage = await processImage(slide.imageUrl);
             
             // Add the processed image to PDF
-            pdf.addImage(processedImageData, 'PNG', imgX, imgY, imgWidth, imgHeight);
+            pdf.addImage(processedImage.data, 'PNG', imgX, imgY, imgWidth, imgHeight);
             console.log(`Image added successfully to slide ${i+1}`);
           } catch (imgError) {
             console.error(`Failed to add image to slide ${i+1}:`, imgError);
@@ -229,7 +276,6 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
     }
   };
 
-  // Completely redesigned PowerPoint export with better image processing
   const handleExportPPTX = async () => {
     try {
       setIsExporting(true);
@@ -271,7 +317,8 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         
         // Add slide number
         pptSlide.addText(`${i + 1}/${editedSlides.length}`, {
-          x: '90%', y: '95%',
+          x: 90, // 90% of slide width
+          y: 95, // 95% of slide height
           color: textColor,
           fontSize: 10,
           bold: false
@@ -279,7 +326,8 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         
         // Add footer with deck title
         pptSlide.addText(deckTitle || 'Presentation', {
-          x: '5%', y: '95%',
+          x: 5, // 5% of slide width
+          y: 95, // 95% of slide height
           color: textColor,
           fontSize: 10,
           bold: false
@@ -287,10 +335,10 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         
         // Add title with the slide's text color
         pptSlide.addText(slide.title, {
-          x: '5%',
-          y: '5%',
-          w: '90%',
-          h: '10%',
+          x: 5, // 5% of slide width
+          y: 5, // 5% of slide height
+          w: 90, // 90% of slide width
+          h: 10, // 10% of slide height
           fontSize: 24,
           bold: true,
           color: textColor
@@ -357,20 +405,42 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           try {
             console.log(`Processing image for PPTX slide ${i+1}`);
             
-            // Process the image through our helper
+            // Process the image through our helper to get dimensions and data
             const processedImage = await processImage(slide.imageUrl);
+            
+            // Calculate aspect ratio to maintain proportions
+            const aspectRatio = processedImage.width / processedImage.height;
+            let finalWidth = imageW;
+            let finalHeight = imageH;
+            
+            // Adjust width or height to maintain aspect ratio within bounds
+            if (aspectRatio > 1) {
+              // Landscape image
+              finalHeight = imageW / aspectRatio;
+              if (finalHeight > imageH) {
+                finalHeight = imageH;
+                finalWidth = imageH * aspectRatio;
+              }
+            } else {
+              // Portrait image
+              finalWidth = imageH * aspectRatio;
+              if (finalWidth > imageW) {
+                finalWidth = imageW;
+                finalHeight = imageW / aspectRatio;
+              }
+            }
             
             // Add the processed image with proper sizing parameters
             pptSlide.addImage({
-              data: processedImage,
+              data: processedImage.data,
               x: imageX,
               y: imageY,
-              w: imageW,
-              h: imageH,
+              w: finalWidth,
+              h: finalHeight,
               sizing: {
-                type: "contain",
-                w: imageW,
-                h: imageH
+                type: 'contain',
+                w: finalWidth,
+                h: finalHeight
               }
             });
             
