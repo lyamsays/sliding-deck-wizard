@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Slide } from '@/types/deck';
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
@@ -176,6 +177,52 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
     } finally {
       setIsGeneratingImage(false);
     }
+  };
+
+  // New function to handle image uploads
+  const handleImageUpload = async (file: File) => {
+    try {
+      // Convert the uploaded file to a data URL
+      const dataUrl = await readFileAsDataURL(file);
+      
+      // Update the slide with the uploaded image
+      onSlideUpdate(index, {
+        ...slide,
+        imageUrl: dataUrl,
+        revisedPrompt: `User uploaded image: ${file.name}`
+      });
+      
+      setIsImageDialogOpen(false);
+      
+      toast({
+        title: "Image uploaded",
+        description: "Your image has been added to the slide.",
+      });
+      
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload image. Please try again.",
+        variant: "destructive"
+      });
+      console.error("Image upload error:", error);
+    }
+  };
+
+  // Helper function to read file as data URL
+  const readFileAsDataURL = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to read file'));
+        }
+      };
+      reader.onerror = () => reject(reader.error || new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
   };
 
   // Handle AI slide edits
@@ -521,6 +568,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
         open={isImageDialogOpen}
         onOpenChange={setIsImageDialogOpen}
         onGenerateImage={handleGenerateImageWithPrompt}
+        onUploadImage={handleImageUpload}
         isGenerating={isGeneratingImage}
         slideTitle={slide.title}
       />
