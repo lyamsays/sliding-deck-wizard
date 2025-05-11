@@ -1,7 +1,21 @@
 
 // This utility extracts text content from PDF and DOCX files
 import mammoth from 'mammoth';
-import pdfParse from 'pdf-parse';
+// Since pdf-parse doesn't have proper type declarations, we'll create our own
+import * as pdfParseModule from 'pdf-parse';
+
+// Type definitions for pdf-parse
+interface PDFData {
+  text: string;
+  numpages: number;
+  numrender: number;
+  info: Record<string, any>;
+  metadata: Record<string, any>;
+  version: string;
+}
+
+// Properly handle the CommonJS module
+const pdfParse = (pdfParseModule as unknown as { default: (buffer: Buffer | ArrayBuffer) => Promise<PDFData> }).default;
 
 /**
  * Extract text from a PDF file
