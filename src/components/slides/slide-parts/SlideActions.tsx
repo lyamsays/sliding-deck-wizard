@@ -2,7 +2,7 @@
 import React from 'react';
 import { Slide } from '@/types/deck';
 import { Button } from "@/components/ui/button";
-import { Wand2, Image, MessageSquare, PencilRuler, Trash2 } from 'lucide-react';
+import { Wand2, Image, PencilRuler, Trash2 } from 'lucide-react';
 
 interface SlideActionsProps {
   slide: Slide;
@@ -67,7 +67,7 @@ const SlideActions: React.FC<SlideActionsProps> = ({
           disabled={isGeneratingImage}
         >
           <Image className="h-3.5 w-3.5" style={{ color: accentColor }} />
-          <span>{isGeneratingImage ? 'Generating...' : 'Change Image'}</span>
+          <span>{isGeneratingImage ? 'Generating...' : 'Add Image'}</span>
         </Button>
       )}
     </div>

@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, Upload, ImageIcon, FileImage, X } from 'lucide-react';
+import { RefreshCw, Upload, ImageIcon, FileImage, X, Search, ExternalLink } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ImageGenerationDialogProps {
   open: boolean;
@@ -15,6 +16,17 @@ interface ImageGenerationDialogProps {
   onUploadImage?: (file: File) => Promise<void>;
   isGenerating: boolean;
   slideTitle: string;
+}
+
+interface WebImage {
+  id: string;
+  url: string;
+  smallUrl: string;
+  thumbUrl: string;
+  description: string;
+  authorName: string;
+  authorUsername: string;
+  downloadUrl: string;
 }
 
 const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
@@ -31,6 +43,12 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [progressValue, setProgressValue] = useState<number>(0);
   const { toast } = useToast();
+  
+  // State for web image search
+  const [searchQuery, setSearchQuery] = useState('');
+  const [webImages, setWebImages] = useState<WebImage[]>([]);
+  const [selectedWebImage, setSelectedWebImage] = useState<WebImage | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Effect to simulate loading progress during generation
   useEffect(() => {
@@ -127,19 +145,106 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
     }
   };
   
+  // Search for images from the web
+  const handleSearchImages = async () => {
+    if (!searchQuery.trim()) {
+      toast({
+        title: "Empty search query",
+        description: "Please enter a search term for web images.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSearching(true);
+    setWebImages([]);
+    setSelectedWebImage(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('search-images', {
+        body: { searchQuery: searchQuery }
+      });
+      
+      if (error) throw new Error(error.message);
+      
+      if (data.error) throw new Error(data.error);
+      
+      if (data.images && Array.isArray(data.images)) {
+        setWebImages(data.images);
+        
+        if (data.images.length === 0) {
+          toast({
+            title: "No images found",
+            description: "Try a different search term.",
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error("Error searching for images:", error);
+      toast({
+        title: "Search failed",
+        description: error.message || "Failed to search for images. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  // Handle selection of a web image
+  const handleSelectWebImage = (image: WebImage) => {
+    setSelectedWebImage(image);
+  };
+  
+  // Handle use of selected web image
+  const handleUseWebImage = async () => {
+    if (!selectedWebImage) return;
+    
+    // Convert the web image to a blob/file
+    try {
+      const response = await fetch(selectedWebImage.url);
+      const blob = await response.blob();
+      
+      // Create a file from the blob
+      const filename = `unsplash-${selectedWebImage.id}.jpg`;
+      const file = new File([blob], filename, { type: 'image/jpeg' });
+      
+      if (onUploadImage) {
+        await onUploadImage(file);
+        setSelectedWebImage(null);
+        onOpenChange(false);
+        
+        toast({
+          title: "Image added",
+          description: `Photo by ${selectedWebImage.authorName} on Unsplash`,
+        });
+      }
+    } catch (error: any) {
+      console.error("Error using web image:", error);
+      toast({
+        title: "Failed to use image",
+        description: error.message || "Failed to use the selected image. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+  
   // Reset the state when the dialog closes
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       setSelectedFile(null);
       setPreviewUrl(null);
       setPrompt('');
+      setSearchQuery('');
+      setWebImages([]);
+      setSelectedWebImage(null);
     }
     onOpenChange(open);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Add Image to Slide</DialogTitle>
           <DialogDescription>
@@ -148,9 +253,10 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-2 mb-4">
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="generate">AI Generate</TabsTrigger>
             <TabsTrigger value="upload">Upload Image</TabsTrigger>
+            <TabsTrigger value="web">Web Search</TabsTrigger>
           </TabsList>
           
           <TabsContent value="generate" className="space-y-4">
@@ -259,6 +365,113 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
               >
                 <Upload className="h-4 w-4 mr-2" />
                 Upload Image
+              </Button>
+            </DialogFooter>
+          </TabsContent>
+          
+          <TabsContent value="web" className="space-y-4">
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500">
+                  Search for professional images from Unsplash:
+                </p>
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="E.g., 'business meeting' or 'team collaboration'"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') handleSearchImages();
+                    }}
+                  />
+                  <Button 
+                    onClick={handleSearchImages}
+                    disabled={isSearching || !searchQuery.trim()}
+                  >
+                    {isSearching ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                
+                {isSearching && (
+                  <div className="flex justify-center py-8">
+                    <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+                  </div>
+                )}
+                
+                {!isSearching && webImages.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 mt-4">
+                    {webImages.map((image) => (
+                      <div 
+                        key={image.id}
+                        className={`relative rounded-md overflow-hidden cursor-pointer border-2 transition-all ${
+                          selectedWebImage?.id === image.id 
+                            ? 'border-primary ring-2 ring-primary/30' 
+                            : 'border-transparent hover:border-gray-300'
+                        }`}
+                        onClick={() => handleSelectWebImage(image)}
+                      >
+                        <img 
+                          src={image.thumbUrl} 
+                          alt={image.description}
+                          className="w-full h-24 object-cover"
+                          crossOrigin="anonymous"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {!isSearching && webImages.length === 0 && searchQuery.trim() !== '' && (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No images found. Try a different search term.</p>
+                  </div>
+                )}
+                
+                {selectedWebImage && (
+                  <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                    <p className="text-xs text-gray-500 mb-1">Selected image:</p>
+                    <div className="flex items-center gap-2">
+                      <img 
+                        src={selectedWebImage.thumbUrl} 
+                        alt={selectedWebImage.description}
+                        className="w-16 h-16 object-cover rounded-md"
+                        crossOrigin="anonymous"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm line-clamp-1">{selectedWebImage.description}</p>
+                        <p className="text-xs text-gray-500">
+                          Photo by {selectedWebImage.authorName} on Unsplash
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end mt-2">
+                      <a 
+                        href={`https://unsplash.com/@${selectedWebImage.authorUsername}?utm_source=your_app&utm_medium=referral`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-gray-500 flex items-center hover:underline"
+                      >
+                        View on Unsplash 
+                        <ExternalLink className="h-3 w-3 ml-1" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                onClick={handleUseWebImage}
+                disabled={!selectedWebImage}
+                className="w-full"
+              >
+                <ImageIcon className="h-4 w-4 mr-2" />
+                Use Selected Image
               </Button>
             </DialogFooter>
           </TabsContent>
