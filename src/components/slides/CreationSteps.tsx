@@ -85,7 +85,6 @@ const CreationSteps: React.FC<CreationStepsProps> = ({ currentStep }) => {
               </div>
             </div>
             
-            {/* Divider line after each step except the last */}
             {stepIdx !== steps.length - 1 && (
               <div className={cn(
                 'hidden sm:block absolute top-4 left-0 w-full',

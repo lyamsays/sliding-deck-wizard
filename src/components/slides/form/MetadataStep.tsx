@@ -14,6 +14,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { themes } from '@/components/themes/theme-data';
+import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 
 interface MetadataStepProps {
   profession: string;
@@ -48,6 +50,7 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
   onNext,
   isGenerating
 }) => {
+  const navigate = useNavigate();
   const showFrameworkOption = profession === "Consultant";
 
   // Framework options for consultants
@@ -95,21 +98,13 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
         
         <div className="space-y-3">
           <label className="text-sm font-medium">What's the purpose?</label>
-          <Select value={purpose} onValueChange={setPurpose}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select purpose" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="Pitch">Pitch / Proposal</SelectItem>
-                <SelectItem value="Inform">Informative / Educational</SelectItem>
-                <SelectItem value="Update">Project Update</SelectItem>
-                <SelectItem value="Report">Report Findings</SelectItem>
-                <SelectItem value="Plan">Strategic Planning</SelectItem>
-                <SelectItem value="Overview">Overview / Introduction</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <Input
+            type="text"
+            placeholder="e.g., Team update, Client presentation"
+            value={purpose}
+            onChange={(e) => setPurpose(e.target.value)}
+            className="w-full"
+          />
         </div>
         
         <div className="space-y-3">
@@ -132,20 +127,30 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
         
         <div className="space-y-3">
           <label className="text-sm font-medium">Theme</label>
-          <Select value={selectedTheme} onValueChange={setSelectedTheme}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select theme" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {themes.map((theme) => (
-                  <SelectItem key={theme.id} value={theme.id}>
-                    {theme.name}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select value={selectedTheme} onValueChange={setSelectedTheme}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select theme" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {themes.map((theme) => (
+                    <SelectItem key={theme.id} value={theme.id}>
+                      {theme.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => navigate('/themes')}
+              className="whitespace-nowrap"
+            >
+              Browse Themes
+            </Button>
+          </div>
         </div>
         
         {showFrameworkOption && setFramework && (

@@ -36,13 +36,24 @@ const ContentStep: React.FC<ContentStepProps> = ({
         </p>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-4 relative">
         <Textarea
           placeholder="Enter your content here..."
           value={slideContent}
           onChange={(e) => setSlideContent(e.target.value)}
           className="min-h-[300px]"
         />
+        
+        <Button
+          type="button"
+          onClick={onTryExample}
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 text-xs"
+          disabled={isGenerating}
+        >
+          Try an Example
+        </Button>
         
         <div className="flex items-center justify-center mt-6 gap-3">
           <Button 
@@ -52,14 +63,6 @@ const ContentStep: React.FC<ContentStepProps> = ({
             disabled={isGenerating}
           >
             Back
-          </Button>
-          <Button 
-            type="button" 
-            onClick={onTryExample}
-            variant="outline"
-            disabled={isGenerating}
-          >
-            Try an Example
           </Button>
           <Button 
             type="submit" 

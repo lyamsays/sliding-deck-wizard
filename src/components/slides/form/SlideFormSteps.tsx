@@ -57,7 +57,7 @@ const SlideFormSteps: React.FC<SlideFormStepsProps> = ({
   onTryExample
 }) => {
   return (
-    <>
+    <div>
       {error && (
         <Alert variant="destructive" className="mb-6 animate-fade-down">
           <AlertCircle className="h-4 w-4" />
@@ -128,7 +128,7 @@ const SlideFormSteps: React.FC<SlideFormStepsProps> = ({
           </p>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
