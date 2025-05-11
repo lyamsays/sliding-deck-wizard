@@ -124,6 +124,7 @@ const SlideGrid: React.FC<SlideGridProps> = ({
           className="card-enhanced hover-lift transition-all duration-300 overflow-hidden"
           variants={slideVariants}
           whileHover={{ scale: 1.02, boxShadow: "0 10px 25px rgba(0,0,0,0.08)" }}
+          id={`slide-${index}`} // Add ID for export functionality
         >
           {viewMode === 'outline' ? (
             <OutlineSlide 
