@@ -12,7 +12,7 @@ const ThemePreview = ({ themeId }: ThemePreviewProps) => {
   const theme = themes.find(t => t.id === themeId) || themes[0];
 
   return (
-    <div className="mt-2 overflow-hidden transition-all bg-white rounded-md shadow-md">
+    <div className="mt-2 overflow-hidden transition-all bg-white rounded-md shadow-md hover:shadow-lg cursor-pointer">
       <div 
         className="h-36 w-full relative" 
         style={{ 
@@ -66,7 +66,7 @@ const ThemePreview = ({ themeId }: ThemePreviewProps) => {
           </div>
         </div>
       </div>
-      <div className="p-2 text-xs text-gray-500 bg-gray-50 border-t">
+      <div className="p-2 text-xs font-medium text-center bg-gray-50 border-t">
         {theme.name}
       </div>
     </div>

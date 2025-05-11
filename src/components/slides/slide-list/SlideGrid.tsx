@@ -45,20 +45,20 @@ const SlideGrid: React.FC<SlideGridProps> = ({
     return 'right-image';
   };
   
-  // Apply intelligent layout to slides while preserving theme settings
+  // Use the slides directly without transforming them
+  // This is important - we want to respect the style settings from SlideInput.tsx
   const optimizedSlides = editedSlides.map((slide, index) => {
     // Only set layout if not already manually set by user
-    const layout = slide.style?.layout || optimizeSlideLayout(slide, index);
-    
-    // Make sure all slides have a style object with necessary properties
-    // but preserve existing style properties from the theme
-    return {
-      ...slide,
-      style: {
-        ...slide.style,
-        layout: layout,
-      }
-    };
+    if (!slide.style?.layout) {
+      return {
+        ...slide,
+        style: {
+          ...slide.style,
+          layout: optimizeSlideLayout(slide, index),
+        }
+      };
+    }
+    return slide;
   });
 
   // Masonry grid container style for visual interest
