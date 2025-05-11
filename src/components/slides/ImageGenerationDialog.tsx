@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, Upload, ImageIcon, FileImage, X, Search, ExternalLink } from 'lucide-react';
+import { RefreshCw, Upload, ImageIcon, FileImage, X, Search, ExternalLink, AlertCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { Slide } from '@/types/deck';
 
 interface ImageGenerationDialogProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface ImageGenerationDialogProps {
   onUploadImage?: (file: File) => Promise<void>;
   isGenerating: boolean;
   slideTitle: string;
+  slide?: Slide;
 }
 
 interface WebImage {
@@ -35,7 +37,8 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
   onGenerateImage,
   onUploadImage,
   isGenerating,
-  slideTitle
+  slideTitle,
+  slide
 }) => {
   const [prompt, setPrompt] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -49,6 +52,58 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
   const [webImages, setWebImages] = useState<WebImage[]>([]);
   const [selectedWebImage, setSelectedWebImage] = useState<WebImage | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [recommendedTab, setRecommendedTab] = useState<string | null>(null);
+
+  // Logic to determine recommended tab based on slide content
+  useEffect(() => {
+    if (!slide) return;
+
+    const analyzeSlideContent = () => {
+      const title = slide.title?.toLowerCase() || '';
+      const content = slide.content?.toLowerCase() || '';
+      const combinedContent = title + ' ' + content;
+      
+      // Keywords that suggest real photos might be better
+      const realPhotoKeywords = [
+        'team', 'person', 'people', 'customer', 'client', 'stakeholder', 
+        'collaboration', 'meeting', 'leader', 'leadership', 'office',
+        'interview', 'testimonial', 'showcase', 'employee', 'staff',
+        'workspace', 'environment', 'location', 'venue', 'event'
+      ];
+      
+      // Check if any real photo keywords are present
+      const hasRealPhotoKeyword = realPhotoKeywords.some(keyword => 
+        combinedContent.includes(keyword)
+      );
+      
+      if (hasRealPhotoKeyword) {
+        return 'web';
+      }
+      
+      return null;
+    };
+    
+    const recommendation = analyzeSlideContent();
+    setRecommendedTab(recommendation);
+    
+    // Auto-select the recommended tab if available and dialog opens
+    if (recommendation && open) {
+      setActiveTab(recommendation);
+      
+      // If web search is recommended, pre-fill search with title keywords
+      if (recommendation === 'web' && slide.title) {
+        // Extract meaningful keywords from title
+        const titleWords = slide.title.split(' ')
+          .filter(word => word.length > 3) // Filter out short words
+          .slice(0, 2) // Take first two meaningful words
+          .join(' ');
+        
+        if (titleWords) {
+          setSearchQuery(titleWords);
+        }
+      }
+    }
+  }, [slide, open]);
 
   // Effect to simulate loading progress during generation
   useEffect(() => {
@@ -249,6 +304,12 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
           <DialogTitle>Add Image to Slide</DialogTitle>
           <DialogDescription>
             Add a visual to your slide "{slideTitle}"
+            {recommendedTab === 'web' && (
+              <span className="flex items-center gap-1 mt-1 text-blue-500">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Real photos recommended for this content</span>
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
         
@@ -256,7 +317,14 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="generate">AI Generate</TabsTrigger>
             <TabsTrigger value="upload">Upload Image</TabsTrigger>
-            <TabsTrigger value="web">Web Search</TabsTrigger>
+            <TabsTrigger value="web" className="relative">
+              Web Search
+              {recommendedTab === 'web' && (
+                <span className="absolute -right-1 -top-1">
+                  <AlertCircle className="h-3 w-3 text-blue-500" />
+                </span>
+              )}
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="generate" className="space-y-4">
