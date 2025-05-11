@@ -12,14 +12,14 @@ const Hero = () => {
             From Idea to Deck <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">in Seconds</span>
           </h1>
           <p className="mt-6 text-lg md:text-xl text-gray-600 animate-fade-up">
-            Transform your notes, bullet points, and raw content into beautiful, structured slide decks using AI — no design skills required.
+            Transform your notes, bullet points, and raw content into beautiful, structured slide decks using AI — choose from our curated themes for a personalized touch.
           </p>
           <div className="mt-10 flex justify-center gap-4 animate-fade-up">
             <Button size="lg" className="bg-primary hover:bg-primary/90 transition-all" asChild>
               <Link to="/create">Try the Demo</Link>
             </Button>
-            <Button variant="outline" size="lg" className="border-primary text-primary hover:bg-accent transition-all">
-              Learn More
+            <Button variant="outline" size="lg" className="border-primary text-primary hover:bg-accent transition-all" asChild>
+              <Link to="/themes">Browse Themes</Link>
             </Button>
           </div>
         </div>

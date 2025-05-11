@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Navbar from '../components/Navbar';
@@ -22,6 +23,8 @@ import FeatureTooltip from '@/components/onboarding/FeatureTooltip';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { HelpCircle, Settings } from 'lucide-react';
+import { themes } from '@/components/themes/theme-data';
+import { Theme } from '@/components/themes/theme-types';
 
 interface SlidesResponse {
   slides: Slide[];
@@ -45,6 +48,13 @@ const SlideInput = () => {
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [imageProgress, setImageProgress] = useState(0);
   const [autoGenerateImages, setAutoGenerateImages] = useState(true);
+  
+  // New state variable for theme selection
+  const [selectedTheme, setSelectedTheme] = useState<string>(() => {
+    // Try to get the saved theme from localStorage
+    const savedTheme = localStorage.getItem('selectedTheme');
+    return savedTheme || 'creme'; // Default to 'creme' if no theme is saved
+  });
   
   // New state variables for enhanced UX
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -84,18 +94,22 @@ const SlideInput = () => {
   useEffect(() => {
     // When generatedSlides updates, update editedSlides
     if (generatedSlides.length > 0) {
-      // Define a consistent professional background
-      const professionalBackground = 'linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%)';
+      // Find the selected theme from themes array
+      const themeData = themes.find(theme => theme.id === selectedTheme) || themes.find(theme => theme.id === 'creme')!;
       
-      // Add style properties to each slide
+      // Add style properties to each slide based on the selected theme
       const styledSlides = generatedSlides.map(slide => ({
         ...slide,
         style: {
-          backgroundColor: professionalBackground,
+          backgroundColor: themeData.background,
           iconType: getIconSuggestion(slide.title, slide.visualSuggestion),
-          // Explicitly cast to one of the allowed layout types
           layout: Math.random() > 0.5 ? 'right-image' : 'left-image' as 'right-image' | 'left-image',
-          colorScheme: 'professional'
+          colorScheme: themeData.id,
+          accentColor: themeData.accentColor,
+          textColor: themeData.textColor,
+          titleFont: themeData.titleFont,
+          bodyFont: themeData.bodyFont,
+          cardDesign: themeData.cardDesign
         }
       }));
       
@@ -106,12 +120,16 @@ const SlideInput = () => {
         generateAllImages();
       }, 500);
     }
-  }, [generatedSlides]);
+  }, [generatedSlides, selectedTheme]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("SlideInput: Form submitted for slide generation");
     console.log("SlideInput: Selected options - Profession:", profession, "Purpose:", purpose, "Tone:", tone, "Framework:", framework);
+    console.log("SlideInput: Selected theme:", selectedTheme);
+    
+    // Save the selected theme to localStorage
+    localStorage.setItem('selectedTheme', selectedTheme);
     
     // Reset any previous errors
     setError(null);
@@ -150,7 +168,7 @@ const SlideInput = () => {
       });
       
       console.log("SlideInput: Calling Supabase function");
-      // Call the Supabase function with a timeout, including the new dropdown selections
+      // Call the Supabase function with a timeout, including the new dropdown selections and theme
       const responsePromise = supabase.functions.invoke('generate-slides', {
         body: { 
           content: slideContent,
@@ -158,6 +176,7 @@ const SlideInput = () => {
           purpose: purpose,
           tone: tone,
           framework: profession === "Consultant" ? framework : undefined,
+          themeId: selectedTheme,
           autoGenerateImages: true // Add flag to indicate images should be auto-generated
         }
       });
@@ -568,12 +587,14 @@ Nudge theory`;
                   framework={framework}
                   generationProgress={generationProgress}
                   autoGenerateImages={autoGenerateImages}
+                  selectedTheme={selectedTheme}
                   setSlideContent={setSlideContent}
                   setProfession={setProfession}
                   setPurpose={setPurpose}
                   setTone={setTone}
                   setFramework={setFramework}
                   setAutoGenerateImages={setAutoGenerateImages}
+                  setSelectedTheme={setSelectedTheme}
                   onSubmit={handleSubmit}
                   onTryExample={handleTryExample}
                 />
@@ -591,12 +612,14 @@ Nudge theory`;
                 framework={framework}
                 generationProgress={generationProgress}
                 autoGenerateImages={autoGenerateImages}
+                selectedTheme={selectedTheme}
                 setSlideContent={setSlideContent}
                 setProfession={setProfession}
                 setPurpose={setPurpose}
                 setTone={setTone}
                 setFramework={setFramework}
                 setAutoGenerateImages={setAutoGenerateImages}
+                setSelectedTheme={setSelectedTheme}
                 onSubmit={handleSubmit}
                 onTryExample={handleTryExample}
               />

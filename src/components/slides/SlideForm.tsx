@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader, Sparkles } from "lucide-react";
+import { Loader, Sparkles, Palette } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -28,12 +29,14 @@ interface SlideFormProps {
   tone: string;
   generationProgress: number;
   autoGenerateImages: boolean;
+  selectedTheme: string;
   framework?: string;
   setSlideContent: (content: string) => void;
   setProfession: (profession: string) => void;
   setPurpose: (purpose: string) => void;
   setTone: (tone: string) => void;
   setAutoGenerateImages: (autoGenerate: boolean) => void;
+  setSelectedTheme: (theme: string) => void;
   setFramework?: (framework: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onTryExample: () => void;
@@ -48,12 +51,14 @@ const SlideForm: React.FC<SlideFormProps> = ({
   tone,
   generationProgress,
   autoGenerateImages,
+  selectedTheme,
   framework,
   setSlideContent,
   setProfession,
   setPurpose,
   setTone,
   setAutoGenerateImages,
+  setSelectedTheme,
   setFramework,
   onSubmit,
   onTryExample
@@ -139,6 +144,50 @@ const SlideForm: React.FC<SlideFormProps> = ({
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        {/* Theme Selection */}
+        <div className="border border-dashed border-gray-200 rounded-md p-4 bg-gray-50">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="theme">Presentation Theme</Label>
+              <Select
+                value={selectedTheme}
+                onValueChange={setSelectedTheme}
+                disabled={isGenerating}
+              >
+                <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectValue placeholder="Select theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Themes</SelectLabel>
+                    <SelectItem value="stardust">Stardust (Dark)</SelectItem>
+                    <SelectItem value="creme">Crème (Light)</SelectItem>
+                    <SelectItem value="minimalist">Minimalist (Light)</SelectItem>
+                    <SelectItem value="vortex">Vortex (Dark)</SelectItem>
+                    <SelectItem value="lux">Lux (Dark)</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <Button 
+              type="button" 
+              variant="outline" 
+              asChild
+              className="text-sm flex items-center gap-1"
+              disabled={isGenerating}
+            >
+              <Link to="/themes">
+                <Palette className="h-4 w-4" />
+                Browse All Themes
+              </Link>
+            </Button>
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            Choose a theme to customize the look and feel of your slides.
+          </p>
         </div>
 
         {/* Framework dropdown - shown only when Consultant is selected */}
