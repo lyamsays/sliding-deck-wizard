@@ -1,3 +1,4 @@
+
 export interface Slide {
   title: string;
   bullets: string[];
@@ -29,13 +30,32 @@ export interface SlideDeck {
   user_id?: string;
 }
 
+// Determine optimal layout based on slide content
+const determineOptimalLayout = (slide: any, index: number): 'left-image' | 'right-image' | 'centered' | 'title-focus' => {
+  const title = slide.title || '';
+  const bullets = Array.isArray(slide.bullets) ? slide.bullets : [];
+  
+  // For slides with no bullets, centered looks elegant
+  if (bullets.length === 0) {
+    return 'centered';
+  }
+  
+  // For longer titles or text-heavy slides, title-focus provides better structure
+  if (title.length > 35 || bullets.length > 4) {
+    return 'title-focus';
+  }
+  
+  // Alternate layouts for visual rhythm in the presentation
+  return index % 2 === 0 ? 'left-image' : 'right-image';
+};
+
 // Helper function to convert database slides (Json) to strongly typed Slide[]
 export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
   // Define a consistent professional background
   const professionalBackground = 'linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%)';
   
   if (Array.isArray(dbSlides)) {
-    return dbSlides.map(slide => ({
+    return dbSlides.map((slide, index) => ({
       title: slide.title || '',
       bullets: Array.isArray(slide.bullets) ? slide.bullets : [],
       visualSuggestion: slide.visualSuggestion || undefined,
@@ -44,7 +64,7 @@ export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
       speakerNotes: slide.speakerNotes || undefined,
       style: slide.style || {
         backgroundColor: professionalBackground,
-        layout: 'right-image',
+        layout: determineOptimalLayout(slide, index),
         colorScheme: 'professional'
       }
     }));
@@ -53,7 +73,7 @@ export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
   if (typeof dbSlides === 'string') {
     try {
       const parsed = JSON.parse(dbSlides);
-      return Array.isArray(parsed) ? parsed.map(slide => ({
+      return Array.isArray(parsed) ? parsed.map((slide, index) => ({
         title: slide.title || '',
         bullets: Array.isArray(slide.bullets) ? slide.bullets : [],
         visualSuggestion: slide.visualSuggestion || undefined,
@@ -62,7 +82,7 @@ export const convertDbSlidesToTypedSlides = (dbSlides: any): Slide[] => {
         speakerNotes: slide.speakerNotes || undefined,
         style: slide.style || {
           backgroundColor: professionalBackground,
-          layout: 'right-image',
+          layout: determineOptimalLayout(slide, index),
           colorScheme: 'professional'
         }
       })) : [];

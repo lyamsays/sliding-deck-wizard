@@ -21,13 +21,44 @@ const SlideGrid: React.FC<SlideGridProps> = ({
   // Use a consistent professional background color for all slides
   const professionalBackground = 'linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%)';
   
-  // Apply the consistent background to all slides
-  editedSlides = editedSlides.map(slide => {
+  // Determine optimal layout for each slide based on content
+  const optimizeSlideLayout = (slide: Slide, index: number): 'left-image' | 'right-image' | 'centered' | 'title-focus' => {
+    // If slide has image, optimize layout based on content
+    if (slide.imageUrl) {
+      // For slides with short title and few bullets, centered layout looks best
+      if (slide.title.length < 25 && slide.bullets.length <= 2) {
+        return 'centered';
+      }
+      
+      // For slide with lots of text/bullets, use right-image to balance
+      if (slide.bullets.length >= 4 || slide.bullets.join('').length > 150) {
+        return 'right-image';
+      }
+      
+      // Alternate layouts for visual interest in the presentation
+      return index % 2 === 0 ? 'left-image' : 'right-image';
+    } 
+    
+    // For text-heavy slides with no image, title-focus often looks best
+    if (slide.bullets.length >= 4 || slide.title.length > 40) {
+      return 'title-focus';
+    }
+    
+    // Default to right-image as it's generally well balanced
+    return 'right-image';
+  };
+  
+  // Apply the consistent background and intelligent layout to all slides
+  const optimizedSlides = editedSlides.map((slide, index) => {
+    // Only set layout if not already manually set by user
+    const layout = slide.style?.layout || optimizeSlideLayout(slide, index);
+    
     return {
       ...slide,
       style: {
         ...slide.style,
-        backgroundColor: professionalBackground
+        backgroundColor: professionalBackground,
+        layout: layout
       }
     };
   });
@@ -68,7 +99,7 @@ const SlideGrid: React.FC<SlideGridProps> = ({
       initial="hidden"
       animate="show"
     >
-      {editedSlides.map((slide, index) => (
+      {optimizedSlides.map((slide, index) => (
         <motion.div 
           key={index} 
           className="card-enhanced hover-lift transition-all duration-300 overflow-hidden"
