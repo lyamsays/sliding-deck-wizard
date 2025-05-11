@@ -1,4 +1,46 @@
-# Welcome to your Lovable project
+# Sliding.io – Deck Wizard MVP
+
+This project is the early-stage MVP of **Sliding.io**, a tool that helps consultants, professors, and other professionals turn raw notes into structured, visual slide decks — powered by AI.
+
+> ⚠️ This version was created in Lovable and synced to GitHub for preservation and future development.
+
+---
+
+## 🚀 Purpose
+
+**Sliding.io** was built to reduce the time professionals spend formatting slides.  
+The goal is simple: transform raw content into clean, structured decks in seconds — without templates, drag-and-drop fatigue, or design headaches.
+
+---
+
+## 🔧 Current State
+
+- Created using [Lovable.so](https://lovable.so) visual builder  
+- Integrated with GitHub via 2-way sync  
+- Includes basic themes, AI-generated structure, and export options (in progress)
+
+---
+
+## 🛠️ Next Steps
+
+- Transition to a standalone React or Next.js implementation  
+- Fix export formatting issues (PDF/PPTX fidelity)  
+- Add analytics and feedback capture  
+- Build in template/theme library  
+
+---
+
+## 🤝 Collaboration
+
+Want to contribute or follow development?  
+Reach out directly to: **lyam@usesliding.com**
+
+---
+
+## 🔐 Status
+
+This repo is currently **private** and managed under the early-access development cycle.  
+Public release planned after MVP stability and UX testing.
 
 ## Project info
 
