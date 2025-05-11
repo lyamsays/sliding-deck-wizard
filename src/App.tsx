@@ -9,6 +9,7 @@ import SlideInput from "./pages/SlideInput";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import MyDecks from "./pages/MyDecks";
+import Themes from "./pages/Themes";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/my-decks" element={<MyDecks />} />
+            <Route path="/themes" element={<Themes />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

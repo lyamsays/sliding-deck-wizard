@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { PresentationIcon, MenuIcon, X } from 'lucide-react';
+import { PresentationIcon, MenuIcon, X, Palette } from 'lucide-react';
 import UserMenu from './UserMenu';
 import { useAuth } from '@/contexts/AuthContext';
 import Logo from './Logo';
@@ -51,6 +51,15 @@ const Navbar = () => {
               className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary transition-colors"
             >
               Create Slides
+            </Link>
+            <Link 
+              to="/themes" 
+              className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary transition-colors"
+            >
+              <span className="flex items-center gap-1">
+                <Palette className="h-4 w-4" />
+                Themes
+              </span>
             </Link>
             {user && (
               <Link 
@@ -117,6 +126,16 @@ const Navbar = () => {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Create Slides
+                </Link>
+                <Link
+                  to="/themes"
+                  className="block px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 rounded-md"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span className="flex items-center gap-2">
+                    <Palette className="h-5 w-5" />
+                    Themes
+                  </span>
                 </Link>
                 {user && (
                   <Link
