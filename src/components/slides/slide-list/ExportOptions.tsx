@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import PptxGenJS from 'pptxgenjs';
 import { Slide } from '@/types/deck';
 import { useToast } from "@/hooks/use-toast";
@@ -19,12 +20,6 @@ interface ExportOptionsProps {
   handleDownloadSlides: () => void;
 }
 
-interface ProcessedImage {
-  data: string;
-  width: number;
-  height: number;
-}
-
 const ExportOptions: React.FC<ExportOptionsProps> = ({ 
   editedSlides, 
   deckTitle, 
@@ -33,98 +28,41 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  // Enhanced image processing function with better error handling
-  const processImage = async (url: string): Promise<ProcessedImage> => {
-    try {
-      // Return a transparent pixel if URL is empty
-      if (!url) {
-        console.log("No image URL provided, returning placeholder");
-        return {
-          data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-          width: 100,
-          height: 100
-        };
-      }
-      
-      // If URL is already a data URL, process it directly
-      if (url.startsWith('data:image')) {
-        return await loadImage(url);
-      }
-      
-      console.log(`Processing image from URL: ${url}`);
-      
-      // For remote URLs, fetch with CORS handling
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        
-        img.onload = () => {
-          try {
-            // Create canvas and draw image
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-              reject(new Error('Failed to get canvas context'));
-              return;
-            }
-            
-            // Draw image to canvas
-            ctx.drawImage(img, 0, 0);
-            
-            // Return the processed image data
-            resolve({
-              data: canvas.toDataURL('image/png'),
-              width: img.width,
-              height: img.height
-            });
-          } catch (canvasError) {
-            console.error('Canvas error:', canvasError);
-            reject(canvasError);
-          }
-        };
-        
-        img.onerror = (err) => {
-          console.error('Image loading error:', err);
-          // Return a placeholder instead of rejecting
-          resolve({
-            data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-            width: 100,
-            height: 100
-          });
-        };
-        
-        img.src = url;
-      });
-    } catch (error) {
-      console.error("Error processing image:", error);
-      // Return a placeholder on error
-      return {
-        data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-        width: 100,
-        height: 100
-      };
+  // Get DOM element for a slide by its ID
+  const getSlideElement = (index: number): HTMLElement | null => {
+    const slideElement = document.getElementById(`slide-${index}`);
+    if (!slideElement) {
+      console.error(`Could not find slide element with ID slide-${index}`);
     }
+    return slideElement;
   };
   
-  // Helper function to load an image and get its dimensions
-  const loadImage = (src: string): Promise<ProcessedImage> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        resolve({
-          data: src,
-          width: img.width,
-          height: img.height
-        });
-      };
-      img.onerror = () => {
-        reject(new Error('Failed to load image'));
-      };
-      img.src = src;
+  // Capture a DOM element as canvas
+  const captureElement = async (element: HTMLElement): Promise<HTMLCanvasElement> => {
+    const canvas = await html2canvas(element, {
+      allowTaint: true,
+      useCORS: true,
+      scale: 2, // Higher quality
+      logging: false,
+      backgroundColor: null,
+      onclone: (clonedDoc) => {
+        // Find and fix any elements that might cause issues
+        const clonedElement = clonedDoc.getElementById(element.id);
+        if (clonedElement) {
+          // Make sure all images use crossOrigin to avoid tainted canvas
+          const images = clonedElement.querySelectorAll('img');
+          images.forEach(img => {
+            img.crossOrigin = 'anonymous';
+          });
+        }
+      }
     });
+    return canvas;
+  };
+
+  // Convert canvas to base64 image data
+  const canvasToImageData = (canvas: HTMLCanvasElement): string => {
+    return canvas.toDataURL('image/png');
   };
 
   const handleExportPDF = async () => {
@@ -132,10 +70,10 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       setIsExporting(true);
       toast({
         title: "Preparing PDF export",
-        description: "Processing slides and images..."
+        description: "Capturing slides from preview..."
       });
       
-      // Initialize PDF with better defaults for presentation slides
+      // Initialize PDF with presentation formatting
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
@@ -143,118 +81,64 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         compress: true,
       });
       
-      // PDF dimensions
-      const width = pdf.internal.pageSize.getWidth();
-      const height = pdf.internal.pageSize.getHeight();
+      // Get PDF dimensions
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
       
-      // Process all slides sequentially
+      // Process all slides by capturing actual DOM elements
       for (let i = 0; i < editedSlides.length; i++) {
-        console.log(`Processing slide ${i+1} for PDF export`);
-        const slide = editedSlides[i];
-        
         // Add new page for all slides except the first
         if (i > 0) {
           pdf.addPage();
         }
         
-        // Get theme colors from slide
-        const backgroundColor = slide.style?.backgroundColor || '#FFFFFF';
-        const textColor = slide.style?.textColor || '#333333';
-        const accentColor = slide.style?.accentColor || '#6E59A5';
+        // Notify progress
+        toast({
+          title: "Exporting slides",
+          description: `Processing slide ${i + 1} of ${editedSlides.length}...`,
+        });
         
-        // Set page background (support for gradient backgrounds by using a filled rectangle)
-        pdf.setFillColor(255, 255, 255);  // Default white background first
-        pdf.rect(0, 0, width, height, 'F');
-        
-        // Add header with accent color
-        pdf.setFillColor(hexToRgb(accentColor).r, hexToRgb(accentColor).g, hexToRgb(accentColor).b);
-        pdf.rect(0, 0, width, 12, 'F');
-        
-        // Add title
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(24);
-        pdf.setTextColor(hexToRgb(textColor).r, hexToRgb(textColor).g, hexToRgb(textColor).b);
-        pdf.text(slide.title, width / 2, 25, { align: 'center' });
-        
-        // Determine layout for content positioning based on slide style
-        const layout = slide.style?.layout || 'right-image';
-        let textX, textWidth, imgX, imgY, imgWidth, imgHeight;
-        
-        // Configure layout dimensions based on type
-        if (layout === 'left-image') {
-          imgX = 20;
-          imgY = 40;
-          imgWidth = 80;
-          imgHeight = 60;
-          textX = imgX + imgWidth + 10;
-          textWidth = width - textX - 20;
-        } else if (layout === 'right-image') {
-          textX = 20;
-          textWidth = width / 2 - 10;
-          imgX = width / 2 + 10;
-          imgY = 40;
-          imgWidth = 80;
-          imgHeight = 60;
-        } else if (layout === 'centered') {
-          textX = 20;
-          textWidth = width - 40;
-          imgX = (width - 100) / 2; // Center the image
-          imgY = 80; // Place image below text
-          imgWidth = 100;
-          imgHeight = 60;
-        } else {
-          // title-focus layout
-          textX = 20;
-          textWidth = width - 120;
-          imgX = width - 80;
-          imgY = 40;
-          imgWidth = 60;
-          imgHeight = 60;
+        // Find the slide element in the DOM
+        const slideElement = getSlideElement(i);
+        if (!slideElement) {
+          console.error(`Could not find slide ${i} in the DOM`);
+          continue;
         }
         
-        // Add bullets with improved formatting
-        pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(14);
-        pdf.setTextColor(hexToRgb(textColor).r, hexToRgb(textColor).g, hexToRgb(textColor).b);
-        
-        let y = layout === 'centered' ? 40 : 45;
-        for (const bullet of slide.bullets) {
-          const bulletText = '• ' + bullet;
-          const lines = pdf.splitTextToSize(bulletText, textWidth);
-          pdf.text(lines, textX, y);
-          y += 8 * lines.length;
+        try {
+          // Capture the slide as a canvas
+          const canvas = await captureElement(slideElement);
+          
+          // Convert to image data
+          const imgData = canvasToImageData(canvas);
+          
+          // Calculate positioning to fit the slide properly on the page
+          const imgWidth = canvas.width;
+          const imgHeight = canvas.height;
+          const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+          const centerX = (pageWidth - imgWidth * ratio) / 2;
+          const centerY = (pageHeight - imgHeight * ratio) / 2;
+          
+          // Add the image to PDF
+          pdf.addImage(
+            imgData,
+            'PNG',
+            centerX,
+            centerY,
+            imgWidth * ratio,
+            imgHeight * ratio
+          );
+          
+          console.log(`Added slide ${i + 1} to PDF`);
+          
+        } catch (error) {
+          console.error(`Error capturing slide ${i}:`, error);
+          // Add error message to PDF
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(16);
+          pdf.setTextColor(255, 0, 0);
+          pdf.text(`Error rendering slide ${i + 1}`, pageWidth / 2, pageHeight / 2, { align: 'center' });
         }
-        
-        // Add image if available
-        if (slide.imageUrl) {
-          try {
-            console.log(`Processing image for PDF slide ${i+1}`);
-            
-            // Process image to handle CORS and format issues
-            const processedImage = await processImage(slide.imageUrl);
-            
-            // Add the processed image to PDF
-            pdf.addImage(processedImage.data, 'PNG', imgX, imgY, imgWidth, imgHeight);
-            console.log(`Image added successfully to slide ${i+1}`);
-          } catch (imgError) {
-            console.error(`Failed to add image to slide ${i+1}:`, imgError);
-            // Add placeholder for failed image
-            pdf.setFillColor(230, 230, 230);
-            pdf.rect(imgX, imgY, imgWidth, imgHeight, 'F');
-            pdf.setFontSize(10);
-            pdf.setTextColor(120, 120, 120);
-            pdf.text("Image not available", imgX + imgWidth/2, imgY + imgHeight/2, { align: 'center' });
-          }
-        }
-        
-        // Add slide number and footer with accent color
-        pdf.setFillColor(hexToRgb(accentColor).r, hexToRgb(accentColor).g, hexToRgb(accentColor).b, 0.1);
-        pdf.rect(0, height - 12, width, 12, 'F');
-        
-        pdf.setFontSize(10);
-        pdf.setTextColor(hexToRgb(textColor).r, hexToRgb(textColor).g, hexToRgb(textColor).b);
-        pdf.text(`${i + 1}/${editedSlides.length}`, width - 20, height - 5, { align: 'right' });
-        pdf.text(`${deckTitle || 'Presentation'}`, 20, height - 5);
       }
       
       // Save the generated PDF
@@ -268,7 +152,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       console.error('Error generating PDF:', error);
       toast({
         title: "Export failed",
-        description: "Failed to generate PDF file. Please try again.",
+        description: `Failed to generate PDF: ${error.message}`,
         variant: "destructive"
       });
     } finally {
@@ -281,7 +165,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       setIsExporting(true);
       toast({
         title: "Preparing PowerPoint export",
-        description: "Processing slides and images..."
+        description: "Capturing slides from preview..."
       });
       
       // Create new PptxGenJS instance
@@ -293,183 +177,71 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       pptx.title = deckTitle || 'Presentation';
       pptx.layout = 'LAYOUT_16x9';
       
-      // Process all slides with improved styling
+      // Process all slides by capturing actual DOM elements
       for (let i = 0; i < editedSlides.length; i++) {
-        console.log(`Processing slide ${i+1} for PPTX export`);
-        const slide = editedSlides[i];
-        
-        // Get theme colors from slide
-        const backgroundColor = slide.style?.backgroundColor || '#FFFFFF';
-        const textColor = slide.style?.textColor || '#333333';
-        const accentColor = slide.style?.accentColor || '#6E59A5';
-        const layout = slide.style?.layout || 'right-image';
-        
-        // Create slide with proper background
-        const pptSlide = pptx.addSlide();
-        
-        // Set slide background
-        if (backgroundColor.includes('gradient')) {
-          // For gradient backgrounds, use a solid color approximation
-          pptSlide.background = { color: accentColor + '20' };
-        } else {
-          pptSlide.background = { color: backgroundColor };
-        }
-        
-        // Add slide number
-        pptSlide.addText(`${i + 1}/${editedSlides.length}`, {
-          x: 90, // 90% of slide width
-          y: 95, // 95% of slide height
-          color: textColor,
-          fontSize: 10,
-          bold: false
+        // Notify progress
+        toast({
+          title: "Exporting slides",
+          description: `Processing slide ${i + 1} of ${editedSlides.length}...`,
         });
         
-        // Add footer with deck title
-        pptSlide.addText(deckTitle || 'Presentation', {
-          x: 5, // 5% of slide width
-          y: 95, // 95% of slide height
-          color: textColor,
-          fontSize: 10,
-          bold: false
-        });
-        
-        // Add title with the slide's text color
-        pptSlide.addText(slide.title, {
-          x: 5, // 5% of slide width
-          y: 5, // 5% of slide height
-          w: 90, // 90% of slide width
-          h: 10, // 10% of slide height
-          fontSize: 24,
-          bold: true,
-          color: textColor
-        });
-        
-        // Set up layout coordinates - convert string percentages to numbers for PptxGenJS
-        // PptxGenJS uses numbers from 0-100 for percentages or specific units
-        let contentX = 5; // 5%
-        let contentY = 20; // 20%
-        let contentW = 50; // 50%
-        let contentH = 60; // 60%
-        let imageX = 60; // 60%
-        let imageY = 20; // 20%
-        let imageW = 35; // 35%
-        let imageH = 60; // 60%
-        
-        if (layout === 'left-image') {
-          imageX = 5;
-          imageY = 20;
-          imageW = 35;
-          imageH = 60;
-          contentX = 45;
-          contentY = 20;
-          contentW = 50;
-          contentH = 60;
-        } else if (layout === 'right-image') {
-          // Default values above are already for right-image
-        } else if (layout === 'centered') {
-          contentX = 5;
-          contentY = 20;
-          contentW = 90;
-          contentH = 30;
-          imageX = 30;
-          imageY = 55;
-          imageW = 40;
-          imageH = 35;
-        } else { // title-focus
-          contentX = 5;
-          contentY = 20;
-          contentW = 65;
-          contentH = 70;
-          imageX = 75;
-          imageY = 20;
-          imageW = 20;
-          imageH = 30;
+        // Find the slide element in the DOM
+        const slideElement = getSlideElement(i);
+        if (!slideElement) {
+          console.error(`Could not find slide ${i} in the DOM`);
+          continue;
         }
         
-        // Add bullets as separate text elements for better formatting
-        if (slide.bullets && slide.bullets.length > 0) {
-          slide.bullets.forEach((bullet, idx) => {
-            pptSlide.addText(`• ${bullet}`, {
-              x: contentX,
-              y: contentY + (idx * 8),
-              w: contentW,
-              color: textColor,
-              fontSize: 14,
-              bullet: false // We're adding our own bullets
-            });
-          });
-        }
-        
-        // Add image if available with robust error handling
-        if (slide.imageUrl) {
-          try {
-            console.log(`Processing image for PPTX slide ${i+1}`);
-            
-            // Process the image through our helper to get dimensions and data
-            const processedImage = await processImage(slide.imageUrl);
-            
-            // Calculate aspect ratio to maintain proportions
-            const aspectRatio = processedImage.width / processedImage.height;
-            let finalWidth = imageW;
-            let finalHeight = imageH;
-            
-            // Adjust width or height to maintain aspect ratio within bounds
-            if (aspectRatio > 1) {
-              // Landscape image
-              finalHeight = imageW / aspectRatio;
-              if (finalHeight > imageH) {
-                finalHeight = imageH;
-                finalWidth = imageH * aspectRatio;
-              }
-            } else {
-              // Portrait image
-              finalWidth = imageH * aspectRatio;
-              if (finalWidth > imageW) {
-                finalWidth = imageW;
-                finalHeight = imageW / aspectRatio;
-              }
+        try {
+          // Capture the slide as a canvas
+          const canvas = await captureElement(slideElement);
+          
+          // Convert to image data
+          const imgData = canvasToImageData(canvas);
+          
+          // Calculate slide dimensions and aspect ratio
+          const slide = pptx.addSlide();
+          
+          // Add the captured slide as a full slide background image
+          slide.addImage({
+            data: imgData,
+            x: 0,
+            y: 0,
+            w: '100%',
+            h: '100%',
+            sizing: {
+              type: 'contain',
+              w: '100%',
+              h: '100%'
             }
-            
-            // Add the processed image with proper sizing parameters
-            pptSlide.addImage({
-              data: processedImage.data,
-              x: imageX,
-              y: imageY,
-              w: finalWidth,
-              h: finalHeight,
-              sizing: {
-                type: 'contain',
-                w: finalWidth,
-                h: finalHeight
-              }
-            });
-            
-            console.log(`Image added successfully to PPTX slide ${i+1}`);
-          } catch (err) {
-            console.error('Error adding image to PPTX:', err);
-            
-            // Add a placeholder shape if image fails
-            pptSlide.addShape(pptx.ShapeType.rect, {
-              x: imageX,
-              y: imageY,
-              w: imageW,
-              h: imageH,
-              fill: { color: 'F0F0F0' }
-            });
-            
-            pptSlide.addText('Image placeholder', {
-              x: imageX,
-              y: imageY + 15,
-              w: imageW,
-              align: 'center',
-              color: '888888'
-            });
+          });
+          
+          // Add slide title as alt text for accessibility
+          const slideTitle = editedSlides[i]?.title || `Slide ${i + 1}`;
+          slide.addNotes(`Title: ${slideTitle}`);
+          
+          // Add speaker notes if available
+          if (editedSlides[i]?.speakerNotes) {
+            slide.addNotes(editedSlides[i].speakerNotes);
           }
-        }
-        
-        // Add speaker notes if available
-        if (slide.speakerNotes) {
-          pptSlide.addNotes(slide.speakerNotes);
+          
+          console.log(`Added slide ${i + 1} to PPTX`);
+          
+        } catch (error) {
+          console.error(`Error capturing slide ${i}:`, error);
+          
+          // Create an error slide
+          const errorSlide = pptx.addSlide();
+          errorSlide.addText(`Error rendering slide ${i + 1}`, {
+            x: 1,
+            y: 1,
+            w: '98%',
+            h: 1,
+            fontSize: 24,
+            color: 'FF0000',
+            align: 'center',
+            valign: 'middle'
+          });
         }
       }
       
@@ -484,7 +256,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       console.error('Error generating PPTX:', error);
       toast({
         title: "Export failed",
-        description: "Failed to generate PowerPoint file. Please try again.",
+        description: `Failed to generate PowerPoint: ${error.message}`,
         variant: "destructive"
       });
     } finally {
@@ -492,7 +264,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
     }
   };
   
-  // Helper function to convert hex color to RGB
+  // Helper function to convert hex color to RGB (reused from original)
   const hexToRgb = (hex: string) => {
     // Default fallback color
     if (!hex || hex.includes('gradient')) return { r: 100, g: 100, b: 255 };
