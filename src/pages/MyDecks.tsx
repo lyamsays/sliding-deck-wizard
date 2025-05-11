@@ -17,6 +17,14 @@ import DeckViewer from '@/components/decks/DeckViewer';
 import EmptyDeckState from '@/components/decks/EmptyDeckState';
 import LoadingDecks from '@/components/decks/LoadingDecks';
 
+// Define interface for user feedback data
+interface UserFeedback {
+  id: string;
+  user_id: string;
+  feedback: string;
+  created_at: string;
+}
+
 const MyDecks = () => {
   const { user } = useAuth();
   const [decks, setDecks] = useState<SlideDeck[]>([]);
@@ -61,14 +69,15 @@ const MyDecks = () => {
         const { data: feedbackData, error: feedbackError } = await supabase
           .from('user_feedback')
           .select('*')
-          .eq('user_id', user.id)
-          .single();
+          .eq('user_id', user.id);
         
-        if (feedbackError && feedbackError.code !== 'PGSQL_ERROR') {
-          // If no feedback found, that's fine
+        if (feedbackError) {
+          console.error('Error checking feedback:', feedbackError);
           setFeedbackSubmitted(false);
-        } else if (feedbackData) {
+        } else if (feedbackData && feedbackData.length > 0) {
           setFeedbackSubmitted(true);
+        } else {
+          setFeedbackSubmitted(false);
         }
         
         // Show feedback dialog if they have one deck and haven't submitted feedback yet
