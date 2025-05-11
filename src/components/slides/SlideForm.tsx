@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader, Sparkles, Palette, ArrowRight, ArrowLeft, Upload } from "lucide-react";
+import { Loader, Sparkles, Palette, ArrowRight, ArrowLeft } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -322,7 +322,7 @@ const SlideForm: React.FC<SlideFormProps> = ({
               />
               
               <div className="mt-3 text-xs text-gray-500 text-center">
-                <p>You can paste text directly or upload a PDF/DOCX file</p>
+                <p>Enter your presentation content here</p>
               </div>
               
               <div className="flex items-center gap-2 mt-4 justify-center">
