@@ -15,8 +15,8 @@ const Features = () => {
       description: "Our AI automatically recommends the perfect layout and visual theme based on your content type and purpose."
     },
     {
-      title: "Professional templates for any presentation",
-      description: "Choose from our collection of templates to jumpstart your presentation with professional designs."
+      title: "No templates or drag-and-drop required",
+      description: "Unlike traditional tools, there's no need to wrestle with templates or spend time on manual layout adjustments."
     },
     {
       title: "Simple export to PDF and PowerPoint",
