@@ -3,6 +3,7 @@ import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Button } from "@/components/ui/button";
+import { Flask } from 'lucide-react';
 
 const AboutPage = () => {
   return (
@@ -32,6 +33,20 @@ const AboutPage = () => {
             <p>
               Sliding.io isn't just another slide tool. It's a purpose-built assistant designed to save time, remove friction, and let professionals focus on what matters — thinking, teaching, advising, and leading.
             </p>
+            
+            <div className="my-12 bg-white rounded-xl shadow-sm p-6">
+              <div className="flex flex-col items-center md:flex-row md:items-start md:space-x-6">
+                <div className="bg-purple-50 rounded-lg p-4 flex items-center justify-center mb-4 md:mb-0">
+                  <Flask className="h-10 w-10 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl mb-2">No Templates or Drag-and-Drop</h3>
+                  <p className="text-gray-600">
+                    Unlike traditional tools, there's no need to wrestle with templates or spend time on manual layout adjustments.
+                  </p>
+                </div>
+              </div>
+            </div>
             
             <div className="my-8 text-center">
               <p className="text-xl font-semibold">

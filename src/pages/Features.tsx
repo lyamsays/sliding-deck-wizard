@@ -15,8 +15,8 @@ const Features = () => {
       description: "Our AI automatically recommends the perfect layout and visual theme based on your content type and purpose."
     },
     {
-      title: "Visual generation (images, icons, context-aware support)",
-      description: "Get relevant visuals suggested for each slide based on content analysis, with easy customization options."
+      title: "Professional templates for any presentation",
+      description: "Choose from our collection of templates to jumpstart your presentation with professional designs."
     },
     {
       title: "Simple export to PDF and PowerPoint",

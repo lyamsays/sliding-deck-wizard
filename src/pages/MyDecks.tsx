@@ -8,6 +8,9 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { SlideDeck, convertDbSlidesToTypedSlides } from '@/types/deck';
 import DeckList from '@/components/decks/DeckList';
 import DeckViewer from '@/components/decks/DeckViewer';
@@ -20,6 +23,10 @@ const MyDecks = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDeck, setSelectedDeck] = useState<SlideDeck | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -31,15 +38,15 @@ const MyDecks = () => {
 
     const fetchDecks = async () => {
       try {
-        const { data, error } = await supabase
+        const { data: decksData, error: decksError } = await supabase
           .from('slide_decks')
           .select('*')
           .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (decksError) throw decksError;
         
         // Convert the database results to the properly typed SlideDeck[]
-        const typedDecks: SlideDeck[] = data.map(deck => ({
+        const typedDecks: SlideDeck[] = decksData.map(deck => ({
           id: deck.id,
           title: deck.title,
           created_at: deck.created_at,
@@ -49,6 +56,27 @@ const MyDecks = () => {
         }));
         
         setDecks(typedDecks);
+        
+        // Check if feedback has been submitted
+        const { data: feedbackData, error: feedbackError } = await supabase
+          .from('user_feedback')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (feedbackError && feedbackError.code !== 'PGSQL_ERROR') {
+          // If no feedback found, that's fine
+          setFeedbackSubmitted(false);
+        } else if (feedbackData) {
+          setFeedbackSubmitted(true);
+        }
+        
+        // Show feedback dialog if they have one deck and haven't submitted feedback yet
+        if (typedDecks.length === 1 && !feedbackSubmitted && !localStorage.getItem('feedbackShown')) {
+          localStorage.setItem('feedbackShown', 'true');
+          setFeedbackOpen(true);
+        }
+        
       } catch (error: any) {
         console.error('Error fetching decks:', error);
         toast({
@@ -62,7 +90,7 @@ const MyDecks = () => {
     };
 
     fetchDecks();
-  }, [user, navigate, toast]);
+  }, [user, navigate, toast, feedbackSubmitted]);
 
   const handleViewDeck = (deck: SlideDeck) => {
     setSelectedDeck(deck);
@@ -103,6 +131,41 @@ const MyDecks = () => {
     }
   };
 
+  const handleSubmitFeedback = async () => {
+    if (!feedback.trim() || !user) return;
+    
+    setSubmittingFeedback(true);
+    
+    try {
+      const { error } = await supabase
+        .from('user_feedback')
+        .insert([
+          { user_id: user.id, feedback, created_at: new Date().toISOString() }
+        ]);
+      
+      if (error) throw error;
+      
+      setFeedbackSubmitted(true);
+      setFeedbackOpen(false);
+      
+      toast({
+        title: "Thank you for your feedback!",
+        description: "Your input helps us improve Sliding.io.",
+      });
+    } catch (error: any) {
+      console.error('Error submitting feedback:', error);
+      toast({
+        title: "Failed to submit feedback",
+        description: error.message || "An error occurred while submitting your feedback. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
+
+  const canCreateMoreDecks = decks.length < 3 || feedbackSubmitted;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -116,6 +179,21 @@ const MyDecks = () => {
             <p className="mt-4 text-lg text-gray-600">
               View and manage all your saved slide decks.
             </p>
+            
+            {decks.length >= 3 && !feedbackSubmitted && (
+              <div className="mt-4 bg-amber-50 text-amber-800 p-4 rounded-md inline-block">
+                <p className="font-medium">
+                  You've reached the limit of 3 slide decks. Please provide feedback to create more.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="mt-2 border-amber-400 hover:bg-amber-100"
+                  onClick={() => setFeedbackOpen(true)}
+                >
+                  Provide Feedback
+                </Button>
+              </div>
+            )}
           </div>
           
           <div className="mt-8">
@@ -142,9 +220,21 @@ const MyDecks = () => {
                       />
                     </CardContent>
                     <CardFooter>
-                      <Button onClick={() => navigate('/create')}>
+                      <Button 
+                        onClick={() => navigate('/create')}
+                        disabled={!canCreateMoreDecks}
+                      >
                         Create New Slides
                       </Button>
+                      {decks.length > 0 && !feedbackSubmitted && (
+                        <Button 
+                          variant="outline" 
+                          className="ml-2"
+                          onClick={() => setFeedbackOpen(true)}
+                        >
+                          Provide Feedback
+                        </Button>
+                      )}
                     </CardFooter>
                   </Card>
                 </div>
@@ -162,6 +252,42 @@ const MyDecks = () => {
           </div>
         </div>
       </main>
+      
+      <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Help us improve Sliding.io</DialogTitle>
+            <DialogDescription>
+              Your feedback helps us make Sliding.io better. After submitting feedback, you'll be able to create more than 3 slide decks.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="feedback">Your feedback</Label>
+              <Textarea 
+                id="feedback" 
+                placeholder="What did you like? What could be improved?" 
+                className="h-32"
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFeedbackOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmitFeedback} 
+              disabled={!feedback.trim() || submittingFeedback}
+            >
+              {submittingFeedback ? 'Submitting...' : 'Submit Feedback'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </div>
