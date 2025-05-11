@@ -48,12 +48,14 @@ const SlideList: React.FC<SlideListProps> = ({
       
       <HelpMessage />
       
-      <SlideGrid 
-        editedSlides={editedSlides}
-        viewMode={viewMode}
-        handleSlideUpdate={handleSlideUpdate}
-        handleRemoveImage={handleRemoveImage}
-      />
+      <div id="slides-for-export-container" className="slides-for-export-wrapper">
+        <SlideGrid 
+          editedSlides={editedSlides}
+          viewMode={viewMode}
+          handleSlideUpdate={handleSlideUpdate}
+          handleRemoveImage={handleRemoveImage}
+        />
+      </div>
       
       <ExportOptions 
         editedSlides={editedSlides}

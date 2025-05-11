@@ -128,7 +128,9 @@ const SlideGrid: React.FC<SlideGridProps> = ({
           data-slide-index={index} // Additional data attribute for backup
         >
           {/* The slide content itself, which will be exported */}
-          <div className="slide-content-for-export">
+          <div className="slide-content-for-export relative overflow-hidden rounded-lg" style={{
+            backgroundColor: slide.style?.backgroundColor || '#ffffff',
+          }}>
             {viewMode === 'outline' ? (
               <OutlineSlide 
                 slide={slide} 
@@ -145,9 +147,9 @@ const SlideGrid: React.FC<SlideGridProps> = ({
             )}
           </div>
           
-          {/* UI elements that should not be exported */}
-          <div className="slide-ui-elements-not-for-export">
-            {/* Any UI controls or recommendations would go here */}
+          {/* UI elements that should not be exported - rendered outside the exportable content */}
+          <div className="slide-ui-elements-not-for-export mt-2">
+            {/* Any UI controls would go here */}
           </div>
         </motion.div>
       ))}

@@ -162,6 +162,22 @@
   .glass-panel {
     @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
   }
+  
+  /* Export-specific classes */
+  .slides-for-export-wrapper {
+    @apply relative;
+  }
+  
+  .slide-content-for-export {
+    @apply rounded-lg overflow-hidden;
+  }
+  
+  /* Hide UI elements during export */
+  .slide-content-for-export .slide-ui-elements-not-for-export,
+  .slide-content-for-export .recommendation-ui,
+  .slide-content-for-export [class*="visual-label"] {
+    @apply print:hidden;
+  }
 }
 
 @layer utilities {
