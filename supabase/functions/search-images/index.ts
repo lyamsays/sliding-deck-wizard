@@ -13,7 +13,12 @@ async function searchUnsplashImages(query: string, page = 1, perPage = 9) {
   
   if (!accessKey) {
     console.error("search-images: UNSPLASH_ACCESS_KEY is not set in environment variables");
-    throw new Error('UNSPLASH_ACCESS_KEY is not set in environment variables');
+    throw new Error('UNSPLASH_ACCESS_KEY is not set. Please configure this in your Supabase Edge Function secrets.');
+  }
+  
+  if (accessKey.trim() === '') {
+    console.error("search-images: UNSPLASH_ACCESS_KEY is empty");
+    throw new Error('UNSPLASH_ACCESS_KEY is empty. Please provide a valid key in your Supabase Edge Function secrets.');
   }
   
   console.log(`search-images: Searching Unsplash with key ${accessKey.substring(0, 5)}... for query "${query}"`);
@@ -30,6 +35,11 @@ async function searchUnsplashImages(query: string, page = 1, perPage = 9) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`search-images: Unsplash API error: ${response.status}, ${errorText}`);
+      
+      if (response.status === 401) {
+        throw new Error('The Unsplash API key provided is invalid or has expired. Please check your API key and update it in Supabase Edge Function secrets.');
+      }
+      
       throw new Error(`Unsplash API error: ${response.status}`);
     }
 
@@ -73,11 +83,12 @@ serve(async (req) => {
 
     // Verify that the UNSPLASH_ACCESS_KEY is set
     const accessKey = Deno.env.get('UNSPLASH_ACCESS_KEY');
-    if (!accessKey) {
-      console.error("search-images: UNSPLASH_ACCESS_KEY is not configured");
+    if (!accessKey || accessKey.trim() === '') {
+      console.error("search-images: UNSPLASH_ACCESS_KEY is not configured or is empty");
       return new Response(
         JSON.stringify({ 
-          error: 'Unsplash API key is not configured. Please set the UNSPLASH_ACCESS_KEY in Supabase Edge Function secrets.' 
+          error: 'Unsplash API key is not configured. Please set the UNSPLASH_ACCESS_KEY in Supabase Edge Function secrets.',
+          apiKeyMissing: true
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -99,10 +110,13 @@ serve(async (req) => {
   } catch (error) {
     console.error("search-images: Error searching for images:", error);
     
+    const isAuthError = error.message?.includes('invalid') && error.message?.includes('API key');
+    
     return new Response(
       JSON.stringify({ 
         error: error.message || 'An error occurred during image search',
-        details: 'This may be due to an invalid Unsplash API key or network issues.'
+        details: 'This may be due to an invalid Unsplash API key or network issues.',
+        apiKeyInvalid: isAuthError
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
