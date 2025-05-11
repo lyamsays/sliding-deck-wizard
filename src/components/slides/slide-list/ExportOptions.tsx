@@ -27,7 +27,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  // Enhanced helper function to convert image URLs to base64 format
+  // Improved helper function to convert image URLs to base64 format
   const getBase64FromUrl = async (url: string): Promise<string> => {
     try {
       // If URL is already base64, return it as is
@@ -36,7 +36,20 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       }
       
       // For external URLs, fetch the image
-      const response = await fetch(url);
+      const response = await fetch(url, { 
+        mode: 'cors',
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+      }
+      
       const blob = await response.blob();
       
       return new Promise((resolve, reject) => {
@@ -51,66 +64,86 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
     }
   };
 
-  // Improved PDF export with better image handling
+  // Improved PDF export with better image handling and font embedding
   const handleExportPDF = async () => {
     try {
       setIsExporting(true);
       
-      // Import fonts for better text rendering
+      // Initialize PDF with better defaults for presentation slides
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
         format: 'a4',
         compress: true,
         putOnlyUsedFonts: true,
+        hotfixes: ['px_scaling'], // Fix for better image handling
       });
-      
-      // Add professional looking fonts
-      pdf.setFont("helvetica");
       
       // PDF dimensions
       const width = pdf.internal.pageSize.getWidth();
       const height = pdf.internal.pageSize.getHeight();
       
-      // Process all slides sequentially
+      // Add custom font styling
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor("#333333");
+      
+      // Process all slides sequentially with improved error handling
       for (let i = 0; i < editedSlides.length; i++) {
+        console.log(`Processing slide ${i+1} for PDF export`);
         const slide = editedSlides[i];
         
         if (i > 0) {
           pdf.addPage();
         }
         
-        // Add slide background color
-        pdf.setFillColor(245, 248, 252);
+        // Add slide background
+        pdf.setFillColor(248, 250, 252); // Light blue-gray background
         pdf.rect(0, 0, width, height, 'F');
+        
+        // Add header bar
+        pdf.setFillColor(40, 80, 160); // Professional blue
+        pdf.rect(0, 0, width, 12, 'F');
         
         // Add slide title with enhanced formatting
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(26);
-        pdf.setTextColor('#1a365d');
-        pdf.text(slide.title, width / 2, 20, { align: 'center' });
+        pdf.setFontSize(24);
+        pdf.setTextColor('#1a365d'); // Dark blue
+        pdf.text(slide.title, width / 2, 25, { align: 'center' });
         
         // Determine layout for content positioning
         const layout = slide.style?.layout || 'right-image';
-        let textX, textWidth, imgX, imgWidth = 70, imgHeight = 50;
+        let textX, textWidth, imgX, imgY, imgWidth, imgHeight;
         
+        // Configure layout dimensions based on type
         if (layout === 'left-image') {
           imgX = 20;
-          textX = width / 2 + 5;
-          textWidth = width / 2 - 25;
+          imgY = 40;
+          imgWidth = 80;
+          imgHeight = 60;
+          textX = imgX + imgWidth + 10;
+          textWidth = width - textX - 20;
         } else if (layout === 'right-image') {
           textX = 20;
-          textWidth = width / 2 - 25;
+          textWidth = width / 2 - 10;
           imgX = width / 2 + 10;
+          imgY = 40;
+          imgWidth = 80;
+          imgHeight = 60;
         } else if (layout === 'centered') {
           textX = 20;
           textWidth = width - 40;
-          imgX = (width - imgWidth) / 2;
+          imgX = (width - 100) / 2; // Center the image
+          imgY = 80; // Place image below text
+          imgWidth = 100;
+          imgHeight = 60;
         } else {
           // title-focus layout
           textX = 20;
-          textWidth = width - 40;
-          imgX = width - imgWidth - 20;
+          textWidth = width - 120;
+          imgX = width - 80;
+          imgY = 40;
+          imgWidth = 60;
+          imgHeight = 60;
         }
         
         // Add bullets with better formatting and positioning
@@ -118,7 +151,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         pdf.setFontSize(14);
         pdf.setTextColor('#333333');
         
-        let y = 40; // Start bullets further down
+        let y = layout === 'centered' ? 40 : 45;
         for (const bullet of slide.bullets) {
           const bulletText = '• ' + bullet;
           const lines = pdf.splitTextToSize(bulletText, textWidth);
@@ -129,40 +162,49 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         // Add image with proper error handling and loading
         if (slide.imageUrl) {
           try {
-            console.log(`Processing image for slide ${i+1}: ${slide.imageUrl.substring(0, 50)}...`);
+            console.log(`Processing image for PDF slide ${i+1}: ${slide.imageUrl.substring(0, 50)}...`);
             
             // Handle image conversion with proper error handling
             let imgData;
             try {
+              console.log(`Fetching image for slide ${i+1}...`);
               imgData = await getBase64FromUrl(slide.imageUrl);
+              console.log(`Successfully converted image to base64 for slide ${i+1}`);
             } catch(imgError) {
               console.error(`Failed to load image for slide ${i+1}:`, imgError);
+              // Add error placeholder instead of failing
+              pdf.setFillColor(230, 230, 230); // Light gray
+              pdf.rect(imgX, imgY, imgWidth, imgHeight, 'F');
+              pdf.setFont("helvetica", "normal");
+              pdf.setFontSize(10);
+              pdf.setTextColor('#666666');
+              pdf.text("Image not available", imgX + imgWidth/2, imgY + imgHeight/2, { align: 'center' });
               continue;
             }
             
             if (imgData) {
-              console.log(`Successfully converted image to base64 for slide ${i+1}`);
               // For centered layout, place image below text
               if (layout === 'centered') {
-                pdf.addImage(imgData, 'JPEG', imgX, y + 10, imgWidth, imgHeight);
+                pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight, undefined, 'FAST');
               } else {
                 // For other layouts, place image to the side
-                pdf.addImage(imgData, 'JPEG', imgX, 40, imgWidth, imgHeight);
+                pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight, undefined, 'FAST');
               }
             }
           } catch (err) {
             console.error(`Error adding image to PDF for slide ${i+1}:`, err);
+            // Don't throw - continue with next slide
           }
         }
         
-        // Add slide number
+        // Add slide number and footer
+        pdf.setFillColor(240, 240, 245); // Light gray footer
+        pdf.rect(0, height - 12, width, 12, 'F');
+        
         pdf.setFontSize(10);
         pdf.setTextColor('#666666');
-        pdf.text(`${i + 1}/${editedSlides.length}`, width - 20, height - 10, { align: 'right' });
-        
-        // Add footer with deck title
-        pdf.setFontSize(8);
-        pdf.text(`${deckTitle || 'Presentation'}`, 20, height - 10);
+        pdf.text(`${i + 1}/${editedSlides.length}`, width - 20, height - 5, { align: 'right' });
+        pdf.text(`${deckTitle || 'Presentation'}`, 20, height - 5);
       }
       
       pdf.save(`${deckTitle || 'presentation'}.pdf`);
@@ -187,6 +229,8 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const handleExportPPTX = async () => {
     try {
       setIsExporting(true);
+      
+      // Create new PptxGenJS instance with better defaults
       const pptx = new PptxGenJS();
       
       // Set presentation properties and improved default styling
@@ -194,21 +238,49 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       pptx.company = 'Created with SlideMaker AI';
       pptx.title = deckTitle || 'Presentation';
       
+      // Set a professional design theme
+      pptx.theme = {
+        headFontFace: 'Arial',
+        bodyFontFace: 'Arial',
+        colorScheme: {
+          background1: { color: "FFFFFF" },
+          background2: { color: "F5F8FC" },
+          text1: { color: "1A365D" },
+          text2: { color: "333333" },
+          accent1: { color: "4472C4" },
+          accent2: { color: "ED7D31" },
+        },
+      };
+      
       // Set the master slide with consistent professional styling
       pptx.defineSlideMaster({
         title: 'MASTER_SLIDE',
-        background: { color: "F5F8FC" },
+        background: { color: "FFFFFF" },
         objects: [
-          { 'rect': { x: 0, y: 0, w: '100%', h: '100%', fill: { color: "F5F8FC" } } },
+          // Top header bar
+          { 'rect': { x: 0, y: 0, w: '100%', h: 0.3, fill: { color: "4472C4" } } },
+          
+          // Footer bar
+          { 'rect': { x: 0, y: 6.8, w: '100%', h: 0.3, fill: { color: "F0F0F5" } } },
+          
+          // Footer text - deck title
           { 'text': { 
             text: deckTitle || 'Presentation', 
-            options: { x: 0.5, y: 6.8, w: '100%', align: 'left', fontSize: 10, color: '666666' } 
+            options: { x: 0.5, y: 6.85, w: 4, h: 0.3, align: 'left', fontSize: 10, color: '666666', fontFace: 'Arial' } 
+          }},
+          
+          // Background subtle effect
+          { 'rect': { 
+            x: 0, y: 0.3, w: '100%', h: 6.5, 
+            fill: { color: "FCFCFF" },
+            line: { color: "F5F5F5", width: 1 }
           }}
         ]
       });
       
-      // Process all slides with improved styling
+      // Process all slides with improved styling and error handling
       for (let i = 0; i < editedSlides.length; i++) {
+        console.log(`Processing slide ${i+1} for PPTX export`);
         const slide = editedSlides[i];
         const layout = slide.style?.layout || 'right-image';
         
@@ -217,7 +289,9 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         
         // Add slide number to bottom right
         pptSlide.addText(`${i + 1}/${editedSlides.length}`, {
-          x: 9.5, y: 6.8, w: 0.5, h: 0.3, fontSize: 10, color: '666666', align: 'right'
+          x: 9, y: 6.85, w: 0.5, h: 0.3, 
+          fontSize: 10, color: '666666', align: 'right',
+          fontFace: 'Arial'
         });
         
         // Add slide title with improved styling
@@ -239,7 +313,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           imageX = 0.5;
           imageY = 1.5;
           imageWidth = 4;
-          imageHeight = 3;
+          imageHeight = 3.5;
           contentX = 5;
           contentWidth = 4.5;
         } else if (layout === 'right-image') {
@@ -248,7 +322,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           imageX = 5.5;
           imageY = 1.5;
           imageWidth = 4;
-          imageHeight = 3;
+          imageHeight = 3.5;
         } else if (layout === 'centered') {
           contentX = 0.5;
           contentWidth = 9;
@@ -259,11 +333,11 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         } else {
           // title-focus layout
           contentX = 0.5;
-          contentWidth = 9;
-          imageX = 7;
+          contentWidth = 7;
+          imageX = 8;
           imageY = 1.5;
-          imageWidth = 2.5;
-          imageHeight = 2;
+          imageWidth = 1.5;
+          imageHeight = 1.5;
         }
         
         // Add bullets with improved formatting
@@ -273,12 +347,12 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           x: contentX,
           y: 1.5,
           w: contentWidth,
-          h: layout === 'centered' ? 1.8 : 4,
-          fontSize: 16,
+          h: layout === 'centered' ? 1.8 : 4.5,
+          fontSize: 18,
           color: '333333',
           bullet: { type: 'bullet' },
           fontFace: 'Arial',
-          lineSpacing: 28
+          lineSpacing: 32
         });
         
         // Add image with improved error handling
@@ -293,7 +367,28 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
               console.log(`Successfully converted image to base64 for PPTX slide ${i+1}`);
             } catch(imgError) {
               console.error(`Failed to load image for PPTX slide ${i+1}:`, imgError);
-              throw imgError;
+              
+              // Add placeholder rectangle instead
+              pptSlide.addShape(pptx.ShapeType.rect, {
+                x: imageX,
+                y: imageY,
+                w: imageWidth,
+                h: imageHeight,
+                fill: { color: 'F0F0F0' }
+              });
+              
+              pptSlide.addText('Image not available', {
+                x: imageX,
+                y: imageY + imageHeight/2 - 0.25,
+                w: imageWidth,
+                h: 0.5,
+                fontSize: 14,
+                color: '888888',
+                align: 'center',
+                fontFace: 'Arial'
+              });
+              
+              continue;
             }
             
             if (base64Image) {
@@ -309,7 +404,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
           } catch (err) {
             console.error('Error adding image to PPTX:', err);
             
-            // If image fails, add a placeholder text
+            // Add placeholder if image fails
             pptSlide.addShape(pptx.ShapeType.rect, {
               x: imageX,
               y: imageY,
@@ -320,9 +415,9 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
             
             pptSlide.addText('Image placeholder', {
               x: imageX,
-              y: imageY + imageHeight/2 - 0.5,
+              y: imageY + imageHeight/2 - 0.25,
               w: imageWidth,
-              h: 1,
+              h: 0.5,
               fontSize: 14,
               color: '888888',
               align: 'center',

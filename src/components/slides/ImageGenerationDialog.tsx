@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, Upload, ImageIcon, FileImage } from 'lucide-react';
+import { RefreshCw, Upload, ImageIcon, FileImage, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 
 interface ImageGenerationDialogProps {
   open: boolean;
@@ -28,7 +29,30 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<string>('generate');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [progressValue, setProgressValue] = useState<number>(0);
   const { toast } = useToast();
+
+  // Effect to simulate loading progress during generation
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isGenerating) {
+      setProgressValue(10);
+      interval = setInterval(() => {
+        setProgressValue(prev => {
+          // Cap progress at 90% until complete
+          if (prev >= 90) return 90;
+          return prev + Math.floor(Math.random() * 15);
+        });
+      }, 800);
+    } else {
+      setProgressValue(100);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isGenerating]);
 
   const handleGenerate = () => {
     if (!prompt.trim()) {
@@ -76,6 +100,11 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
       
       setSelectedFile(file);
     }
+  };
+
+  const handleRemovePreview = () => {
+    setPreviewUrl(null);
+    setSelectedFile(null);
   };
 
   const handleUpload = async () => {
@@ -138,6 +167,16 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
               </div>
             </div>
             
+            {isGenerating && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Generating image...</span>
+                  <span className="text-sm font-medium">{progressValue}%</span>
+                </div>
+                <Progress value={progressValue} className="h-2" />
+              </div>
+            )}
+            
             <DialogFooter>
               <Button 
                 onClick={handleGenerate}
@@ -184,26 +223,23 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
                   </div>
                 ) : (
                   <div className="relative rounded-md overflow-hidden">
+                    <div className="absolute top-2 right-2 z-10">
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="h-6 w-6 rounded-full"
+                        onClick={handleRemovePreview}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
                     <img 
                       src={previewUrl} 
                       alt="Preview" 
                       className="w-full h-auto object-cover rounded-md"
                       style={{ maxHeight: '200px' }}
+                      crossOrigin="anonymous"
                     />
-                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          setPreviewUrl(null);
-                          setSelectedFile(null);
-                          document.getElementById("image-upload")?.click();
-                        }}
-                      >
-                        <FileImage className="h-4 w-4 mr-2" />
-                        Choose Different Image
-                      </Button>
-                    </div>
                   </div>
                 )}
 

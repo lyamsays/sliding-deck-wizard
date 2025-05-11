@@ -26,12 +26,12 @@ const SlideGrid: React.FC<SlideGridProps> = ({
     // If slide has image, optimize layout based on content
     if (slide.imageUrl) {
       // For slides with short title and few bullets, centered layout looks best
-      if (slide.title.length < 25 && slide.bullets.length <= 2) {
+      if (slide.title.length < 30 && slide.bullets.length <= 3) {
         return 'centered';
       }
       
       // For slide with lots of text/bullets, use right-image to balance
-      if (slide.bullets.length >= 4 || slide.bullets.join('').length > 150) {
+      if (slide.bullets.length >= 4 || slide.bullets.join('').length > 200) {
         return 'right-image';
       }
       
@@ -40,7 +40,7 @@ const SlideGrid: React.FC<SlideGridProps> = ({
     } 
     
     // For text-heavy slides with no image, title-focus often looks best
-    if (slide.bullets.length >= 4 || slide.title.length > 40) {
+    if (slide.bullets.length >= 5 || slide.title.length > 40) {
       return 'title-focus';
     }
     
@@ -53,12 +53,15 @@ const SlideGrid: React.FC<SlideGridProps> = ({
     // Only set layout if not already manually set by user
     const layout = slide.style?.layout || optimizeSlideLayout(slide, index);
     
+    // Make sure all slides have a style object with necessary properties
     return {
       ...slide,
       style: {
         ...slide.style,
         backgroundColor: professionalBackground,
-        layout: layout
+        layout: layout,
+        // Ensure we have a color scheme for exports
+        colorScheme: slide.style?.colorScheme || 'professional'
       }
     };
   });

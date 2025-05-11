@@ -83,7 +83,20 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
       }
       
       // For external URLs, fetch the image
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        mode: 'cors',
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+      }
+      
       const blob = await response.blob();
       
       return new Promise((resolve, reject) => {
@@ -102,61 +115,81 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
     try {
       setIsPdfExporting(true);
       
-      // Import fonts for better text rendering
+      // Initialize PDF with better defaults for presentation slides
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
         format: 'a4',
         compress: true,
         putOnlyUsedFonts: true,
+        hotfixes: ['px_scaling'], // Fix for better image handling
       });
-      
-      // Add professional looking fonts
-      pdf.setFont("helvetica");
       
       // PDF dimensions
       const width = pdf.internal.pageSize.getWidth();
       const height = pdf.internal.pageSize.getHeight();
       
-      // Process all slides sequentially
+      // Add custom font styling
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor("#333333");
+      
+      // Process all slides sequentially with improved error handling
       for (let i = 0; i < currentDeck.slides.length; i++) {
+        console.log(`Processing slide ${i+1} for PDF export`);
         const slide = currentDeck.slides[i];
         
         if (i > 0) {
           pdf.addPage();
         }
         
-        // Add slide background color
-        pdf.setFillColor(245, 248, 252);
+        // Add slide background
+        pdf.setFillColor(248, 250, 252); // Light blue-gray background
         pdf.rect(0, 0, width, height, 'F');
+        
+        // Add header bar for visual appeal
+        pdf.setFillColor(40, 80, 160); // Professional blue
+        pdf.rect(0, 0, width, 12, 'F');
         
         // Add slide title with enhanced formatting
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(26);
-        pdf.setTextColor('#1a365d');
-        pdf.text(slide.title, width / 2, 20, { align: 'center' });
+        pdf.setFontSize(24);
+        pdf.setTextColor('#1a365d'); // Dark blue
+        pdf.text(slide.title, width / 2, 25, { align: 'center' });
         
         // Determine layout for content positioning
         const layout = slide.style?.layout || 'right-image';
-        let textX, textWidth, imgX, imgWidth = 70, imgHeight = 50;
+        let textX, textWidth, imgX, imgY, imgWidth, imgHeight;
         
+        // Configure layout dimensions based on type
         if (layout === 'left-image') {
           imgX = 20;
-          textX = width / 2 + 5;
-          textWidth = width / 2 - 25;
+          imgY = 40;
+          imgWidth = 80;
+          imgHeight = 60;
+          textX = imgX + imgWidth + 10;
+          textWidth = width - textX - 20;
         } else if (layout === 'right-image') {
           textX = 20;
-          textWidth = width / 2 - 25;
+          textWidth = width / 2 - 10;
           imgX = width / 2 + 10;
+          imgY = 40;
+          imgWidth = 80;
+          imgHeight = 60;
         } else if (layout === 'centered') {
           textX = 20;
           textWidth = width - 40;
-          imgX = (width - imgWidth) / 2;
+          imgX = (width - 100) / 2; // Center the image
+          imgY = 80; // Place image below text
+          imgWidth = 100;
+          imgHeight = 60;
         } else {
           // title-focus layout
           textX = 20;
-          textWidth = width - 40;
-          imgX = width - imgWidth - 20;
+          textWidth = width - 120;
+          imgX = width - 80;
+          imgY = 40;
+          imgWidth = 60;
+          imgHeight = 60;
         }
         
         // Add bullets with better formatting and positioning
@@ -164,7 +197,7 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
         pdf.setFontSize(14);
         pdf.setTextColor('#333333');
         
-        let y = 40; // Start bullets further down
+        let y = layout === 'centered' ? 40 : 45;
         for (const bullet of slide.bullets) {
           const bulletText = '• ' + bullet;
           const lines = pdf.splitTextToSize(bulletText, textWidth);
@@ -180,35 +213,44 @@ const DeckViewer = ({ deck, onClose }: DeckViewerProps) => {
             // Handle image conversion with proper error handling
             let imgData;
             try {
+              console.log(`Fetching image for slide ${i+1}...`);
               imgData = await getBase64FromUrl(slide.imageUrl);
-              console.log(`Successfully converted image to base64 for PDF slide ${i+1}`);
+              console.log(`Successfully converted image to base64 for slide ${i+1}`);
             } catch(imgError) {
-              console.error(`Failed to load image for PDF slide ${i+1}:`, imgError);
+              console.error(`Failed to load image for slide ${i+1}:`, imgError);
+              // Add error placeholder instead of failing
+              pdf.setFillColor(230, 230, 230); // Light gray
+              pdf.rect(imgX, imgY, imgWidth, imgHeight, 'F');
+              pdf.setFont("helvetica", "normal");
+              pdf.setFontSize(10);
+              pdf.setTextColor('#666666');
+              pdf.text("Image not available", imgX + imgWidth/2, imgY + imgHeight/2, { align: 'center' });
               continue;
             }
             
             if (imgData) {
               // For centered layout, place image below text
               if (layout === 'centered') {
-                pdf.addImage(imgData, 'JPEG', imgX, y + 10, imgWidth, imgHeight);
+                pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight, undefined, 'FAST');
               } else {
                 // For other layouts, place image to the side
-                pdf.addImage(imgData, 'JPEG', imgX, 40, imgWidth, imgHeight);
+                pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight, undefined, 'FAST');
               }
             }
           } catch (err) {
             console.error(`Error adding image to PDF for slide ${i+1}:`, err);
+            // Don't throw - continue with next slide
           }
         }
         
-        // Add slide number
+        // Add slide number and footer
+        pdf.setFillColor(240, 240, 245); // Light gray footer
+        pdf.rect(0, height - 12, width, 12, 'F');
+        
         pdf.setFontSize(10);
         pdf.setTextColor('#666666');
-        pdf.text(`${i + 1}/${currentDeck.slides.length}`, width - 20, height - 10, { align: 'right' });
-        
-        // Add footer with deck title
-        pdf.setFontSize(8);
-        pdf.text(`${currentDeck.title || 'Presentation'}`, 20, height - 10);
+        pdf.text(`${i + 1}/${currentDeck.slides.length}`, width - 20, height - 5, { align: 'right' });
+        pdf.text(`${currentDeck.title || 'Presentation'}`, 20, height - 5);
       }
       
       pdf.save(`${currentDeck.title || 'presentation'}.pdf`);
