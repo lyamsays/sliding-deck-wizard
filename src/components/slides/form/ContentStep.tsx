@@ -1,68 +1,72 @@
 
 import React from 'react';
-import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Wand } from "lucide-react";
 
 interface ContentStepProps {
   slideContent: string;
   setSlideContent: (content: string) => void;
-  autoGenerateImages: boolean;
-  setAutoGenerateImages: (autoGenerate: boolean) => void;
   isGenerating: boolean;
+  generationProgress: number;
+  onSubmit: (e: React.FormEvent) => void;
+  onBack: () => void;
   onTryExample: () => void;
 }
 
 const ContentStep: React.FC<ContentStepProps> = ({
   slideContent,
   setSlideContent,
-  autoGenerateImages,
-  setAutoGenerateImages,
   isGenerating,
+  generationProgress,
+  onSubmit,
+  onBack,
   onTryExample
 }) => {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 w-full max-w-3xl mx-auto">
-      <div className="flex justify-between items-center mb-3">
-        <label className="text-sm text-gray-500">Content</label>
-        <div className="flex space-x-2">
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-semibold text-center mb-4">Step 2: Content Input</h2>
+        <p className="text-muted-foreground text-center mb-6">
+          Enter your content below and we'll transform it into slides.
+        </p>
+      </div>
+      
+      <div className="space-y-4">
+        <Textarea
+          placeholder="Enter your content here..."
+          value={slideContent}
+          onChange={(e) => setSlideContent(e.target.value)}
+          className="min-h-[300px]"
+        />
+        
+        <div className="flex items-center justify-center mt-6 gap-3">
           <Button 
-            type="button" 
             variant="outline" 
-            onClick={onTryExample}
-            size="sm"
-            className="text-xs flex items-center gap-1"
+            type="button" 
+            onClick={onBack}
             disabled={isGenerating}
           >
-            <Sparkles className="h-3 w-3" />
-            Try Example
+            Back
+          </Button>
+          <Button 
+            type="button" 
+            onClick={onTryExample}
+            variant="outline"
+            disabled={isGenerating}
+          >
+            Try an Example
+          </Button>
+          <Button 
+            type="submit" 
+            onClick={onSubmit}
+            disabled={isGenerating || !slideContent.trim()}
+            className="btn-enhanced"
+          >
+            <Wand className="mr-2 h-4 w-4" />
+            {isGenerating ? `Generating... ${generationProgress}%` : "Generate Slides"}
           </Button>
         </div>
-      </div>
-
-      <Textarea 
-        className="min-h-[300px] w-full bg-white border-0 resize-none focus-visible:ring-1 focus-visible:ring-primary text-base md:text-lg"
-        placeholder="Paste your content here... (bullet points, notes, or paragraphs)"
-        value={slideContent}
-        onChange={(e) => setSlideContent(e.target.value)}
-        disabled={isGenerating}
-      />
-      
-      <div className="mt-3 text-xs text-gray-500 text-center">
-        <p>Enter your presentation content here</p>
-      </div>
-      
-      <div className="flex items-center gap-2 mt-4 justify-center">
-        <input 
-          type="checkbox" 
-          id="auto-generate-images" 
-          checked={autoGenerateImages} 
-          onChange={(e) => setAutoGenerateImages(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 text-primary"
-        />
-        <label htmlFor="auto-generate-images" className="text-sm text-gray-600">
-          Automatically generate images for slides
-        </label>
       </div>
     </div>
   );
