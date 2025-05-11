@@ -238,19 +238,16 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       pptx.company = 'Created with SlideMaker AI';
       pptx.title = deckTitle || 'Presentation';
       
-      // Set a professional design theme
+      // Set a professional design theme - FIX: Remove colorScheme from theme object
       pptx.theme = {
         headFontFace: 'Arial',
         bodyFontFace: 'Arial',
-        colorScheme: {
-          background1: { color: "FFFFFF" },
-          background2: { color: "F5F8FC" },
-          text1: { color: "1A365D" },
-          text2: { color: "333333" },
-          accent1: { color: "4472C4" },
-          accent2: { color: "ED7D31" },
-        },
       };
+      
+      // Add color scheme separately (as direct properties of the presentation)
+      // This properly sets colors without TypeScript errors
+      pptx.background = { color: "FFFFFF" };
+      pptx.textColor = { color: "333333" };
       
       // Set the master slide with consistent professional styling
       pptx.defineSlideMaster({
