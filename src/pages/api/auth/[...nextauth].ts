@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 console.log("Active Google Client ID:", process.env.GOOGLE_CLIENT_ID);
+console.log("Using Google Client ID:", process.env.GOOGLE_CLIENT_ID);
 
 const handler = NextAuth({
   providers: [
