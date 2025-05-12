@@ -45,9 +45,9 @@ const HowItWorksPage = () => {
           {/* Steps */}
           {steps.map((step, index) => (
             <div key={index} className="relative mb-24 last:mb-0">
-              <div className="md:grid md:grid-cols-2 md:gap-8 items-center">
+              <div className="md:flex md:items-center md:gap-8">
                 {/* Step number and content - alternating sides */}
-                <div className={`md:col-span-1 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
+                <div className={`md:w-1/2 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
                   <div className="flex items-center mb-4">
                     <div className="flex-shrink-0 h-12 w-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl">
                       {step.number}
@@ -55,13 +55,6 @@ const HowItWorksPage = () => {
                     <h2 className="ml-4 text-2xl font-bold text-gray-900">{step.title}</h2>
                   </div>
                   <p className="text-lg text-gray-600 ml-16">{step.description}</p>
-                </div>
-                
-                {/* Illustration */}
-                <div className={`mt-8 md:mt-0 md:col-span-1 ${index % 2 === 1 ? 'md:order-1' : ''}`}>
-                  <div className="bg-gray-100 h-64 rounded-lg flex items-center justify-center">
-                    <p className="text-gray-500 italic">Step {step.number} illustration</p>
-                  </div>
                 </div>
               </div>
               

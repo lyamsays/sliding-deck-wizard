@@ -1,10 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Slide } from '@/types/deck';
 import HelpMessage from './HelpMessage';
 import SlideHeader from './SlideHeader';
 import SlideGrid from './SlideGrid';
 import ExportOptions from './ExportOptions';
+import { Button } from "@/components/ui/button";
+import { MessageSquare } from 'lucide-react';
+import NarrativeMode from '../NarrativeMode';
 
 interface SlideListProps {
   editedSlides: Slide[];
@@ -31,9 +34,21 @@ const SlideList: React.FC<SlideListProps> = ({
   handleDownloadSlides,
   isSaving
 }) => {
+  const [isNarrativeModeOpen, setIsNarrativeModeOpen] = useState(false);
+  
   if (editedSlides.length === 0) {
     return null;
   }
+  
+  const handleSpeakerNotesAdded = (slideIndex: number, notes: string) => {
+    if (slideIndex >= 0 && slideIndex < editedSlides.length) {
+      const updatedSlide = {
+        ...editedSlides[slideIndex],
+        speakerNotes: notes
+      };
+      handleSlideUpdate(slideIndex, updatedSlide);
+    }
+  };
   
   return (
     <div className="mt-12 md:mt-16 space-y-6 animate-fade-up" id="slide-list-container">
@@ -46,7 +61,18 @@ const SlideList: React.FC<SlideListProps> = ({
         isSaving={isSaving}
       />
       
-      <HelpMessage />
+      <div className="flex justify-between items-center">
+        <HelpMessage />
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1" 
+          onClick={() => setIsNarrativeModeOpen(true)}
+        >
+          <MessageSquare className="h-4 w-4" />
+          Generate Speaker Notes
+        </Button>
+      </div>
       
       {/* Wrapper with explicit ID for finding export elements */}
       <div id="slides-for-export-container" className="slides-for-export-wrapper">
@@ -74,6 +100,14 @@ const SlideList: React.FC<SlideListProps> = ({
         editedSlides={editedSlides}
         deckTitle={deckTitle}
         handleDownloadSlides={handleDownloadSlides}
+      />
+      
+      <NarrativeMode 
+        open={isNarrativeModeOpen}
+        onOpenChange={setIsNarrativeModeOpen}
+        slides={editedSlides}
+        deckTitle={deckTitle}
+        onSpeakerNotesAdded={handleSpeakerNotesAdded}
       />
     </div>
   );
