@@ -62,26 +62,12 @@ It should summarize the topic and purpose of the deck, flow naturally, and be pr
 2. 📝 Slide-by-Slide Speaker Notes
 For each slide, write a short paragraph (1–3 sentences) of speaker notes that would sound natural when spoken.
 Include transitions between slides when appropriate.
+Write in first person perspective, as if you are the presenter speaking to the audience.
 
 The deck title is: "${deckTitle}"
 
 Here are the slides:
-${formattedSlides}
-
-Please format your response as:
-
-🎙 Pitch Summary:
-[Your pitch summary paragraphs]
-
-📝 Speaker Notes:
-
-**Slide 1 – [Title]:**
-[Notes]
-
-**Slide 2 – [Title]:**
-[Notes]
-
-And so on for all slides.`;
+${formattedSlides}`;
       
       const { data, error } = await supabase.functions.invoke('generate-slides', {
         body: { 
