@@ -136,7 +136,8 @@ serve(async (req) => {
             content: `You are a professional presentation creator.
             You create slide decks from content.
             You are an expert in visual design and presentation structure.
-            You always return valid JSON.
+            YOU MUST RETURN VALID JSON WITHOUT ANY MARKDOWN FORMATTING.
+            DO NOT WRAP THE JSON IN CODE BLOCKS OR BACKTICKS.
             Each slide should have a title and an array of bullets.
             Include a visualSuggestion field that suggests an image for the slide.
             Include a speakerNotes field that contains notes for the speaker.
@@ -153,8 +154,7 @@ serve(async (req) => {
             Here is the content: ${content}.
             Here are the instructions: ${prompt}.
             Here is the theme id: ${themeId}.
-            Here is an example of the JSON you should return:
-            \`\`\`json
+            Here is an example of the JSON you should return (WITHOUT ANY MARKDOWN FORMATTING OR CODE BLOCKS):
             {
               "slides": [
                 {
@@ -168,8 +168,7 @@ serve(async (req) => {
                   "speakerNotes": "This is a slide about cats."
                 }
               ]
-            }
-            \`\`\``
+            }`
           },
           { role: "user", content: prompt },
         ],
@@ -190,10 +189,19 @@ serve(async (req) => {
       throw new Error("No response from OpenAI");
     }
 
-    console.log("Response from OpenAI", response);
+    console.log("Response from OpenAI:", response);
 
     try {
-      const parsedResponse = JSON.parse(response);
+      // Clean the response before parsing to handle cases where it might be wrapped in markdown code blocks
+      let cleanedResponse = response;
+      // Remove markdown code block formatting if present
+      const codeBlockMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (codeBlockMatch) {
+        cleanedResponse = codeBlockMatch[1];
+        console.log("Cleaned response from markdown:", cleanedResponse);
+      }
+
+      const parsedResponse = JSON.parse(cleanedResponse);
 
       if (!parsedResponse || !parsedResponse.slides) {
         throw new Error("Invalid response format from OpenAI");
