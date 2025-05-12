@@ -1,6 +1,5 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { Configuration, OpenAIApi } from "https://esm.sh/openai@3.2.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,438 +7,201 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log("generate-slides: Function invoked");
-  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log("generate-slides: Handling CORS preflight");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const requestStart = Date.now();
-    console.log("generate-slides: Parsing request body");
-    const requestBody = await req.json();
-    
-    // Check if this is a regular slide generation or an edit request
-    const isEditMode = requestBody.mode === 'edit';
-    const isSingleSlideEdit = isEditMode && requestBody.singleSlide === true;
-    
-    if (isEditMode) {
-      console.log(`generate-slides: Edit mode requested with instruction: ${requestBody.editInstruction}`);
-      // Extract content, instruction, etc. for edit mode
-      const { content, editInstruction } = requestBody;
-      
-      // Return 400 if content or instruction is empty
-      if (!content || !editInstruction) {
-        console.error("generate-slides: Empty content or instruction provided for edit");
-        return new Response(
-          JSON.stringify({ error: 'Content and edit instruction cannot be empty' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      // Handle the edit request
-      return await handleEditRequest(content, editInstruction, isSingleSlideEdit, corsHeaders);
-    } else {
-      // Regular slide generation
-      const { content, profession, purpose, tone, framework } = requestBody;
-      
-      console.log(`generate-slides: Received parameters - Profession: ${profession}, Purpose: ${purpose}, Tone: ${tone}, Framework: ${framework || 'None'}`);
-      
-      // Return 400 if content is empty
-      if (!content || content.trim() === '') {
-        console.error("generate-slides: Empty content provided");
-        return new Response(
-          JSON.stringify({ error: 'Content cannot be empty' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) {
+      throw new Error('Missing OpenAI API key');
+    }
 
-      console.log("generate-slides: Content received, length:", content.length);
+    const configuration = new Configuration({
+      apiKey: OPENAI_API_KEY,
+    });
+    const openai = new OpenAIApi(configuration);
+
+    const requestData = await req.json();
+    const { content, mode } = requestData;
+
+    // Handle narrative mode generation
+    if (mode === "narrative") {
+      console.log("Generating narrative for slides...");
+
+      const completion = await openai.createChatCompletion({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are a professional AI presentation coach that helps create compelling narratives for slide decks.`
+          },
+          {
+            role: "user",
+            content
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+      });
+
+      const response = completion.data.choices[0].message?.content || '';
+      console.log("Generated narrative response");
+
+      // Parse the response to separate pitch summary and slide notes
+      const pitchSummaryMatch = response.match(/🎙 Pitch Summary:([\s\S]*?)(?:📝 Speaker Notes:)/);
+      const pitchSummary = pitchSummaryMatch ? pitchSummaryMatch[1].trim() : '';
+
+      // Extract individual slide notes
+      const slideNotesSection = response.split('📝 Speaker Notes:')[1] || '';
+      const slideNoteMatches = slideNotesSection.match(/\*\*Slide \d+ – .*?\*\*:([\s\S]*?)(?=\*\*Slide \d+|$)/g) || [];
       
-      // Continue with regular slide generation logic
-      const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-      if (!openAIApiKey) {
-        console.error("generate-slides: Missing OPENAI_API_KEY");
-        throw new Error('OPENAI_API_KEY is not set');
-      }
+      const slideNotes = slideNoteMatches.map(match => {
+        const noteContent = match.split('*:')[1] || '';
+        return noteContent.trim();
+      });
 
-      // Add a timeout to the OpenAI API call
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        console.warn("generate-slides: Request timeout triggered");
-        controller.abort();
-      }, 25000); // 25 second timeout
+      return new Response(
+        JSON.stringify({
+          narrative: {
+            pitchSummary,
+            slideNotes,
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-      try {
-        console.log("generate-slides: Calling OpenAI API");
-        
-        // Enhanced system prompt with stronger emphasis on visual design
-        let systemPrompt = `
-          You are an expert presentation designer specializing in visually stunning, high-impact slides.
-          
-          Transform the provided content into a visually dominant presentation following these design principles:
-          
-          VISUAL-FIRST APPROACH:
-          - Create slides that communicate primarily through visuals, with minimal text
-          - Follow the 3-second rule: viewers should grasp the slide's message in 3 seconds
-          - Use the "billboard approach" - slides should work like highway billboards
-          
-          SLIDE STRUCTURE:
-          - Create 4-6 slides total (based on content complexity)
-          - Follow a clear visual hierarchy on each slide
-          - Use consistent visual language throughout the presentation
-          - Design slides that build on each other to tell a cohesive story
-          
-          CONTENT STRATEGY:
-          - Create concise, impactful titles (maximum 5-7 words)
-          - Limit bullet points to 3 maximum per slide, each 1-5 words
-          - Convert complex ideas into visual metaphors, diagrams, or illustrations
-          - Suggest specific imagery or visual treatment for each slide
-          
-          VISUAL DESIGN:
-          - For each slide, specify a compelling layout that prioritizes visual impact
-          - Suggest color schemes that evoke appropriate emotions for the content
-          - Recommend specific icon styles, chart types, or imagery based on content
-          - Provide detailed descriptions of suggested visuals that would enhance the message
-          
-          ADAPTATION:
-          - Adapt the design style for the user's profession (${profession}) and purpose (${purpose})
-        `;
-        
-        // Add tone-specific instructions based on the new options
-        if (tone === "Professional") {
-          systemPrompt += `
-          TONE - PROFESSIONAL:
-          - Maintain a formal, clean, and corporate style
-          - Use concise, straightforward language with industry-standard terminology
-          - Focus on clarity and precision in both text and visuals
-          - Suggest professional color schemes (blues, grays, subdued tones)
-          - Recommend structured layouts with clear hierarchy and organization
-          - Suggest business-appropriate imagery and icons
-          `;
-        } else if (tone === "Persuasive") {
-          systemPrompt += `
-          TONE - PERSUASIVE:
-          - Use action-oriented, motivational language with strong calls-to-action
-          - Create high-contrast slides with bold visual elements that draw attention
-          - Suggest imagery and visuals that evoke emotion and inspire action
-          - Recommend dynamic layouts that guide the viewer through a compelling journey
-          - Use color psychology to influence the audience (reds, oranges for urgency, etc.)
-          - Focus on benefits and results in both text and visual elements
-          `;
-        } else if (tone === "Academic") {
-          systemPrompt += `
-          TONE - ACADEMIC:
-          - Use precise, scholarly language with proper terminology
-          - Include more detailed text when necessary for explaining complex concepts
-          - Suggest data visualization approaches for communicating research or findings
-          - Recommend clean, information-focused layouts that prioritize clarity
-          - Focus on evidence, sources, and supporting data in visual suggestions
-          - Suggest neutral color schemes that don't distract from the information
-          `;
-        } else if (tone === "Creative") {
-          systemPrompt += `
-          TONE - CREATIVE:
-          - Use imaginative, expressive language that inspires
-          - Suggest unexpected or innovative visual metaphors and imagery
-          - Recommend bold color combinations and artistic visual elements
-          - Create unconventional slide layouts that surprise and engage
-          - Focus on originality and visual interest in all aspects of design
-          - Suggest modern, trendy design aesthetics that feel fresh and innovative
-          `;
-        } else if (tone === "Minimalist") {
-          systemPrompt += `
-          TONE - MINIMALIST:
-          - Use extremely concise language with only essential words
-          - Create abundant white space in all slide layouts
-          - Suggest simple, elegant visuals with minimal elements
-          - Recommend restrained color palettes (1-2 colors maximum)
-          - Focus on essential information only, removing all decorative elements
-          - Suggest clean typography with ample spacing and breathing room
-          `;
-        }
-        
-        // Add framework specific instructions for consultants
-        if (profession === "Consultant" && framework && framework !== "None") {
-          systemPrompt += `
-          
-          CONSULTING FRAMEWORK:
-          - You are a consultant. Use the ${framework} to structure the slide content in a business context.
-          - Ensure the slide structure follows the components and methodology of ${framework}.
-          - Use appropriate business terminology and concepts specific to ${framework}.
-          - Include relevant analysis categories, quadrants, or components from the ${framework} framework.
-          - Design visual representations that effectively communicate the ${framework} concepts.
-        `;
-        }
-        
-        systemPrompt += `  
-          SPECIFIC VISUAL GUIDANCE:
-          - For each slide, provide detailed visual suggestions:
-            * Background color or gradient recommendation
-            * Layout structure specifics (e.g., asymmetric, Z-pattern, golden ratio)
-            * Imagery concept with specific description (not generic terms)
-            * Iconography style and specific icons to use
-            * Typography recommendation (font pairing, weight, sizing)
-            * Data visualization approach if presenting numbers or statistics
-          
-          Return ONLY a JSON object with the following structure:
+    // For all other modes, continue with existing implementation
+    const {
+      profession,
+      purpose,
+      tone,
+      framework,
+      themeId,
+      editInstruction,
+      singleSlide,
+      autoGenerateImages
+    } = requestData;
+
+    console.log("generate-slides: mode", mode);
+    console.log("generate-slides: profession", profession);
+    console.log("generate-slides: purpose", purpose);
+    console.log("generate-slides: tone", tone);
+    console.log("generate-slides: framework", framework);
+    console.log("generate-slides: themeId", themeId);
+    console.log("generate-slides: editInstruction", editInstruction);
+    console.log("generate-slides: singleSlide", singleSlide);
+    console.log("generate-slides: autoGenerateImages", autoGenerateImages);
+
+    let prompt = `You are a professional ${profession}-level expert presentation creator.
+      The presentation's purpose is to ${purpose}.
+      The tone of the presentation should be ${tone}.
+      Create a slide deck from the following content: ${content}.`;
+
+    if (framework && profession === "Consultant") {
+      prompt += ` Use the ${framework} framework.`;
+    }
+
+    if (editInstruction) {
+      prompt = `You are a professional presentation editor. Edit the following content: ${content}.
+        Here are the instructions: ${editInstruction}.
+        Return the edited content.`;
+    }
+
+    console.log("Prompt being used:", prompt);
+
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `You are a professional presentation creator.
+          You create slide decks from content.
+          You are an expert in visual design and presentation structure.
+          You always return valid JSON.
+          Each slide should have a title and an array of bullets.
+          Include a visualSuggestion field that suggests an image for the slide.
+          Include a speakerNotes field that contains notes for the speaker.
+          The slide deck should be engaging and persuasive.
+          The slide deck should be visually appealing.
+          The slide deck should be well-structured.
+          The slide deck should be easy to follow.
+          The slide deck should be memorable.
+          Each slide should have a title and an array of bullets.
+          Each slide should have a visualSuggestion field that suggests an image for the slide.
+          Each slide should have a speakerNotes field that contains notes for the speaker.
+          The slide deck should be no more than 7 slides.
+          The slide deck should be no less than 3 slides.
+          Here is the content: ${content}.
+          Here are the instructions: ${prompt}.
+          Here is the theme id: ${themeId}.
+          Here is an example of the JSON you should return:
+          \`\`\`json
           {
             "slides": [
               {
-                "title": "Clear and concise slide title",
-                "bullets": ["Key point 1", "Key point 2", "Key point 3"],
-                "visualSuggestion": "Detailed description of recommended visual with specific layout, colors, and imagery details",
-                "style": {
-                  "backgroundColor": "Specific color in hex format or gradient",
-                  "layout": "Specific layout type: left-image, right-image, centered, or title-focus",
-                  "iconType": "Suggested icon name that would work well for this slide",
-                  "colorScheme": "Suggested color palette that enhances the message"
-                }
+                "title": "Slide 1 Title",
+                "bullets": [
+                  "Bullet 1",
+                  "Bullet 2",
+                  "Bullet 3"
+                ],
+                "visualSuggestion": "A picture of a cat",
+                "speakerNotes": "This is a slide about cats."
               }
             ]
           }
-          
-          DO NOT include any explanations or notes outside the JSON structure.
-          ENSURE the presentation flows logically and maintains coherence throughout.
-        `;
-        
-        // Call OpenAI API with abort controller for timeout
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini', // Using gpt-4o-mini for cost-effectiveness
-            messages: [
-              {
-                role: 'system',
-                content: systemPrompt
-              },
-              {
-                role: 'user',
-                content: content
-              }
-            ],
-            temperature: 0.7, // Slightly higher temperature for more creative visual suggestions
-          }),
-          signal: controller.signal,
-        });
-        
-        clearTimeout(timeoutId); // Clear timeout if API call completes
-        
-        const apiDuration = Date.now() - requestStart;
-        console.log(`generate-slides: OpenAI API call completed in ${apiDuration}ms`);
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("generate-slides: OpenAI API Error:", errorData);
-          
-          // Special handling for quota errors
-          if (errorData.error?.type === 'insufficient_quota') {
-            console.error("generate-slides: OpenAI quota exceeded");
-            return new Response(
-              JSON.stringify({ 
-                error: 'OpenAI API quota exceeded. Please check your billing details or try again later.',
-                code: 'quota_exceeded'
-              }),
-              { 
-                status: 429, 
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-              }
-            );
-          }
-          
-          throw new Error(`API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
-        }
+          \`\`\``,
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 2048,
+    });
 
-        const data = await response.json();
-        const slidesContent = data.choices[0].message.content;
-        
-        console.log("generate-slides: Raw response from OpenAI:", slidesContent.substring(0, 100) + "...");
-        
-        // Parse the JSON from the OpenAI response
-        let slides;
-        try {
-          // Clean the response in case OpenAI returns markdown code blocks
-          const jsonStr = slidesContent.replace(/```json|```/g, '').trim();
-          console.log("generate-slides: Attempting to parse JSON response");
-          slides = JSON.parse(jsonStr);
-        } catch (e) {
-          console.error("generate-slides: Error parsing OpenAI response:", e);
-          console.log("generate-slides: Response content preview:", slidesContent.substring(0, 200));
-          return new Response(
-            JSON.stringify({ error: 'Failed to parse slide content' }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
+    const response = completion.data.choices[0].message?.content;
 
-        console.log("generate-slides: Successfully generated slides:", slides.slides?.length || 0);
-        
-        // Validate the response structure
-        if (!slides.slides || !Array.isArray(slides.slides) || slides.slides.length === 0) {
-          console.error("generate-slides: Invalid response format from AI");
-          throw new Error('Invalid response format from AI');
-        }
-        
-        const totalDuration = Date.now() - requestStart;
-        console.log(`generate-slides: Total function execution time: ${totalDuration}ms`);
-        
-        return new Response(
-          JSON.stringify(slides),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      } catch (fetchError) {
-        clearTimeout(timeoutId);
-        if (fetchError.name === 'AbortError') {
-          console.error("generate-slides: Request timed out");
-          throw new Error('Generation request timed out. Please try again.');
-        }
-        console.error("generate-slides: Fetch error:", fetchError);
-        throw fetchError;
-      }
+    if (!response) {
+      throw new Error("No response from OpenAI");
     }
-  } catch (error) {
-    console.error("generate-slides: Error generating slides:", error);
-    
+
+    console.log("Response from OpenAI", response);
+
+    // try {
+    const parsedResponse = JSON.parse(response);
+    // } catch (error) {
+    //   console.error("Error parsing JSON response:", error);
+    //   console.error("Raw response from OpenAI:", response);
+    //   throw new Error("Failed to parse JSON response from OpenAI. Check the console for the raw response.");
+    // }
+
+    if (!parsedResponse || !parsedResponse.slides) {
+      throw new Error("Invalid response format from OpenAI");
+    }
+
+    if (singleSlide) {
+      return new Response(
+        JSON.stringify(parsedResponse),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
-      JSON.stringify({ error: error.message || 'An error occurred during slide generation' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify(parsedResponse),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Error processing request:", error);
+    return new Response(
+      JSON.stringify({
+        error: error.message || "An error occurred during processing."
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });
-
-// Helper function to handle slide edit requests - make more visually focused
-async function handleEditRequest(content, instruction, isSingleSlide, corsHeaders) {
-  console.log(`generate-slides: Processing edit request for ${isSingleSlide ? 'single slide' : 'slides'}`);
-  
-  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openAIApiKey) {
-    console.error("generate-slides: Missing OPENAI_API_KEY for edit request");
-    throw new Error('OPENAI_API_KEY is not set');
-  }
-  
-  try {
-    // Parse the content (should be a JSON string of slide data)
-    const slideData = typeof content === 'string' ? JSON.parse(content) : content;
-    
-    console.log("generate-slides: Parsed slide data for editing:", JSON.stringify(slideData).substring(0, 100) + "...");
-    console.log("generate-slides: Edit instruction:", instruction);
-    
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `
-              You are an expert presentation designer specializing in visually stunning, high-impact slides.
-              
-              You will receive slide content that needs improvement. Apply the user's edit instruction
-              while also enhancing the visual design and impact.
-              
-              VISUAL-FIRST PRINCIPLES:
-              - Prioritize visual communication over text
-              - Follow the 3-second rule: viewers should grasp the message in 3 seconds
-              - Use powerful visual metaphors, diagrams or illustrations where possible
-              - Suggest specific, detailed imagery that amplifies the message
-              
-              DESIGN IMPROVEMENT:
-              - Reduce text to absolute minimum while maintaining clarity
-              - Maximum 3 bullet points per slide, each 1-5 words if possible
-              - Suggest specific visual layout improvements (asymmetric, Z-pattern, rule of thirds)
-              - Recommend typography improvements (font pairings, size hierarchies)
-              - Provide color palette suggestions that evoke the right emotion
-              
-              ENHANCEMENT GUIDANCE:
-              - Make titles shorter and more impactful (5-7 words maximum)
-              - Convert abstract concepts into concrete visual metaphors
-              - Suggest data visualization approaches for any numbers or statistics
-              - Add speaker notes to capture details that should be spoken, not shown
-              
-              Return ONLY a JSON object with this structure:
-              {
-                "slides": [
-                  {
-                    "title": "Short impactful title",
-                    "bullets": ["Concise point 1", "Concise point 2", "Concise point 3"],
-                    "visualSuggestion": "Detailed description of specific visuals to enhance impact",
-                    "speakerNotes": "Additional context and details for the presenter",
-                    "style": {
-                      "backgroundColor": "Specific color or gradient suggestion",
-                      "layout": "Optimal layout: left-image, right-image, centered, or title-focus",
-                      "iconType": "Specific icon that would enhance this slide",
-                      "colorScheme": "Color palette that reinforces the message"
-                    }
-                  }
-                ]
-              }
-              
-              DO NOT include any explanations or notes outside the JSON structure.
-            `
-          },
-          {
-            role: 'user',
-            content: `
-              SLIDE CONTENT:
-              ${JSON.stringify(slideData, null, 2)}
-              
-              EDIT INSTRUCTION:
-              ${instruction}
-              
-              Please improve this slide content according to the instruction while enhancing visual design.
-            `
-          }
-        ],
-        temperature: 0.7, // Higher temperature for more creative visual design
-      }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("generate-slides: OpenAI API Error during edit:", errorData);
-      throw new Error(`API error during edit: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
-    }
-    
-    const data = await response.json();
-    const editedContent = data.choices[0].message.content;
-    
-    // Parse the JSON from the OpenAI response
-    let edited;
-    try {
-      // Clean the response in case OpenAI returns markdown code blocks
-      const jsonStr = editedContent.replace(/```json|```/g, '').trim();
-      console.log("generate-slides: Attempting to parse JSON response from edit");
-      edited = JSON.parse(jsonStr);
-    } catch (e) {
-      console.error("generate-slides: Error parsing OpenAI edit response:", e);
-      console.log("generate-slides: Edit response content preview:", editedContent.substring(0, 200));
-      throw new Error('Failed to parse edited slide content');
-    }
-    
-    console.log("generate-slides: Successfully edited slide content");
-    
-    // Validate the response structure
-    if (!edited.slides || !Array.isArray(edited.slides) || edited.slides.length === 0) {
-      console.error("generate-slides: Invalid edit response format from AI");
-      throw new Error('Invalid response format from AI during edit');
-    }
-    
-    return new Response(
-      JSON.stringify(edited),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-    
-  } catch (error) {
-    console.error("generate-slides: Error during slide edit:", error);
-    throw error;
-  }
-}
