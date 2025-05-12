@@ -12,9 +12,8 @@ const Hero = () => {
   Turn Bullet Points into Beautiful Decks
 </h1>
 <p className="mt-6 text-lg md:text-xl text-gray-600 animate-fade-up">
-  Sliding.io helps professionals transform raw ideas into polished presentations — no templates, no design work, just results.
+  Sliding.io helps professionals transform raw ideas into polished presentations — no design work, just results.
 </p>
-
           <div className="mt-10 flex justify-center gap-4 animate-fade-up">
             <Button size="lg" className="bg-primary hover:bg-primary/90 transition-all" asChild>
               <Link to="/create">Try the Demo</Link>
