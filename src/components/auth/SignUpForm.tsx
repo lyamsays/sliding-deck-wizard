@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaGoogle } from 'react-icons/fa';
 import { useToast } from '@/hooks/use-toast';
+import { FaLock, FaGoogle } from 'react-icons/fa';
+
 
 const SignUpForm = () => {
   const [email, setEmail] = useState('');
@@ -106,14 +108,17 @@ const SignUpForm = () => {
       </div>
       
       <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={handleGoogleSignUp}
-      >
-        <FaGoogle className="mr-2" />
-        Google
-      </Button>
+  type="button"
+  variant="outline"
+  className="w-full flex items-center justify-center gap-2"
+  onClick={handleGoogleSignUp}
+>
+  <FaGoogle className="mr-1" />
+  Sign up with Google
+  <span className="flex items-center text-xs text-gray-500 ml-2">
+    <FaLock className="mr-1" /> Secure
+  </span>
+</Button>
     </div>
   );
 };

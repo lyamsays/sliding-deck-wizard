@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaGoogle } from 'react-icons/fa';
+import { FaLock, FaGoogle } from 'react-icons/fa';
 
 const SignInForm = () => {
   const [email, setEmail] = useState('');
@@ -88,14 +89,17 @@ const SignInForm = () => {
       </div>
       
       <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={handleGoogleSignIn}
-      >
-        <FaGoogle className="mr-2" />
-        Google
-      </Button>
+  type="button"
+  variant="outline"
+  className="w-full flex items-center justify-center gap-2"
+  onClick={handleGoogleSignIn}
+>
+  <FaGoogle className="mr-1" />
+  Sign in with Google
+  <span className="flex items-center text-xs text-gray-500 ml-2">
+    <FaLock className="mr-1" /> Secure
+  </span>
+</Button>
     </div>
   );
 };
