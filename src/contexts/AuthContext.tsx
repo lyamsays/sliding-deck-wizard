@@ -12,7 +12,13 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  user: User | null;
+}
+
   signOut: () => Promise<void>;
 }
 
@@ -39,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, signIn, signUp, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );
