@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Progress } from "@/components/ui/progress";
 
 interface ImageGenerationProgressProps {
   isGeneratingImages: boolean;
@@ -17,7 +16,12 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({
   
   return (
     <div className="w-full mt-2 space-y-2">
-      <Progress value={imageProgress} className="h-2 w-full bg-secondary/30" />
+      <div className="h-2 w-full bg-gray-200 rounded">
+        <div 
+          className="h-2 bg-blue-600 rounded" 
+          style={{ width: `${imageProgress}%` }}
+        ></div>
+      </div>
       <p className="text-sm text-center text-gray-500 italic">
         Generating images for your slides... {Math.round(imageProgress)}%
       </p>

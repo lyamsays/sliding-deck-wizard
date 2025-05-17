@@ -1,6 +1,5 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircle } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -19,7 +18,6 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI.
     return { hasError: true, error };
   }
 
@@ -36,7 +34,7 @@ class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="w-full h-full min-h-[50vh] flex flex-col items-center justify-center p-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md text-center">
-            <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
+            <div className="h-10 w-10 text-red-500 mx-auto mb-4">⚠️</div>
             <h3 className="text-lg font-medium text-red-800 mb-2">Something went wrong</h3>
             <p className="text-red-600 mb-4">
               {this.state.error?.message || "An unexpected error occurred"}
