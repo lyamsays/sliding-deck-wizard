@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import componentTagger from "lovable-tagger";
+import { componentTagger } from "lovable-tagger";
 import tsconfigPaths from "vite-tsconfig-paths"; // ✅ Add this line
 
 export default defineConfig(({ mode }) => ({
