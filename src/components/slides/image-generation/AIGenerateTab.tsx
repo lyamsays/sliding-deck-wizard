@@ -7,20 +7,48 @@ import { Progress } from "@/components/ui/progress";
 import { DialogFooter } from "@/components/ui/dialog";
 
 interface AIGenerateTabProps {
-  prompt: string;
-  setPrompt: (prompt: string) => void;
+  onGenerateImage: (prompt: string) => void;
   isGenerating: boolean;
-  progressValue: number;
-  handleGenerate: () => void;
+  suggestions: string[];
+  slideTitle: string;
 }
 
 const AIGenerateTab: React.FC<AIGenerateTabProps> = ({
-  prompt,
-  setPrompt,
+  onGenerateImage,
   isGenerating,
-  progressValue,
-  handleGenerate
+  suggestions,
+  slideTitle
 }) => {
+  const [prompt, setPrompt] = useState('');
+  const [progressValue, setProgressValue] = useState(0);
+  
+  // Simulate progress when generating
+  useEffect(() => {
+    if (isGenerating) {
+      setProgressValue(0);
+      const interval = setInterval(() => {
+        setProgressValue(prev => {
+          if (prev >= 90) return prev;
+          return prev + 10;
+        });
+      }, 500);
+      
+      return () => clearInterval(interval);
+    } else {
+      setProgressValue(0);
+    }
+  }, [isGenerating]);
+
+  const handleGenerate = () => {
+    if (prompt.trim()) {
+      onGenerateImage(prompt);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setPrompt(suggestion);
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4">
@@ -34,6 +62,23 @@ const AIGenerateTab: React.FC<AIGenerateTabProps> = ({
             onChange={(e) => setPrompt(e.target.value)}
           />
         </div>
+        
+        {suggestions.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-700">Suggestions:</p>
+            <div className="grid gap-2">
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="text-left p-2 text-sm bg-gray-50 hover:bg-gray-100 rounded-md border transition-colors"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       
       {isGenerating && (
@@ -49,7 +94,7 @@ const AIGenerateTab: React.FC<AIGenerateTabProps> = ({
       <DialogFooter>
         <Button 
           onClick={handleGenerate}
-          disabled={isGenerating}
+          disabled={isGenerating || !prompt.trim()}
           className="w-full"
         >
           {isGenerating ? (

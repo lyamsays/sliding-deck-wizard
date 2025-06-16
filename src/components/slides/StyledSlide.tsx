@@ -1,18 +1,15 @@
+
 import React, { useState } from 'react';
 import { Slide } from '@/types/deck';
-import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
-import { Image, MessageSquare } from 'lucide-react';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Image, MessageSquare, Wand2, PencilRuler, Trash2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { getIconSuggestion } from '@/types/deck';
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import ImageGenerationDialog from './ImageGenerationDialog';
 import ImageEditor from './ImageEditor';
 import SlideEditDialog from './SlideEditDialog';
-
-// Import refactored components
-import SlideHeader from './slide-parts/SlideHeader';
-import SlideContent from './slide-parts/SlideContent';
-import SlideActions from './slide-parts/SlideActions';
 
 interface StyledSlideProps {
   slide: Slide;
@@ -36,14 +33,12 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const { toast } = useToast();
-  const backgroundColor = slide.style?.backgroundColor || '#F1F0FB';
-  const textColor = slide.style?.textColor || '#333333';
-  const accentColor = slide.style?.accentColor || '#6E59A5';
+  
+  const backgroundColor = slide.style?.backgroundColor || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  const textColor = slide.style?.textColor || '#FFFFFF';
+  const accentColor = slide.style?.accentColor || '#FFD700';
   const titleFont = slide.style?.titleFont || '"Inter", sans-serif';
   const bodyFont = slide.style?.bodyFont || '"Inter", sans-serif';
-  
-  // Ensure layout is one of the allowed types
-  const layout = slide.style?.layout || 'right-image';
   
   const handleTitleChange = (e: React.FormEvent<HTMLHeadingElement>) => {
     const newTitle = e.currentTarget.textContent || "";
@@ -63,60 +58,11 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
       bullets: updatedBullets
     });
   };
-  
-  const handleCopySlide = () => {
-    let content = `${slide.title}\n\n`;
-    slide.bullets.forEach(bullet => {
-      content += `• ${bullet}\n`;
-    });
-    
-    navigator.clipboard.writeText(content).then(() => {
-      toast({
-        title: "Copied to clipboard",
-        description: "Slide content has been copied.",
-      });
-    });
-  };
-  
-  // Define available layouts
-  const layouts: Array<'left-image' | 'right-image' | 'centered' | 'title-focus'> = [
-    'left-image', 'right-image', 'centered', 'title-focus'
-  ];
-  
-  const handleLayoutChange = (direction: 'next' | 'previous') => {
-    const currentIndex = layouts.indexOf(layout as any);
-    
-    // Calculate the new index based on direction
-    let newIndex;
-    if (direction === 'next') {
-      newIndex = (currentIndex + 1) % layouts.length;
-    } else {
-      // For previous, we add layouts.length before modulo to handle negative index
-      newIndex = (currentIndex - 1 + layouts.length) % layouts.length;
-    }
-    
-    const newLayout = layouts[newIndex];
-    
-    onSlideUpdate(index, {
-      ...slide,
-      style: {
-        ...slide.style,
-        layout: newLayout
-      }
-    });
-    
-    toast({
-      title: "Layout updated",
-      description: `Slide layout changed to ${newLayout.replace('-', ' ')}.`,
-    });
-  };
 
-  // Handle AI-assisted image generation
   const handleGenerateImageWithPrompt = async (prompt: string) => {
     setIsGeneratingImage(true);
     
     try {
-      // Create a refined prompt based on the provided input
       const imagePrompt = `Create a professional presentation slide visual about "${slide.title}". ${prompt}. Make it suitable for a business presentation, clean and minimal style, no text in the image.`;
       
       toast({
@@ -129,18 +75,15 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
       });
       
       if (error) {
-        console.error("Error generating image:", error);
         throw new Error(error.message || "Failed to generate image");
       }
       
       if (data.error) {
-        console.error("API error generating image:", data.error);
         throw new Error(data.error);
       }
       
       const { imageUrl, revisedPrompt } = data;
       
-      // Update the slide with the generated image
       onSlideUpdate(index, {
         ...slide,
         imageUrl,
@@ -160,19 +103,15 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
         description: error.message || "Failed to generate image. Please try again.",
         variant: "destructive"
       });
-      console.error("Image generation error:", error);
     } finally {
       setIsGeneratingImage(false);
     }
   };
 
-  // New function to handle image uploads
   const handleImageUpload = async (file: File) => {
     try {
-      // Convert the uploaded file to a data URL
       const dataUrl = await readFileAsDataURL(file);
       
-      // Update the slide with the uploaded image
       onSlideUpdate(index, {
         ...slide,
         imageUrl: dataUrl,
@@ -192,11 +131,9 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
         description: error.message || "Failed to upload image. Please try again.",
         variant: "destructive"
       });
-      console.error("Image upload error:", error);
     }
   };
 
-  // Helper function to read file as data URL
   const readFileAsDataURL = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -212,12 +149,10 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
     });
   };
 
-  // Handle AI slide edits
   const handleSlideEdit = (updatedSlide: Slide) => {
     onSlideUpdate(index, updatedSlide);
   };
 
-  // New function to handle editing an image
   const handleEditImage = () => {
     if (!slide.imageUrl) {
       toast({
@@ -229,12 +164,10 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
     setIsImageEditorOpen(true);
   };
 
-  // Handle saving edited image
   const handleSaveEditedImage = (editedImageData: string, cropData: CropData) => {
     onSlideUpdate(index, {
       ...slide,
       imageUrl: editedImageData,
-      // Optionally store the crop data if you need it later
       cropData: cropData
     });
     
@@ -244,65 +177,167 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
     });
   };
 
-  // Create a style object for the slide container
-  const slideStyle = {
-    backgroundColor,
-    color: textColor,
-    fontFamily: bodyFont
-  };
-  
-  // Create a style object for the slide title
-  const titleStyle = {
-    color: textColor,
-    fontFamily: titleFont
-  };
-
+  // Gamma-style design with seamless image integration
   return (
-    <Card 
-      className="overflow-hidden border border-gray-200 transition-shadow hover:shadow-md"
+    <div 
+      className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      style={slideStyle}
+      style={{ 
+        background: backgroundColor,
+        minHeight: '400px',
+        aspectRatio: '16/9'
+      }}
+      id={`slide-content-${index}`}
     >
-      <CardHeader className="p-0">
-        <SlideHeader
-          title={slide.title}
-          layout={layout}
-          isHovering={isHovering}
-          onTitleChange={handleTitleChange}
-          onLayoutChange={handleLayoutChange}
-          onCopySlide={handleCopySlide}
-          titleStyle={titleStyle}
+      {/* Background Image Integration - Gamma Style */}
+      {slide.imageUrl && (
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-20"
+          style={{ 
+            backgroundImage: `url(${slide.imageUrl})`,
+            filter: 'blur(1px)'
+          }}
         />
-      </CardHeader>
-      <CardContent className="pt-6">
-        <SlideContent 
-          slide={slide}
-          layout={layout as any}
-          handleBulletChange={handleBulletChange}
-          textColor={textColor}
-          accentColor={accentColor}
-        />
-      </CardContent>
+      )}
       
-      <CardFooter className="border-t border-gray-100 pt-4 mt-4 flex justify-between items-center flex-wrap gap-2">
-        <div className="flex items-start text-sm max-w-[55%] visual-label-wrapper" style={{ color: textColor }}>
-          <Image className="h-4 w-4 mr-2 mt-1 flex-shrink-0" style={{ color: accentColor }} />
-          <span className="line-clamp-2 recommendation-ui">
-            <strong>Visual:</strong> {slide.revisedPrompt || slide.visualSuggestion || "Add an image to this slide"}
-          </span>
+      {/* Gradient Overlay for Text Readability */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: slide.imageUrl 
+            ? 'linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%)'
+            : 'transparent'
+        }}
+      />
+      
+      {/* Content Container */}
+      <div className="relative z-10 h-full flex flex-col p-8">
+        {/* Title Section */}
+        <div className="mb-6">
+          <h2
+            className="text-3xl font-bold leading-tight"
+            style={{ 
+              color: slide.imageUrl ? '#FFFFFF' : textColor,
+              fontFamily: titleFont,
+              textShadow: slide.imageUrl ? '0 2px 4px rgba(0,0,0,0.3)' : 'none'
+            }}
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={handleTitleChange}
+          >
+            {slide.title}
+          </h2>
         </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex items-center">
+          {slide.imageUrl ? (
+            // Image + Content Layout - Gamma Style
+            <div className="grid grid-cols-2 gap-8 w-full items-center">
+              <div className="space-y-4">
+                <ul className="space-y-3">
+                  {slide.bullets.map((bullet, bulletIndex) => (
+                    <li 
+                      key={bulletIndex} 
+                      className="flex items-start text-lg"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleBulletChange(bulletIndex, e)}
+                      style={{ 
+                        color: '#FFFFFF',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+                      }}
+                    >
+                      <span style={{ color: accentColor }} className="mr-3 mt-1 text-xl">•</span>
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="flex justify-center">
+                <div className="rounded-xl overflow-hidden shadow-2xl border-4 border-white/20">
+                  <img 
+                    src={slide.imageUrl} 
+                    alt={slide.title}
+                    className="w-full h-64 object-cover"
+                    crossOrigin="anonymous"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Text-Only Layout
+            <div className="w-full">
+              <ul className="space-y-4">
+                {slide.bullets.map((bullet, bulletIndex) => (
+                  <li 
+                    key={bulletIndex} 
+                    className="flex items-start text-xl"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleBulletChange(bulletIndex, e)}
+                    style={{ color: textColor }}
+                  >
+                    <span style={{ color: accentColor }} className="mr-4 mt-1 text-2xl">•</span>
+                    <span>{bullet}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Floating Action Buttons - Hidden in Export */}
+      <div 
+        className={`absolute top-4 right-4 flex gap-2 transition-opacity duration-200 slide-ui-elements-not-for-export ${
+          isHovering ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <Button
+          size="sm"
+          variant="secondary"
+          className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30"
+          onClick={() => setIsEditDialogOpen(true)}
+        >
+          <Wand2 className="h-4 w-4" />
+        </Button>
         
-        <SlideActions
-          slide={slide}
-          isGeneratingImage={isGeneratingImage}
-          onOpenImageDialog={() => setIsImageDialogOpen(true)}
-          onOpenEditDialog={() => setIsEditDialogOpen(true)}
-          onEditImage={handleEditImage}
-          onRemoveImage={onRemoveImage}
-          accentColor={accentColor}
-        />
-      </CardFooter>
+        {slide.imageUrl ? (
+          <>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30"
+              onClick={handleEditImage}
+            >
+              <PencilRuler className="h-4 w-4" />
+            </Button>
+            
+            {onRemoveImage && (
+              <Button
+                size="sm"
+                variant="destructive"
+                className="bg-red-500/80 backdrop-blur-sm border-red-300/30 text-white hover:bg-red-600/80"
+                onClick={onRemoveImage}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </>
+        ) : (
+          <Button
+            size="sm"
+            variant="secondary"
+            className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30"
+            onClick={() => setIsImageDialogOpen(true)}
+            disabled={isGeneratingImage}
+          >
+            <Image className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
       
       <ImageGenerationDialog
         open={isImageDialogOpen}
@@ -328,7 +363,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
           onSave={handleSaveEditedImage}
         />
       )}
-    </Card>
+    </div>
   );
 };
 

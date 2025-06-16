@@ -1,13 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Slide } from '@/types/deck';
-import HelpMessage from './HelpMessage';
-import SlideHeader from './SlideHeader';
 import SlideGrid from './SlideGrid';
-import ExportOptions from './ExportOptions';
-import { Button } from "@/components/ui/button";
-import { MessageSquare } from 'lucide-react';
-import NarrativeMode from '../NarrativeMode';
+import SlideHeader from './SlideHeader';
+import ExportToImage from '../ExportToImage';
+import { motion } from 'framer-motion';
 
 interface SlideListProps {
   editedSlides: Slide[];
@@ -34,82 +31,34 @@ const SlideList: React.FC<SlideListProps> = ({
   handleDownloadSlides,
   isSaving
 }) => {
-  const [isNarrativeModeOpen, setIsNarrativeModeOpen] = useState(false);
-  
-  if (editedSlides.length === 0) {
-    return null;
-  }
-  
-  const handleSpeakerNotesAdded = (slideIndex: number, notes: string) => {
-    if (slideIndex >= 0 && slideIndex < editedSlides.length) {
-      const updatedSlide = {
-        ...editedSlides[slideIndex],
-        speakerNotes: notes
-      };
-      handleSlideUpdate(slideIndex, updatedSlide);
-    }
-  };
-  
+  if (editedSlides.length === 0) return null;
+
   return (
-    <div className="mt-12 md:mt-16 space-y-6 animate-fade-up" id="slide-list-container">
+    <motion.div 
+      className="mt-12 space-y-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+    >
       <SlideHeader 
-        viewMode={viewMode}
-        setViewMode={setViewMode}
         deckTitle={deckTitle}
         setDeckTitle={setDeckTitle}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
         handleSave={handleSave}
-        isSaving={isSaving}
-      />
-      
-      <div className="flex justify-between items-center">
-        <HelpMessage />
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex items-center gap-1" 
-          onClick={() => setIsNarrativeModeOpen(true)}
-        >
-          <MessageSquare className="h-4 w-4" />
-          Generate Speaker Notes
-        </Button>
-      </div>
-      
-      {/* Wrapper with explicit ID for finding export elements */}
-      <div id="slides-for-export-container" className="slides-for-export-wrapper">
-        <style id="export-styles" type="text/css">{`
-          /* Hide UI elements during export */
-          .exporting .visual-label-wrapper,
-          .exporting .slide-ui-elements-not-for-export,
-          .exporting .recommendation-ui,
-          .exporting [class*="visual-label"],
-          .exporting .slide-actions {
-            display: none !important;
-            opacity: 0 !important;
-            visibility: hidden !important;
-          }
-        `}</style>
-        <SlideGrid 
-          editedSlides={editedSlides}
-          viewMode={viewMode}
-          handleSlideUpdate={handleSlideUpdate}
-          handleRemoveImage={handleRemoveImage}
-        />
-      </div>
-      
-      <ExportOptions 
-        editedSlides={editedSlides}
-        deckTitle={deckTitle}
         handleDownloadSlides={handleDownloadSlides}
+        isSaving={isSaving}
+        slideCount={editedSlides.length}
+        ExportComponent={<ExportToImage slides={editedSlides} deckTitle={deckTitle} />}
       />
       
-      <NarrativeMode 
-        open={isNarrativeModeOpen}
-        onOpenChange={setIsNarrativeModeOpen}
-        slides={editedSlides}
-        deckTitle={deckTitle}
-        onSpeakerNotesAdded={handleSpeakerNotesAdded}
+      <SlideGrid
+        editedSlides={editedSlides}
+        viewMode={viewMode}
+        handleSlideUpdate={handleSlideUpdate}
+        handleRemoveImage={handleRemoveImage}
       />
-    </div>
+    </motion.div>
   );
 };
 
