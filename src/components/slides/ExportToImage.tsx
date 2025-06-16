@@ -63,9 +63,6 @@ const ExportToImage: React.FC<ExportToImageProps> = ({ slides, deckTitle }) => {
               // Ensure fonts are loaded in the cloned document
               const clonedElement = clonedDoc.getElementById(`slide-content-${i}`);
               if (clonedElement) {
-                // Force font rendering
-                clonedElement.style.fontDisplay = 'swap';
-                
                 // Ensure all text is rendered
                 const textElements = clonedElement.querySelectorAll('*');
                 textElements.forEach(el => {
