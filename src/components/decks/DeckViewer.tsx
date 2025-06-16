@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -18,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileText, Image, MessageSquare } from 'lucide-react';
 
 // Import jsPDF for PDF generation
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 
 type SlideDeck = Database['public']['Tables']['slide_decks']['Row'];
 
