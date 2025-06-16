@@ -3,16 +3,14 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { FaGoogle } from 'react-icons/fa';
-import { useToast } from '@/hooks/use-toast';
-import { FaLock, FaGoogle } from 'react-icons/fa';
-
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const SignUpForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
@@ -20,81 +18,86 @@ const SignUpForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('SignUpForm: Starting sign-up process');
+    
+    if (password !== confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure your passwords match.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      console.log('SignUpForm: Attempting to sign up with email:', email);
       await signUp(email, password);
-      console.log('SignUpForm: Sign-up successful, redirecting to home page');
-      navigate('/');
-    } catch (error: any) {
-      console.error('SignUpForm Error:', error);
       toast({
-        variant: "destructive",
-        title: "Sign-up failed",
-        description: error.message || "Could not create your account. Please try again."
+        title: "Account created!",
+        description: "Please check your email to verify your account.",
+      });
+      navigate('/signin');
+    } catch (error) {
+      console.error('Sign up error:', error);
+      toast({
+        title: "Sign up failed",
+        description: "There was an error creating your account. Please try again.",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleSignUp = async () => {
-    console.log('SignUpForm: Attempting to sign up with Google');
+  const handleGoogleSignUp = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
     try {
       await signInWithGoogle();
-      console.log('SignUpForm: Google sign-in flow initiated');
-      // Redirection is handled by the OAuth provider
-    } catch (error: any) {
-      console.error('Google Sign-up Error:', error);
-      toast({
-        variant: "destructive",
-        title: "Google sign-in failed",
-        description: error.message || "Could not sign in with Google. Please try again."
-      });
+      navigate('/create');
+    } catch (error) {
+      console.error('Google sign up error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6 w-full max-w-md mx-auto">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold">Create an Account</h1>
-        <p className="text-sm text-gray-500 mt-2">Enter your details to get started</p>
-      </div>
-      
+    <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
+        <div>
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
-            placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
-        
-        <div className="space-y-2">
+        <div>
           <Label htmlFor="password">Password</Label>
           <Input
             id="password"
             type="password"
-            placeholder="Create a password (min. 6 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={6}
           />
         </div>
-        
-        <Button 
-          type="submit" 
-          className="w-full" 
-          disabled={isLoading}
-        >
-          {isLoading ? 'Creating account...' : 'Sign Up'}
+        <div>
+          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+        </div>
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? 'Creating account...' : 'Create Account'}
         </Button>
       </form>
       
@@ -103,22 +106,20 @@ const SignUpForm = () => {
           <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-gray-500">Or continue with</span>
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with
+          </span>
         </div>
       </div>
       
-      <Button
-  type="button"
-  variant="outline"
-  className="w-full flex items-center justify-center gap-2"
-  onClick={handleGoogleSignUp}
->
-  <FaGoogle className="mr-1" />
-  Sign up with Google
-  <span className="flex items-center text-xs text-gray-500 ml-2">
-    <FaLock className="mr-1" /> Secure
-  </span>
-</Button>
+      <Button 
+        variant="outline" 
+        className="w-full" 
+        onClick={handleGoogleSignUp}
+        disabled={isLoading}
+      >
+        Continue with Google
+      </Button>
     </div>
   );
 };
