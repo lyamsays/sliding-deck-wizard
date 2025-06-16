@@ -15,10 +15,13 @@ serve(async (req) => {
   try {
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
+      console.error('Missing OpenAI API key');
       throw new Error('Missing OpenAI API key');
     }
 
     const requestData = await req.json();
+    console.log('Received request data:', JSON.stringify(requestData, null, 2));
+    
     const { content, mode } = requestData;
 
     // Handle narrative mode generation
@@ -97,6 +100,7 @@ And so on for all slides.`
 
       if (!response.ok) {
         const error = await response.json();
+        console.error('OpenAI API error:', error);
         throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
       }
 
@@ -131,14 +135,14 @@ And so on for all slides.`
 
     // For all other modes, continue with regular slide generation
     const {
-      profession,
-      purpose,
-      tone,
+      profession = "Consultant",
+      purpose = "",
+      tone = "Professional", 
       framework,
-      themeId,
+      themeId = "creme",
       editInstruction,
       singleSlide,
-      autoGenerateImages
+      autoGenerateImages = true
     } = requestData;
 
     console.log("generate-slides: mode", mode);
@@ -150,6 +154,11 @@ And so on for all slides.`
     console.log("generate-slides: editInstruction", editInstruction);
     console.log("generate-slides: singleSlide", singleSlide);
     console.log("generate-slides: autoGenerateImages", autoGenerateImages);
+
+    if (!content || content.trim() === '') {
+      console.error('No content provided');
+      throw new Error('Content is required to generate slides');
+    }
 
     let prompt = `You are a professional ${profession}-level expert presentation creator.
       The presentation's purpose is to ${purpose}.
@@ -226,6 +235,7 @@ And so on for all slides.`
 
     if (!completion.ok) {
       const error = await completion.json();
+      console.error('OpenAI API error:', error);
       throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
     }
 
@@ -233,6 +243,7 @@ And so on for all slides.`
     const response = result.choices[0].message?.content;
 
     if (!response) {
+      console.error('No response from OpenAI');
       throw new Error("No response from OpenAI");
     }
 
@@ -251,15 +262,18 @@ And so on for all slides.`
       const parsedResponse = JSON.parse(cleanedResponse);
 
       if (!parsedResponse || !parsedResponse.slides) {
+        console.error('Invalid response format:', parsedResponse);
         throw new Error("Invalid response format from OpenAI");
       }
+
+      console.log("Successfully parsed response, returning slides:", parsedResponse.slides.length);
 
       return new Response(
         JSON.stringify(parsedResponse),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-    } catch (error) {
-      console.error("Error parsing JSON response:", error);
+    } catch (parseError) {
+      console.error("Error parsing JSON response:", parseError);
       console.error("Raw response from OpenAI:", response);
       throw new Error("Failed to parse JSON response from OpenAI");
     }
