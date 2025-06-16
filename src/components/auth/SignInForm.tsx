@@ -1,93 +1,118 @@
 
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 
 const SignInForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signInWithGoogle } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
     
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
     try {
-      await signIn(email, password);
-      navigate('/create');
-    } catch (error) {
-      console.error('Sign in error:', error);
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        setError(error.message);
+      } else {
+        navigate('/my-decks');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleGoogleSignIn = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      await signInWithGoogle();
-      navigate('/create');
-    } catch (error) {
-      console.error('Google sign in error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (error) setError('');
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (error) setError('');
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-md mx-auto">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
+            placeholder="your@email.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
             required
           />
         </div>
-        <div>
+        
+        <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Your password"
+              value={password}
+              onChange={handlePasswordChange}
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Signing in...' : 'Sign In'}
+
+        {error && (
+          <p className="text-sm text-red-600">{error}</p>
+        )}
+
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={loading}
+        >
+          {loading ? 'Signing in...' : 'Sign In'}
         </Button>
+
+        <p className="text-center text-sm text-gray-600">
+          Don't have an account?{' '}
+          <Link to="/signup" className="text-primary hover:underline">
+            Sign up
+          </Link>
+        </p>
       </form>
-      
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
-      
-      <Button 
-        variant="outline" 
-        className="w-full" 
-        onClick={handleGoogleSignIn}
-        disabled={isLoading}
-      >
-        Continue with Google
-      </Button>
     </div>
   );
 };
