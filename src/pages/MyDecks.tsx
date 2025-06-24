@@ -86,11 +86,12 @@ const MyDecks = () => {
           setFeedbackOpen(true);
         }
         
-      } catch (error: any) {
-        console.error('Error fetching decks:', error);
+      } catch (error) {
+        const err = error as Error;
+        console.error('Error fetching decks:', err);
         toast({
           title: "Failed to load decks",
-          description: error.message || "An error occurred while fetching your slide decks.",
+          description: err.message || "An error occurred while fetching your slide decks.",
           variant: "destructive"
         });
       } finally {
@@ -128,11 +129,12 @@ const MyDecks = () => {
         title: "Deck deleted",
         description: "The slide deck was successfully deleted.",
       });
-    } catch (error: any) {
-      console.error('Error deleting deck:', error);
+    } catch (error) {
+      const err = error as Error;
+      console.error('Error deleting deck:', err);
       toast({
         title: "Delete failed",
-        description: error.message || "Failed to delete the slide deck. Please try again.",
+        description: err.message || "Failed to delete the slide deck. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -161,11 +163,12 @@ const MyDecks = () => {
         title: "Thank you for your feedback!",
         description: "Your input helps us improve Sliding.io.",
       });
-    } catch (error: any) {
-      console.error('Error submitting feedback:', error);
+    } catch (error) {
+      const err = error as Error;
+      console.error('Error submitting feedback:', err);
       toast({
         title: "Failed to submit feedback",
-        description: error.message || "An error occurred while submitting your feedback. Please try again.",
+        description: err.message || "An error occurred while submitting your feedback. Please try again.",
         variant: "destructive"
       });
     } finally {

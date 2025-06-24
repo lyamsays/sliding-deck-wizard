@@ -30,14 +30,15 @@ export const useSupabaseAuth = () => {
         title: "Success!",
         description: "Please check your email to verify your account.",
       });
-    } catch (error: any) {
-      console.error('useSupabaseAuth: Sign-up exception:', error);
+    } catch (error) {
+      const err = error as Error;
+      console.error('useSupabaseAuth: Sign-up exception:', err);
       toast({
         variant: "destructive",
         title: "Error signing up",
-        description: error.message || "An unexpected error occurred",
+        description: err.message || "An unexpected error occurred",
       });
-      throw error;
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -63,14 +64,15 @@ export const useSupabaseAuth = () => {
         title: "Welcome back!",
         description: "Successfully signed in",
       });
-    } catch (error: any) {
-      console.error('useSupabaseAuth: Sign-in exception:', error);
+    } catch (error) {
+      const err = error as Error;
+      console.error('useSupabaseAuth: Sign-in exception:', err);
       toast({
         variant: "destructive",
         title: "Error signing in",
-        description: error.message || "Invalid email or password",
+        description: err.message || "Invalid email or password",
       });
-      throw error;
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -93,14 +95,15 @@ export const useSupabaseAuth = () => {
       }
       
       console.log('useSupabaseAuth: Google sign-in flow initiated');
-    } catch (error: any) {
-      console.error('useSupabaseAuth: Google sign-in exception:', error);
+    } catch (error) {
+      const err = error as Error;
+      console.error('useSupabaseAuth: Google sign-in exception:', err);
       toast({
         variant: "destructive",
         title: "Error signing in with Google",
-        description: error.message || "An unexpected error occurred",
+        description: err.message || "An unexpected error occurred",
       });
-      throw error;
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -121,12 +124,13 @@ export const useSupabaseAuth = () => {
         title: "Signed out",
         description: "You have been successfully signed out",
       });
-    } catch (error: any) {
-      console.error('useSupabaseAuth: Sign-out exception:', error);
+    } catch (error) {
+      const err = error as Error;
+      console.error('useSupabaseAuth: Sign-out exception:', err);
       toast({
         variant: "destructive",
         title: "Error signing out",
-        description: error.message || "An unexpected error occurred",
+        description: err.message || "An unexpected error occurred",
       });
     } finally {
       setLoading(false);

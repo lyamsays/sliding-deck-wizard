@@ -47,7 +47,7 @@ async function searchUnsplashImages(query: string, page = 1, perPage = 9) {
     console.log(`search-images: Successfully found ${data.results?.length || 0} images`);
     
     // Transform the data to include only what we need
-    return data.results.map((img: any) => ({
+    return data.results.map((img: Record<string, unknown>) => ({
       id: img.id,
       url: img.urls.regular,
       smallUrl: img.urls.small,

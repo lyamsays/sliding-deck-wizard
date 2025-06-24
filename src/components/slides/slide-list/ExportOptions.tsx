@@ -252,11 +252,12 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         title: "PDF exported successfully",
         description: "Your presentation has been downloaded as a PDF file."
       });
-    } catch (error: any) {
-      console.error('Error generating PDF:', error);
+    } catch (error) {
+      const err = error as Error;
+      console.error('Error generating PDF:', err);
       toast({
         title: "Export failed",
-        description: error.message || "Failed to generate PDF. Please try again.",
+        description: err.message || "Failed to generate PDF. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -339,11 +340,12 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
         title: "PowerPoint exported successfully",
         description: "Your presentation has been downloaded as a PPTX file."
       });
-    } catch (error: any) {
-      console.error('Error generating PPTX:', error);
+    } catch (error) {
+      const err = error as Error;
+      console.error('Error generating PPTX:', err);
       toast({
         title: "Export failed",
-        description: error.message || "Failed to generate PowerPoint. Please try again.",
+        description: err.message || "Failed to generate PowerPoint. Please try again.",
         variant: "destructive"
       });
     } finally {

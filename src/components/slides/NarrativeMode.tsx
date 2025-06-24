@@ -99,11 +99,12 @@ ${formattedSlides}`;
         description: "Your pitch summary and speaker notes are ready!",
       });
       
-    } catch (error: any) {
-      console.error("Error generating narrative:", error);
+    } catch (error) {
+      const err = error as Error;
+      console.error("Error generating narrative:", err);
       toast({
         title: "Generation failed",
-        description: error.message || "Failed to generate narrative. Please try again.",
+        description: err.message || "Failed to generate narrative. Please try again.",
         variant: "destructive"
       });
     } finally {

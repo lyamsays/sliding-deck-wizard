@@ -207,13 +207,16 @@ const SlideInput = () => {
       });
       
       // Race between the actual API call and the timeout
-      const { data, error } = await Promise.race([
+      const { data, error } = await Promise.race<{
+        data: SlidesResponse | null;
+        error: { message?: string } | null;
+      }>([
         responsePromise,
-        timeoutPromise.then(() => { 
+        timeoutPromise.then(() => {
           console.error("SlideInput: Generation timeout reached");
-          throw new Error('Generation timed out. The server might be busy, please try again.'); 
+          throw new Error('Generation timed out. The server might be busy, please try again.');
         })
-      ]) as any;
+      ]);
       
       if (error) {
         console.error("SlideInput: Function returned error:", error);
@@ -256,12 +259,13 @@ const SlideInput = () => {
       // Scroll to the slides preview
       setTimeout(scrollToPreview, 1000);
       
-    } catch (error: any) {
-      console.error('SlideInput: Error generating slides:', error);
-      setError(error.message || "Failed to generate slides. Please try again.");
+    } catch (error) {
+      const err = error as Error;
+      console.error('SlideInput: Error generating slides:', err);
+      setError(err.message || "Failed to generate slides. Please try again.");
       toast({
         title: "Generation failed",
-        description: error.message || "Failed to generate slides. Please try again.",
+        description: err.message || "Failed to generate slides. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -328,11 +332,12 @@ const SlideInput = () => {
       
       // Redirect to My Decks page after saving
       navigate('/my-decks');
-    } catch (error: any) {
-      console.error('SlideInput: Error saving slides:', error);
+    } catch (error) {
+      const err = error as Error;
+      console.error('SlideInput: Error saving slides:', err);
       toast({
         title: "Save failed",
-        description: error.message || "Failed to save slides. Please try again.",
+        description: err.message || "Failed to save slides. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -445,10 +450,11 @@ const SlideInput = () => {
         title: "Images generated",
         description: `Successfully generated ${processedCount} images.`,
       });
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as Error;
       toast({
         title: "Some images failed",
-        description: error.message || "Some images could not be generated. Please try again.",
+        description: err.message || "Some images could not be generated. Please try again.",
         variant: "destructive"
       });
     } finally {

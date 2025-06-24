@@ -108,11 +108,12 @@ const SlideEditDialog: React.FC<SlideEditDialogProps> = ({
       });
       
       onOpenChange(false);
-    } catch (error: any) {
-      console.error("Error editing slide with AI:", error);
+    } catch (error) {
+      const err = error as Error;
+      console.error("Error editing slide with AI:", err);
       toast({
         title: "Edit failed",
-        description: error.message || "Failed to edit slide. Please try again.",
+        description: err.message || "Failed to edit slide. Please try again.",
         variant: "destructive"
       });
     } finally {
