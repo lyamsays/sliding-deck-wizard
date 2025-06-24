@@ -10,15 +10,11 @@ interface User {
   };
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
-  export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  user: User | null;
-}
-
   signOut: () => Promise<void>;
 }
 
@@ -29,18 +25,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     console.log("Sign in with:", email, password);
-    // Mock sign in functionality
+    // Mock sign-in logic
     setUser({
       id: "user-123",
-      email: email,
+      email,
       user_metadata: {
-        full_name: "Test User"
+        full_name: "Test User",
+        avatar_url: "https://example.com/avatar.png"
+      }
+    });
+  };
+
+  const signUp = async (email: string, password: string) => {
+    console.log("Sign up with:", email, password);
+    // Mock sign-up logic (can mirror signIn logic)
+    await signIn(email, password);
+  };
+
+  const signInWithGoogle = async () => {
+    console.log("Signing in with Google...");
+    // Mock Google sign-in logic
+    setUser({
+      id: "google-user-456",
+      email: "googleuser@example.com",
+      user_metadata: {
+        full_name: "Google User",
+        avatar_url: "https://example.com/google-avatar.png"
       }
     });
   };
 
   const signOut = async () => {
-    console.log("Sign out");
+    console.log("Signing out...");
     setUser(null);
   };
 

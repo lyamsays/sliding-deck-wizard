@@ -19,6 +19,19 @@ export interface Slide {
   cropData?: any;
 }
 
+export function prepareDbSlides(rawSlides: any[]): Slide[] {
+  return rawSlides.map((slide, index) => ({
+    title: slide.title ?? `Slide ${index + 1}`,
+    bullets: slide.bullets ?? [],
+    visualSuggestion: slide.visualSuggestion ?? "",
+    speakerNotes: slide.speakerNotes ?? "",
+    imageUrl: slide.imageUrl ?? "",
+    revisedPrompt: slide.revisedPrompt ?? "",
+    style: slide.style ?? {},
+    cropData: slide.cropData ?? null,
+  }));
+}
+
 // Helper functions
 export function getRandomPastelColor(): string {
   const hue = Math.floor(Math.random() * 360);
@@ -40,4 +53,16 @@ export function getIconSuggestion(title: string, visualSuggestion?: string): str
   
   // Default icon
   return 'chevron-right';
+}
+export function convertDbSlidesToTypedSlides(dbSlides: any[]): Slide[] {
+  return dbSlides.map((slide, index) => ({
+    title: slide.title ?? `Slide ${index + 1}`,
+    bullets: slide.bullets ?? [],
+    visualSuggestion: slide.visualSuggestion ?? "",
+    speakerNotes: slide.speakerNotes ?? "",
+    imageUrl: slide.imageUrl ?? "",
+    revisedPrompt: slide.revisedPrompt ?? "",
+    style: slide.style ?? {},
+    cropData: slide.cropData ?? null,
+  }));
 }
