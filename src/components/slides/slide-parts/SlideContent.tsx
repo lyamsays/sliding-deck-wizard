@@ -68,7 +68,7 @@ const SlideContent: React.FC<SlideContentProps> = ({
   
   // If we have an image, display it instead of the icon
   const iconName = slide.style?.iconType || "FileText";
-  const IconComponent = (LucideIcons as Record<string, LucideIcons.LucideIcon>)[iconName] || LucideIcons.FileText;
+  const IconComponent = (LucideIcons as any)[iconName] || LucideIcons.FileText;
   
   const imageElement = slide.imageUrl ? (
     <div className="relative overflow-hidden rounded-lg">

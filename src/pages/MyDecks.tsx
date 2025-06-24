@@ -60,7 +60,7 @@ const MyDecks = () => {
           created_at: deck.created_at,
           updated_at: deck.updated_at,
           user_id: deck.user_id,
-          slides: convertDbSlidesToTypedSlides(deck.slides)
+          slides: deck.slides ? convertDbSlidesToTypedSlides(deck.slides as unknown[]) : []
         }));
         
         setDecks(typedDecks);

@@ -1,3 +1,4 @@
+
 export interface Slide {
   id: string;
   title: string;
@@ -68,6 +69,7 @@ interface RawSlide {
 
 export function prepareDbSlides(rawSlides: unknown[]): Slide[] {
   return (rawSlides as RawSlide[]).map((slide, index: number) => ({
+    id: `slide-${index}`,
     title: slide.title ?? `Slide ${index + 1}`,
     bullets: slide.bullets ?? [],
     visualSuggestion: slide.visualSuggestion ?? "",
@@ -81,6 +83,7 @@ export function prepareDbSlides(rawSlides: unknown[]): Slide[] {
 
 export function convertDbSlidesToTypedSlides(dbSlides: unknown[]): Slide[] {
   return (dbSlides as RawSlide[]).map((slide, index: number) => ({
+    id: `slide-${index}`,
     title: slide.title ?? `Slide ${index + 1}`,
     bullets: slide.bullets ?? [],
     visualSuggestion: slide.visualSuggestion ?? "",

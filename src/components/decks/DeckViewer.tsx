@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,36 +16,40 @@ import { ArrowLeft, Download, Edit, Trash2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Image, MessageSquare } from 'lucide-react';
+import { SlideDeck, Slide } from '@/types/deck';
 
 // Import jsPDF for PDF generation
 import { jsPDF } from 'jspdf';
 
-type SlideDeck = Database['public']['Tables']['slide_decks']['Row'];
+type SlideDeckRow = Database['public']['Tables']['slide_decks']['Row'];
 
-interface Slide {
-  title: string;
-  bullets: string[];
-  visualSuggestion?: string;
-  imageUrl?: string;
-  speakerNotes?: string;
+interface DeckViewerProps {
+  deck?: SlideDeck;
+  onClose?: () => void;
 }
 
-const DeckViewer = () => {
+const DeckViewer: React.FC<DeckViewerProps> = ({ deck: propDeck, onClose }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [deck, setDeck] = useState<SlideDeck | null>(null);
+  const [deck, setDeck] = useState<SlideDeckRow | null>(null);
   const [slides, setSlides] = useState<Slide[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    if (id) {
+    if (propDeck) {
+      // Use deck passed as prop
+      setSlides(propDeck.slides);
+      setIsLoading(false);
+    } else if (id) {
       fetchDeck();
     }
-  }, [id]);
+  }, [id, propDeck]);
 
   const fetchDeck = async () => {
+    if (!id) return;
+    
     try {
       const { data, error } = await supabase
         .from('slide_decks')
@@ -55,9 +60,20 @@ const DeckViewer = () => {
       if (error) throw error;
 
       setDeck(data);
-      // Parse the slides JSON data
+      // Parse the slides JSON data safely
       if (data.slides && Array.isArray(data.slides)) {
-        setSlides(data.slides as Slide[]);
+        const typedSlides = (data.slides as unknown[]).map((slide: any, index: number) => ({
+          id: slide.id || `slide-${index}`,
+          title: slide.title || `Slide ${index + 1}`,
+          bullets: slide.bullets || [],
+          visualSuggestion: slide.visualSuggestion || '',
+          speakerNotes: slide.speakerNotes || '',
+          imageUrl: slide.imageUrl || '',
+          revisedPrompt: slide.revisedPrompt || '',
+          style: slide.style || {},
+          cropData: slide.cropData || null,
+        })) as Slide[];
+        setSlides(typedSlides);
       }
     } catch (error) {
       console.error('Error fetching deck:', error);
@@ -72,7 +88,8 @@ const DeckViewer = () => {
   };
 
   const handleDelete = async () => {
-    if (!deck || !confirm('Are you sure you want to delete this deck? This action cannot be undone.')) {
+    const deckToDelete = deck || propDeck;
+    if (!deckToDelete || !confirm('Are you sure you want to delete this deck? This action cannot be undone.')) {
       return;
     }
 
@@ -81,7 +98,7 @@ const DeckViewer = () => {
       const { error } = await supabase
         .from('slide_decks')
         .delete()
-        .eq('id', deck.id);
+        .eq('id', deckToDelete.id);
 
       if (error) throw error;
 
@@ -90,7 +107,11 @@ const DeckViewer = () => {
         description: "The deck has been successfully deleted.",
       });
       
-      navigate('/my-decks');
+      if (onClose) {
+        onClose();
+      } else {
+        navigate('/my-decks');
+      }
     } catch (error) {
       console.error('Error deleting deck:', error);
       toast({
@@ -104,15 +125,15 @@ const DeckViewer = () => {
   };
 
   const downloadAsPDF = () => {
-    if (!deck || slides.length === 0) return;
+    const deckData = deck || propDeck;
+    if (!deckData || slides.length === 0) return;
 
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
     
     // Title page
     pdf.setFontSize(24);
-    pdf.text(deck.title, pageWidth / 2, 50, { align: 'center' });
+    pdf.text(deckData.title, pageWidth / 2, 50, { align: 'center' });
     
     pdf.setFontSize(12);
     pdf.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, 70, { align: 'center' });
@@ -156,7 +177,7 @@ const DeckViewer = () => {
       }
     });
 
-    pdf.save(`${deck.title}.pdf`);
+    pdf.save(`${deckData.title}.pdf`);
     
     toast({
       title: "PDF downloaded",
@@ -175,7 +196,8 @@ const DeckViewer = () => {
     );
   }
 
-  if (!deck) {
+  const deckData = deck || propDeck;
+  if (!deckData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -196,18 +218,30 @@ const DeckViewer = () => {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/my-decks')}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to My Decks
-              </Button>
+              {!onClose && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/my-decks')}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to My Decks
+                </Button>
+              )}
+              {onClose && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClose}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Close
+                </Button>
+              )}
               <div>
-                <h1 className="text-2xl font-bold">{deck.title}</h1>
+                <h1 className="text-2xl font-bold">{deckData.title}</h1>
                 <p className="text-sm text-gray-500">
-                  Created {formatDistanceToNow(new Date(deck.created_at))} ago
+                  Created {formatDistanceToNow(new Date(deckData.created_at))} ago
                 </p>
               </div>
             </div>
@@ -234,7 +268,7 @@ const DeckViewer = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid gap-6">
           {slides.map((slide: Slide, index: number) => (
-            <Card key={index} className="overflow-hidden">
+            <Card key={slide.id || index} className="overflow-hidden">
               <CardHeader className="bg-gray-50">
                 <CardTitle className="flex items-center">
                   <span className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold mr-3">

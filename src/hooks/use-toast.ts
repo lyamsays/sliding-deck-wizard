@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
@@ -12,7 +13,7 @@ export const actionTypes = {
   REMOVE_TOAST: "REMOVE_TOAST",
 } as const
 
-interface Toast extends ToastProps {
+interface Toast extends Omit<ToastProps, "title"> {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode

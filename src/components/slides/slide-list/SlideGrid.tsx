@@ -42,7 +42,7 @@ const SlideGrid: React.FC<SlideGridProps> = ({
       y: 0,
       scale: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         damping: 20,
         stiffness: 300
       }
@@ -59,7 +59,7 @@ const SlideGrid: React.FC<SlideGridProps> = ({
     >
       {editedSlides.map((slide, index) => (
         <motion.div 
-          key={index} 
+          key={slide.id || index} 
           variants={slideVariants}
           whileHover={{ 
             scale: 1.02,
