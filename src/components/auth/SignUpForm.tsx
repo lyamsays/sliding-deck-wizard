@@ -1,4 +1,5 @@
 
+<<<<<<< HEAD
 import React, { useState } from 'react';
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -8,116 +9,174 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { FaLock, FaGoogle } from 'react-icons/fa';
 
+=======
+import React, { useState, FormEvent } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link, useNavigate } from 'react-router-dom';
+import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff } from 'lucide-react';
+>>>>>>> 0586fc0ddfcb662ea18ceb0a567de8e4d6b73122
 
 const SignUpForm = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { signUp, signInWithGoogle } = useAuth();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('SignUpForm: Starting sign-up process');
-    setIsLoading(true);
     
+    if (!formData.email || !formData.password || !formData.confirmPassword) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
     try {
-      console.log('SignUpForm: Attempting to sign up with email:', email);
-      await signUp(email, password);
-      console.log('SignUpForm: Sign-up successful, redirecting to home page');
-      navigate('/');
-    } catch (error: any) {
-      console.error('SignUpForm Error:', error);
-      toast({
-        variant: "destructive",
-        title: "Sign-up failed",
-        description: error.message || "Could not create your account. Please try again."
-      });
+      const { error } = await signUp(formData.email, formData.password);
+      
+      if (error) {
+        setError(error.message);
+      } else {
+        toast({
+          title: "Account created successfully!",
+          description: "Please check your email to verify your account.",
+        });
+        navigate('/signin');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleGoogleSignUp = async () => {
-    console.log('SignUpForm: Attempting to sign up with Google');
-    try {
-      await signInWithGoogle();
-      console.log('SignUpForm: Google sign-in flow initiated');
-      // Redirection is handled by the OAuth provider
-    } catch (error: any) {
-      console.error('Google Sign-up Error:', error);
-      toast({
-        variant: "destructive",
-        title: "Google sign-in failed",
-        description: error.message || "Could not sign in with Google. Please try again."
-      });
-    }
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, email: e.target.value }));
+    if (error) setError('');
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, password: e.target.value }));
+    if (error) setError('');
+  };
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, confirmPassword: e.target.value }));
+    if (error) setError('');
   };
 
   return (
-    <div className="space-y-6 w-full max-w-md mx-auto">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold">Create an Account</h1>
-        <p className="text-sm text-gray-500 mt-2">Enter your details to get started</p>
-      </div>
-      
+    <div className="w-full max-w-md mx-auto">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            placeholder="your@email.com"
+            value={formData.email}
+            onChange={handleEmailChange}
             required
           />
         </div>
         
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Create a password (min. 6 characters)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Create a password"
+              value={formData.password}
+              onChange={handlePasswordChange}
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
-        
+
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <div className="relative">
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm your password"
+              value={formData.confirmPassword}
+              onChange={handleConfirmPasswordChange}
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {error && (
+          <p className="text-sm text-red-600">{error}</p>
+        )}
+
         <Button 
           type="submit" 
           className="w-full" 
-          disabled={isLoading}
+          disabled={loading}
         >
-          {isLoading ? 'Creating account...' : 'Sign Up'}
+          {loading ? 'Creating account...' : 'Sign Up'}
         </Button>
+
+        <p className="text-center text-sm text-gray-600">
+          Already have an account?{' '}
+          <Link to="/signin" className="text-primary hover:underline">
+            Sign in
+          </Link>
+        </p>
       </form>
-      
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-gray-500">Or continue with</span>
-        </div>
-      </div>
-      
-      <Button
-  type="button"
-  variant="outline"
-  className="w-full flex items-center justify-center gap-2"
-  onClick={handleGoogleSignUp}
->
-  <FaGoogle className="mr-1" />
-  Sign up with Google
-  <span className="flex items-center text-xs text-gray-500 ml-2">
-    <FaLock className="mr-1" /> Secure
-  </span>
-</Button>
     </div>
   );
 };

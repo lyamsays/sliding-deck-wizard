@@ -28,6 +28,9 @@ const AboutPage = () => {
               <p className="italic text-gray-700">
                 "As a pre-law student with a passion for AI and entrepreneurship, I kept hearing the same frustration in conversations with mentors and professors: building presentations is time-consuming, repetitive, and often a barrier to getting real work done."
               </p>
+              <p className="text-right text-sm text-gray-600 mt-4 font-medium">
+                — Lyam Ouattara
+              </p>
             </div>
             
             <p>

@@ -1,6 +1,13 @@
 
 import React from 'react';
 import { Slide } from '@/types/deck';
+<<<<<<< HEAD
+=======
+import SlideGrid from './SlideGrid';
+import SlideHeader from './SlideHeader';
+import ExportToImage from '../ExportToImage';
+import { motion } from 'framer-motion';
+>>>>>>> 0586fc0ddfcb662ea18ceb0a567de8e4d6b73122
 
 interface SlideListProps {
   slides: Slide[];
@@ -15,6 +22,7 @@ const SlideList: React.FC<SlideListProps> = ({
   onRemoveImage,
   viewMode
 }) => {
+<<<<<<< HEAD
   if (slides.length === 0) {
     return (
       <div className="p-8 text-center">
@@ -43,6 +51,36 @@ const SlideList: React.FC<SlideListProps> = ({
         </div>
       ))}
     </div>
+=======
+  if (editedSlides.length === 0) return null;
+
+  return (
+    <motion.div 
+      className="mt-12 space-y-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+    >
+      <SlideHeader 
+        deckTitle={deckTitle}
+        setDeckTitle={setDeckTitle}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        handleSave={handleSave}
+        handleDownloadSlides={handleDownloadSlides}
+        isSaving={isSaving}
+        slideCount={editedSlides.length}
+        ExportComponent={<ExportToImage slides={editedSlides} deckTitle={deckTitle} />}
+      />
+      
+      <SlideGrid
+        editedSlides={editedSlides}
+        viewMode={viewMode}
+        handleSlideUpdate={handleSlideUpdate}
+        handleRemoveImage={handleRemoveImage}
+      />
+    </motion.div>
+>>>>>>> 0586fc0ddfcb662ea18ceb0a567de8e4d6b73122
   );
 };
 
