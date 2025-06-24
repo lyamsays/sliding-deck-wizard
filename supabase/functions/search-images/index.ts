@@ -1,4 +1,5 @@
 
+/// <reference types="https://deno.land/types/index.d.ts" />
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -47,15 +48,15 @@ async function searchUnsplashImages(query: string, page = 1, perPage = 9) {
     console.log(`search-images: Successfully found ${data.results?.length || 0} images`);
     
     // Transform the data to include only what we need
-    return data.results.map((img: Record<string, unknown>) => ({
+    return data.results.map((img: any) => ({
       id: img.id,
-      url: img.urls.regular,
-      smallUrl: img.urls.small,
-      thumbUrl: img.urls.thumb,
+      url: (img.urls as any).regular,
+      smallUrl: (img.urls as any).small,
+      thumbUrl: (img.urls as any).thumb,
       description: img.description || img.alt_description || 'Image from Unsplash',
-      authorName: img.user.name,
-      authorUsername: img.user.username,
-      downloadUrl: img.links.download
+      authorName: (img.user as any).name,
+      authorUsername: (img.user as any).username,
+      downloadUrl: (img.links as any).download
     }));
   } catch (error) {
     console.error("search-images: Error during Unsplash API request:", error);
@@ -63,7 +64,7 @@ async function searchUnsplashImages(query: string, page = 1, perPage = 9) {
   }
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log("search-images: Handling CORS preflight");
@@ -110,11 +111,11 @@ serve(async (req) => {
   } catch (error) {
     console.error("search-images: Error searching for images:", error);
     
-    const isAuthError = error.message?.includes('invalid') && error.message?.includes('API key');
+    const isAuthError = (error as Error).message?.includes('invalid') && (error as Error).message?.includes('API key');
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'An error occurred during image search',
+        error: (error as Error).message || 'An error occurred during image search',
         details: 'This may be due to an invalid Unsplash API key or network issues.',
         apiKeyInvalid: isAuthError
       }),

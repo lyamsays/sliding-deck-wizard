@@ -1,4 +1,5 @@
 
+/// <reference types="https://deno.land/types/index.d.ts" />
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -6,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -117,7 +118,7 @@ And so on for all slides.`
       const slideNotesSection = responseText.split('📝 Speaker Notes:')[1] || '';
       const slideNoteMatches = slideNotesSection.match(/\*\*Slide \d+ – .*?\*\*:([\s\S]*?)(?=\*\*Slide \d+|$)/g) || [];
       
-      const slideNotes = slideNoteMatches.map(match => {
+      const slideNotes = slideNoteMatches.map((match: string) => {
         const noteContent = match.split('*:')[1] || '';
         return noteContent.trim();
       });
@@ -281,7 +282,7 @@ And so on for all slides.`
     console.error("Error processing request:", error);
     return new Response(
       JSON.stringify({
-        error: error.message || "An error occurred during processing."
+        error: (error as Error).message || "An error occurred during processing."
       }),
       { 
         status: 500,

@@ -1,4 +1,5 @@
 
+/// <reference types="https://deno.land/types/index.d.ts" />
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -7,7 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log("generate-image: Handling CORS preflight");
@@ -75,7 +76,7 @@ serve(async (req) => {
     console.error("generate-image: Error generating image:", error);
     
     return new Response(
-      JSON.stringify({ error: error.message || 'An error occurred during image generation' }),
+      JSON.stringify({ error: (error as Error).message || 'An error occurred during image generation' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
