@@ -1,5 +1,4 @@
 
-/// <reference types="https://deno.land/types/index.d.ts" />
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -27,7 +26,8 @@ serve(async (req: Request) => {
       );
     }
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    // Use globalThis to access Deno in a more compatible way
+    const openAIApiKey = (globalThis as any).Deno?.env?.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
       console.error("generate-image: Missing OPENAI_API_KEY");
       throw new Error('OPENAI_API_KEY is not set');

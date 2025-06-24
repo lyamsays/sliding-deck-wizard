@@ -1,5 +1,4 @@
 
-/// <reference types="https://deno.land/types/index.d.ts" />
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -14,7 +13,7 @@ serve(async (req: Request) => {
   }
 
   try {
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const OPENAI_API_KEY = (globalThis as any).Deno?.env?.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       console.error('Missing OpenAI API key');
       throw new Error('Missing OpenAI API key');

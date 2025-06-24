@@ -1,5 +1,4 @@
 
-/// <reference types="https://deno.land/types/index.d.ts" />
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -10,7 +9,7 @@ const corsHeaders = {
 
 // Function to search for images using Unsplash API
 async function searchUnsplashImages(query: string, page = 1, perPage = 9) {
-  const accessKey = Deno.env.get('UNSPLASH_ACCESS_KEY');
+  const accessKey = (globalThis as any).Deno?.env?.get('UNSPLASH_ACCESS_KEY');
   
   if (!accessKey) {
     console.error("search-images: UNSPLASH_ACCESS_KEY is not set in environment variables");
@@ -83,7 +82,7 @@ serve(async (req: Request) => {
     }
 
     // Verify that the UNSPLASH_ACCESS_KEY is set
-    const accessKey = Deno.env.get('UNSPLASH_ACCESS_KEY');
+    const accessKey = (globalThis as any).Deno?.env?.get('UNSPLASH_ACCESS_KEY');
     if (!accessKey || accessKey.trim() === '') {
       console.error("search-images: UNSPLASH_ACCESS_KEY is not configured or is empty");
       return new Response(
