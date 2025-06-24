@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import SlideInput from "./pages/SlideInput";
+import Create from "./pages/Create";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import MyDecks from "./pages/MyDecks";
@@ -44,6 +45,7 @@ const App = () => {
             <ErrorBoundary>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/create" element={<Create />} />
                 <Route path="/slide-input" element={<SlideInput />} />
                 <Route path="/sign-in" element={<SignIn />} />
                 <Route path="/sign-up" element={<SignUp />} />
