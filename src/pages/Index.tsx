@@ -1,10 +1,13 @@
 
 import React from 'react';
 import ErrorBoundary from '../components/ErrorBoundary';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const Index = () => {
   return (
     <ErrorBoundary>
+      <Navbar />
       <div className="min-h-screen bg-gradient-to-b from-white to-gray-100">
         <main className="container mx-auto px-4 py-16">
           <div className="max-w-4xl mx-auto text-center">
@@ -33,6 +36,7 @@ const Index = () => {
           </div>
         </main>
       </div>
+      <Footer />
     </ErrorBoundary>
   );
 };
