@@ -49,6 +49,37 @@ interface SlidesResponse {
 const SlideInput = () => {
   console.log("SlideInput component rendering"); // Debug log
   
+  // Check for setup data on component mount
+  useEffect(() => {
+    const setupDataString = localStorage.getItem('setupData');
+    if (setupDataString) {
+      try {
+        const setupData = JSON.parse(setupDataString);
+        console.log("SlideInput: Loading setup data:", setupData);
+        
+        // Pre-fill form with setup data
+        setSlideContent(setupData.content || '');
+        setProfession(setupData.profession || 'Consultant');
+        setPurpose(setupData.purpose || '');
+        setTone(setupData.tone || 'Professional');
+        setSelectedTheme(setupData.selectedTheme || 'creme');
+        setAutoGenerateImages(setupData.autoGenerateImages !== undefined ? setupData.autoGenerateImages : true);
+        
+        // Clear the setup data from localStorage
+        localStorage.removeItem('setupData');
+        
+        // Show a welcome message
+        toast({
+          title: "Setup completed!",
+          description: "Your preferences have been loaded. You can now generate your presentation.",
+        });
+        
+      } catch (error) {
+        console.error("SlideInput: Error parsing setup data:", error);
+      }
+    }
+  }, []);
+
   // Original state variables
   const [slideContent, setSlideContent] = useState('');
   const [generatedSlides, setGeneratedSlides] = useState<Slide[]>([]);

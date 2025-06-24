@@ -1,22 +1,36 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import SlideForm from '@/components/slides/SlideForm';
+import SetupWizard, { SetupData } from '@/components/setup/SetupWizard';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Presentation, Sparkles, Clock, Users } from 'lucide-react';
+import { Presentation, Sparkles, Clock, Users, ArrowRight } from 'lucide-react';
 
 const Create = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [showSetup, setShowSetup] = useState(false);
 
-  // Redirect to slide input page for now (existing functionality)
   const handleGetStarted = () => {
+    setShowSetup(true);
+  };
+
+  const handleSetupComplete = (data: SetupData) => {
+    // Store setup data and navigate to slide input with pre-filled data
+    localStorage.setItem('setupData', JSON.stringify(data));
     navigate('/slide-input');
   };
+
+  const handleSetupCancel = () => {
+    setShowSetup(false);
+  };
+
+  if (showSetup) {
+    return <SetupWizard onComplete={handleSetupComplete} onCancel={handleSetupCancel} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,7 +44,7 @@ const Create = () => {
           </h1>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             Transform your ideas into professional presentations with AI-powered slide generation. 
-            Choose from beautiful themes and let our AI create compelling content for you.
+            Our guided setup helps you create exactly what you need.
           </p>
         </div>
 
@@ -40,9 +54,9 @@ const Create = () => {
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="font-semibold mb-2">AI-Powered</h3>
+            <h3 className="font-semibold mb-2">Guided Setup</h3>
             <p className="text-sm text-muted-foreground">
-              Generate professional slides with intelligent content suggestions
+              Step-by-step wizard to create the perfect presentation
             </p>
           </Card>
 
@@ -50,9 +64,9 @@ const Create = () => {
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Clock className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="font-semibold mb-2">Save Time</h3>
+            <h3 className="font-semibold mb-2">AI-Powered</h3>
             <p className="text-sm text-muted-foreground">
-              Create presentations in minutes, not hours
+              Intelligent content generation and visual suggestions
             </p>
           </Card>
 
@@ -60,9 +74,9 @@ const Create = () => {
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Presentation className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="font-semibold mb-2">Beautiful Themes</h3>
+            <h3 className="font-semibold mb-2">Professional Themes</h3>
             <p className="text-sm text-muted-foreground">
-              Choose from professionally designed templates
+              Industry-specific themes for every profession
             </p>
           </Card>
 
@@ -70,9 +84,9 @@ const Create = () => {
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Users className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="font-semibold mb-2">Collaborate</h3>
+            <h3 className="font-semibold mb-2">Easy Export</h3>
             <p className="text-sm text-muted-foreground">
-              Share and work together on presentations
+              Share and export in multiple formats
             </p>
           </Card>
         </div>
@@ -85,23 +99,24 @@ const Create = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-6">
-                Join thousands of professionals who create stunning presentations with our AI-powered platform.
+                Our guided setup will help you create the perfect presentation in just a few steps.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
                   size="lg" 
                   onClick={handleGetStarted}
-                  className="bg-primary hover:bg-primary/90"
+                  className="bg-primary hover:bg-primary/90 flex items-center gap-2"
                 >
-                  <Presentation className="mr-2 h-5 w-5" />
-                  Create Your First Presentation
+                  <Presentation className="h-5 w-5" />
+                  Start Guided Setup
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button 
                   variant="outline" 
                   size="lg"
-                  onClick={() => navigate('/themes')}
+                  onClick={() => navigate('/slide-input')}
                 >
-                  Browse Themes
+                  Skip to Advanced Mode
                 </Button>
               </div>
               {!user && (
