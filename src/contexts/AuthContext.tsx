@@ -7,8 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   loading: boolean;
 }
@@ -64,13 +64,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       return { error: null };
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as Error;
       toast({
         variant: "destructive",
         title: "Error signing in",
-        description: error.message || "An unexpected error occurred",
+        description: err.message || "An unexpected error occurred",
       });
-      return { error };
+      return { error: err };
     } finally {
       setLoading(false);
     }
@@ -102,13 +103,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       return { error: null };
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as Error;
       toast({
         variant: "destructive",
         title: "Error signing up",
-        description: error.message || "An unexpected error occurred",
+        description: err.message || "An unexpected error occurred",
       });
-      return { error };
+      return { error: err };
     } finally {
       setLoading(false);
     }
@@ -131,11 +133,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Signed out",
         description: "You have been successfully signed out",
       });
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as Error;
       toast({
         variant: "destructive",
         title: "Error signing out",
-        description: error.message || "An unexpected error occurred",
+        description: err.message || "An unexpected error occurred",
       });
     } finally {
       setLoading(false);

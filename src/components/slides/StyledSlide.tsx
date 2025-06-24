@@ -97,10 +97,11 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
         description: "Visual has been added to your slide.",
       });
       
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as Error;
       toast({
         title: "Image generation failed",
-        description: error.message || "Failed to generate image. Please try again.",
+        description: err.message || "Failed to generate image. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -125,10 +126,11 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
         description: "Your image has been added to the slide.",
       });
       
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as Error;
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload image. Please try again.",
+        description: err.message || "Failed to upload image. Please try again.",
         variant: "destructive"
       });
     }

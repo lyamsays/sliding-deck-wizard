@@ -17,7 +17,7 @@ export interface Slide {
     cardDesign?: string;
     iconType?: string;
   };
-  cropData?: any;
+  cropData?: unknown;
 }
 
 export interface SlideDeck {
@@ -55,8 +55,19 @@ export interface GenerationProgress {
   isComplete: boolean;
 }
 
-export function prepareDbSlides(rawSlides: any[]): Slide[] {
-  return rawSlides.map((slide: any, index: number) => ({
+interface RawSlide {
+  title?: string;
+  bullets?: string[];
+  visualSuggestion?: string;
+  speakerNotes?: string;
+  imageUrl?: string;
+  revisedPrompt?: string;
+  style?: Slide["style"];
+  cropData?: unknown;
+}
+
+export function prepareDbSlides(rawSlides: unknown[]): Slide[] {
+  return (rawSlides as RawSlide[]).map((slide, index: number) => ({
     title: slide.title ?? `Slide ${index + 1}`,
     bullets: slide.bullets ?? [],
     visualSuggestion: slide.visualSuggestion ?? "",
@@ -68,8 +79,8 @@ export function prepareDbSlides(rawSlides: any[]): Slide[] {
   }));
 }
 
-export function convertDbSlidesToTypedSlides(dbSlides: any[]): Slide[] {
-  return dbSlides.map((slide: any, index: number) => ({
+export function convertDbSlidesToTypedSlides(dbSlides: unknown[]): Slide[] {
+  return (dbSlides as RawSlide[]).map((slide, index: number) => ({
     title: slide.title ?? `Slide ${index + 1}`,
     bullets: slide.bullets ?? [],
     visualSuggestion: slide.visualSuggestion ?? "",
