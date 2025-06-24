@@ -1,13 +1,4 @@
 
-<<<<<<< HEAD
-import React, { useState } from 'react';
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { useAuth } from "../../contexts/AuthContext";
-import { useNavigate } from 'react-router-dom';
-import { FaLock, FaGoogle } from 'react-icons/fa';
-=======
 import React, { useState, FormEvent } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
->>>>>>> 0586fc0ddfcb662ea18ceb0a567de8e4d6b73122
 
 const SignInForm = () => {
   const [email, setEmail] = useState('');
