@@ -7,7 +7,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "start": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "test": "bun test"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
