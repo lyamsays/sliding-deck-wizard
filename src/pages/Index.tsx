@@ -4,6 +4,8 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Hero from '../components/Hero';
+import FeatureShowcase from '../components/landing/FeatureShowcase';
+import ProfessionalShowcase from '../components/landing/ProfessionalShowcase';
 
 const Index = () => {
   return (
@@ -11,6 +13,8 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <Hero />
+        <FeatureShowcase />
+        <ProfessionalShowcase />
         <Footer />
       </div>
     </ErrorBoundary>
