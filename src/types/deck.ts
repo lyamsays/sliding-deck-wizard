@@ -1,5 +1,3 @@
-
-
 export interface Slide {
   id: string;
   title: string;
@@ -7,6 +5,7 @@ export interface Slide {
   visualSuggestion?: string;
   imageUrl?: string;
   revisedPrompt?: string;
+  speakerNotes?: string;
   style?: {
     backgroundColor: string;
     iconType: string;
@@ -77,7 +76,21 @@ export const getIconSuggestion = (title: string, visualSuggestion?: string): str
   if (text.includes('security') || text.includes('protection') || text.includes('safe')) return 'shield';
   if (text.includes('time') || text.includes('schedule') || text.includes('deadline')) return 'clock';
   if (text.includes('money') || text.includes('revenue') || text.includes('profit')) return 'dollar-sign';
-  
+
   return 'presentation';
+};
+
+export const convertDbSlidesToTypedSlides = (slides: unknown[]): Slide[] => {
+  if (!Array.isArray(slides)) return [];
+  return slides.map((slide) => ({
+    id: slide.id ?? '',
+    title: slide.title ?? '',
+    bullets: Array.isArray(slide.bullets) ? slide.bullets : [],
+    visualSuggestion: slide.visualSuggestion ?? slide.visual_suggestion,
+    imageUrl: slide.imageUrl ?? slide.image_url,
+    revisedPrompt: slide.revisedPrompt ?? slide.revised_prompt,
+    speakerNotes: slide.speakerNotes ?? slide.speaker_notes,
+    style: slide.style,
+  }));
 };
 
