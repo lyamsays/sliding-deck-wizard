@@ -178,7 +178,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
     });
   };
 
-  // Gamma-style design with side-by-side layout for images
+  // Modern side-by-side layout design
   return (
     <div 
       className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
@@ -212,9 +212,9 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
         {/* Main Content Area - Side by Side Layout */}
         <div className="flex-1 flex items-center">
           <div className="grid grid-cols-12 gap-8 w-full items-center">
-            {/* Text Content - Takes up 7 columns */}
-            <div className="col-span-7 space-y-4">
-              <ul className="space-y-3">
+            {/* Text Content - Takes up 7 columns when image exists, 12 when no image */}
+            <div className={slide.imageUrl ? "col-span-7" : "col-span-12"}>
+              <ul className="space-y-4">
                 {slide.bullets.map((bullet, bulletIndex) => (
                   <li 
                     key={bulletIndex} 
@@ -224,33 +224,45 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
                     onBlur={(e) => handleBulletChange(bulletIndex, e)}
                     style={{ color: textColor }}
                   >
-                    <span style={{ color: accentColor }} className="mr-3 mt-1 text-xl">•</span>
-                    <span>{bullet}</span>
+                    <span style={{ color: accentColor }} className="mr-3 mt-1 text-xl font-bold">•</span>
+                    <span className="leading-relaxed">{bullet}</span>
                   </li>
                 ))}
               </ul>
             </div>
             
-            {/* Image Content - Takes up 5 columns */}
-            <div className="col-span-5 flex justify-center">
-              {slide.imageUrl ? (
-                <div className="rounded-xl overflow-hidden shadow-2xl border-4 border-white/20 max-w-full">
+            {/* Image Content - Takes up 5 columns when image exists */}
+            {slide.imageUrl && (
+              <div className="col-span-5 flex justify-center">
+                <div className="rounded-xl overflow-hidden shadow-2xl border-4 border-white/20 w-full max-w-sm">
                   <img 
                     src={slide.imageUrl} 
                     alt={slide.title}
                     className="w-full h-64 object-cover"
                     crossOrigin="anonymous"
+                    onError={(e) => {
+                      console.error('Image failed to load:', slide.imageUrl);
+                      // Keep the broken image visible for debugging
+                    }}
+                    onLoad={() => {
+                      console.log('Image loaded successfully:', slide.imageUrl);
+                    }}
                   />
                 </div>
-              ) : (
-                <div className="w-full h-64 bg-white/10 rounded-xl flex items-center justify-center border-2 border-dashed border-white/30">
+              </div>
+            )}
+            
+            {/* Placeholder when no image */}
+            {!slide.imageUrl && (
+              <div className="col-span-5 flex justify-center">
+                <div className="w-full h-64 bg-white/10 rounded-xl flex items-center justify-center border-2 border-dashed border-white/30 max-w-sm">
                   <div className="text-center">
                     <Image className="h-12 w-12 mx-auto mb-2 text-white/50" />
-                    <p className="text-white/50 text-sm">No image yet</p>
+                    <p className="text-white/50 text-sm">Click to add image</p>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
