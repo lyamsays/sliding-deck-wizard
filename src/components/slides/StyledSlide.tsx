@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Slide } from '@/types/deck';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -179,7 +178,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
     });
   };
 
-  // Gamma-style design with seamless image integration
+  // Gamma-style design with side-by-side layout for images
   return (
     <div 
       className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
@@ -192,27 +191,6 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
       }}
       id={`slide-content-${index}`}
     >
-      {/* Background Image Integration - Gamma Style */}
-      {slide.imageUrl && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ 
-            backgroundImage: `url(${slide.imageUrl})`,
-            filter: 'blur(1px)'
-          }}
-        />
-      )}
-      
-      {/* Gradient Overlay for Text Readability */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          background: slide.imageUrl 
-            ? 'linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%)'
-            : 'transparent'
-        }}
-      />
-      
       {/* Content Container */}
       <div className="relative z-10 h-full flex flex-col p-8">
         {/* Title Section */}
@@ -220,9 +198,8 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
           <h2
             className="text-3xl font-bold leading-tight"
             style={{ 
-              color: slide.imageUrl ? '#FFFFFF' : textColor,
-              fontFamily: titleFont,
-              textShadow: slide.imageUrl ? '0 2px 4px rgba(0,0,0,0.3)' : 'none'
+              color: textColor,
+              fontFamily: titleFont
             }}
             contentEditable
             suppressContentEditableWarning
@@ -232,33 +209,32 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
           </h2>
         </div>
 
-        {/* Main Content Area */}
+        {/* Main Content Area - Side by Side Layout */}
         <div className="flex-1 flex items-center">
-          {slide.imageUrl ? (
-            // Image + Content Layout - Gamma Style
-            <div className="grid grid-cols-2 gap-8 w-full items-center">
-              <div className="space-y-4">
-                <ul className="space-y-3">
-                  {slide.bullets.map((bullet, bulletIndex) => (
-                    <li 
-                      key={bulletIndex} 
-                      className="flex items-start text-lg"
-                      contentEditable
-                      suppressContentEditableWarning
-                      onBlur={(e) => handleBulletChange(bulletIndex, e)}
-                      style={{ 
-                        color: '#FFFFFF',
-                        textShadow: '0 1px 2px rgba(0,0,0,0.5)'
-                      }}
-                    >
-                      <span style={{ color: accentColor }} className="mr-3 mt-1 text-xl">•</span>
-                      <span>{bullet}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="flex justify-center">
-                <div className="rounded-xl overflow-hidden shadow-2xl border-4 border-white/20">
+          <div className="grid grid-cols-12 gap-8 w-full items-center">
+            {/* Text Content - Takes up 7 columns */}
+            <div className="col-span-7 space-y-4">
+              <ul className="space-y-3">
+                {slide.bullets.map((bullet, bulletIndex) => (
+                  <li 
+                    key={bulletIndex} 
+                    className="flex items-start text-lg"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleBulletChange(bulletIndex, e)}
+                    style={{ color: textColor }}
+                  >
+                    <span style={{ color: accentColor }} className="mr-3 mt-1 text-xl">•</span>
+                    <span>{bullet}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            {/* Image Content - Takes up 5 columns */}
+            <div className="col-span-5 flex justify-center">
+              {slide.imageUrl ? (
+                <div className="rounded-xl overflow-hidden shadow-2xl border-4 border-white/20 max-w-full">
                   <img 
                     src={slide.imageUrl} 
                     alt={slide.title}
@@ -266,28 +242,16 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
                     crossOrigin="anonymous"
                   />
                 </div>
-              </div>
+              ) : (
+                <div className="w-full h-64 bg-white/10 rounded-xl flex items-center justify-center border-2 border-dashed border-white/30">
+                  <div className="text-center">
+                    <Image className="h-12 w-12 mx-auto mb-2 text-white/50" />
+                    <p className="text-white/50 text-sm">No image yet</p>
+                  </div>
+                </div>
+              )}
             </div>
-          ) : (
-            // Text-Only Layout
-            <div className="w-full">
-              <ul className="space-y-4">
-                {slide.bullets.map((bullet, bulletIndex) => (
-                  <li 
-                    key={bulletIndex} 
-                    className="flex items-start text-xl"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleBulletChange(bulletIndex, e)}
-                    style={{ color: textColor }}
-                  >
-                    <span style={{ color: accentColor }} className="mr-4 mt-1 text-2xl">•</span>
-                    <span>{bullet}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
