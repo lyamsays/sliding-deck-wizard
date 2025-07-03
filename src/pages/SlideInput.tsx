@@ -183,11 +183,11 @@ const SlideInput = () => {
       if (autoGenerateImages) {
         console.log("SlideInput: Auto image generation is enabled, will generate images after delay");
         setTimeout(() => {
-          generateAllImages();
-        }, 500);
+          generateAllImages(styledSlides);
+        }, 1000); // Increased delay to ensure slides are properly set
       }
     }
-  }, [generatedSlides, selectedTheme]);
+  }, [generatedSlides, selectedTheme, autoGenerateImages]);
   
   const handleAutoGenerate = async (setupData: any) => {
     console.log("SlideInput: Auto-generating slides from setup data");
@@ -506,8 +506,10 @@ const SlideInput = () => {
     });
   };
   
-  const generateAllImages = async () => {
-    if (editedSlides.length === 0) {
+  const generateAllImages = async (slidesToProcess?: Slide[]) => {
+    const targetSlides = slidesToProcess || editedSlides;
+    
+    if (targetSlides.length === 0) {
       toast({
         title: "No slides to generate images for",
         description: "Generate some slides first.",
@@ -517,14 +519,10 @@ const SlideInput = () => {
     }
     
     console.log("SlideInput: Starting automatic image generation for all slides");
-    const slidesWithSuggestions = editedSlides.filter(slide => slide.visualSuggestion);
+    const slidesWithSuggestions = targetSlides.filter(slide => slide.visualSuggestion && !slide.imageUrl);
     
     if (slidesWithSuggestions.length === 0) {
-      toast({
-        title: "No visual suggestions",
-        description: "None of your slides have visual suggestions to generate images from.",
-        variant: "destructive"
-      });
+      console.log("SlideInput: No slides need image generation");
       return;
     }
     
@@ -533,18 +531,18 @@ const SlideInput = () => {
     // Start with 10% progress
     setImageProgress(10);
     
-    const updatedSlides = [...editedSlides];
+    const updatedSlides = [...targetSlides];
     const totalSlides = slidesWithSuggestions.length;
     let processedCount = 0;
     
     toast({
       title: "Generating images",
-      description: `Starting image generation for ${totalSlides} slides...`,
+      description: `Starting image generation for ${totalSlides} slides like Gamma...`,
     });
     
     try {
-      for (let i = 0; i < editedSlides.length; i++) {
-        const slide = editedSlides[i];
+      for (let i = 0; i < targetSlides.length; i++) {
+        const slide = targetSlides[i];
         
         if (!slide.visualSuggestion || slide.imageUrl) {
           continue;
@@ -590,8 +588,8 @@ const SlideInput = () => {
       setImageProgress(100);
       
       toast({
-        title: "Images generated",
-        description: `Successfully generated ${processedCount} images.`,
+        title: "Images generated automatically!",
+        description: `Successfully generated ${processedCount} images like Gamma.`,
       });
     } catch (error) {
       const err = error as Error;
@@ -602,6 +600,7 @@ const SlideInput = () => {
       });
     } finally {
       setIsGeneratingImages(false);
+      setTimeout(() => setImageProgress(0), 2000);
     }
   };
   
