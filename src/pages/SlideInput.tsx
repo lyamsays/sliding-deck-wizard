@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +50,9 @@ interface SlidesResponse {
 const SlideInput = () => {
   console.log("SlideInput component rendering"); // Debug log
   
+  const location = useLocation();
+  const autoGenerate = new URLSearchParams(location.search).get('autoGenerate') === 'true';
+  
   // Check for setup data on component mount
   useEffect(() => {
     const setupDataString = localStorage.getItem('setupData');
@@ -71,8 +75,16 @@ const SlideInput = () => {
         // Show a welcome message
         toast({
           title: "Setup completed!",
-          description: "Your preferences have been loaded. You can now generate your presentation.",
+          description: "Your preferences have been loaded. Generating your presentation...",
         });
+        
+        // Auto-generate slides if coming from setup
+        if (autoGenerate && setupData.content) {
+          // Small delay to ensure state is set
+          setTimeout(() => {
+            handleAutoGenerate(setupData);
+          }, 100);
+        }
         
       } catch (error) {
         console.error("SlideInput: Error parsing setup data:", error);
@@ -176,6 +188,106 @@ const SlideInput = () => {
       }
     }
   }, [generatedSlides, selectedTheme]);
+  
+  const handleAutoGenerate = async (setupData: any) => {
+    console.log("SlideInput: Auto-generating slides from setup data");
+    
+    setError(null);
+    setIsGenerating(true);
+    setGeneratedSlides([]);
+    setCurrentCreationStep('generating');
+    
+    // Set up a progress indicator that simulates the generation process
+    setGenerationProgress(10);
+    const progressInterval = setInterval(() => {
+      setGenerationProgress(prev => {
+        return prev < 90 ? prev + 10 : prev;
+      });
+    }, 500);
+    
+    try {
+      console.log("SlideInput: Starting auto slide generation");
+      setGenerationProgress(30);
+      
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Generation timed out. The server might be busy, please try again.')), 30000);
+      });
+      
+      console.log("SlideInput: Calling Supabase function for auto generation");
+      const responsePromise = supabase.functions.invoke('generate-slides', {
+        body: { 
+          content: setupData.content,
+          profession: setupData.profession,
+          purpose: setupData.purpose,
+          tone: setupData.tone,
+          framework: setupData.profession === "Consultant" ? framework : undefined,
+          themeId: setupData.selectedTheme,
+          autoGenerateImages: setupData.autoGenerateImages
+        }
+      });
+      
+      const { data, error } = await Promise.race<{
+        data: SlidesResponse | null;
+        error: { message?: string } | null;
+      }>([
+        responsePromise,
+        timeoutPromise.then(() => {
+          console.error("SlideInput: Auto generation timeout reached");
+          throw new Error('Generation timed out. The server might be busy, please try again.');
+        })
+      ]);
+      
+      if (error) {
+        console.error("SlideInput: Auto generation function returned error:", error);
+        throw error;
+      }
+      
+      console.log("SlideInput: Received auto generation response from function");
+      const slidesData = data as SlidesResponse;
+      
+      if (!slidesData.slides || !Array.isArray(slidesData.slides) || slidesData.slides.length === 0) {
+        console.error("SlideInput: Invalid auto generation slides structure:", slidesData);
+        throw new Error('Invalid or empty response from AI. Please try with more detailed content.');
+      }
+      
+      console.log("SlideInput: Successfully auto-generated slides:", slidesData.slides.length);
+      
+      setGenerationProgress(100);
+      setGeneratedSlides(slidesData.slides);
+      setCurrentCreationStep('editing');
+      
+      if (slidesData.slides.length > 0) {
+        setDeckTitle(slidesData.slides[0].title);
+        console.log("SlideInput: Set auto-generated deck title to:", slidesData.slides[0].title);
+      } else {
+        setDeckTitle('Untitled Deck');
+      }
+      
+      toast({
+        title: "Slides generated!",
+        description: `Successfully created ${slidesData.slides.length} slides from your setup.`,
+      });
+      
+      setTimeout(scrollToPreview, 1000);
+      
+    } catch (error) {
+      const err = error as Error;
+      console.error('SlideInput: Error auto-generating slides:', err);
+      setError(err.message || "Failed to generate slides. Please try again.");
+      toast({
+        title: "Auto-generation failed",
+        description: err.message || "Failed to auto-generate slides. Please adjust your content and try again.",
+        variant: "destructive"
+      });
+    } finally {
+      clearInterval(progressInterval);
+      setIsGenerating(false);
+      if (generationProgress < 100) {
+        console.log("SlideInput: Resetting auto-generation progress as generation did not complete successfully");
+        setGenerationProgress(0);
+      }
+    }
+  };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -7,24 +7,29 @@ import SetupWizard, { SetupData } from '@/components/setup/SetupWizard';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Presentation, Sparkles, Clock, Users, ArrowRight } from 'lucide-react';
+import { Presentation, Sparkles, Clock, Users, ArrowRight, X } from 'lucide-react';
 
 const Create = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [showSetup, setShowSetup] = useState(false);
+  const [showSetup, setShowSetup] = useState(true); // Start with setup by default
 
   const handleGetStarted = () => {
     setShowSetup(true);
   };
 
   const handleSetupComplete = (data: SetupData) => {
-    // Store setup data and navigate to slide input with pre-filled data
+    // Store setup data and navigate to slide generation
     localStorage.setItem('setupData', JSON.stringify(data));
-    navigate('/slide-input');
+    navigate('/slide-input?autoGenerate=true');
   };
 
   const handleSetupCancel = () => {
+    setShowSetup(false);
+  };
+
+  // Allow users to skip setup with a clear opt-out
+  const handleSkipSetup = () => {
     setShowSetup(false);
   };
 

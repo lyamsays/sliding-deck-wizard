@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Sparkles } from 'lucide-react';
 import ProfessionStep from './steps/ProfessionStep';
 import PurposeStep from './steps/PurposeStep';
 import ThemeStep from './steps/ThemeStep';
@@ -50,6 +50,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, onCancel }) => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Complete the setup and trigger automatic slide generation
       onComplete(setupData);
     }
   };
@@ -159,8 +160,8 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, onCancel }) => {
             >
               {currentStep === steps.length - 1 ? (
                 <>
-                  <Check className="h-4 w-4" />
-                  Create Presentation
+                  <Sparkles className="h-4 w-4" />
+                  Generate Presentation
                 </>
               ) : (
                 <>

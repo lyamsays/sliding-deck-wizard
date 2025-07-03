@@ -95,7 +95,7 @@ const AIGenerateTab: React.FC<AIGenerateTabProps> = ({
         <Button 
           onClick={handleGenerate}
           disabled={isGenerating || !prompt.trim()}
-          className="w-full"
+          className="w-full bg-purple-600 hover:bg-purple-700"
         >
           {isGenerating ? (
             <>
