@@ -195,9 +195,13 @@ const SlideInput = () => {
       // Call image generation if autoGenerateImages is enabled
       if (autoGenerateImages) {
         console.log("SlideInput: Auto image generation is enabled, will generate images after delay");
+        toast({
+          title: "Starting automatic image generation...",
+          description: "AI is generating images for your slides. This may take a moment.",
+        });
         setTimeout(() => {
           generateAllImages(styledSlides);
-        }, 1000); // Increased delay to ensure slides are properly set
+        }, 1500); // Increased delay to ensure slides are properly set
       }
     }
   }, [generatedSlides, selectedTheme, autoGenerateImages]);
@@ -602,11 +606,13 @@ const SlideInput = () => {
         // Create a refined prompt for professional presentation images
         const imagePrompt = `Create a high-quality, professional presentation visual for "${slide.title}". ${slide.visualSuggestion}. Style: clean, modern, minimal design with professional color palette. No text overlay. Suitable for business presentation. High resolution and professional quality.`;
         
+        console.log(`SlideInput: Calling generate-image function with prompt: ${imagePrompt}`);
+        
         const result = await Promise.race([
           supabase.functions.invoke('generate-image', {
             body: { prompt: imagePrompt }
           }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Image generation timeout')), 15000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Image generation timeout')), 20000))
         ]) as { data: any; error: any };
         
         const { data, error } = result;
