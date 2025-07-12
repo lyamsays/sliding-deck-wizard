@@ -51,7 +51,7 @@ const AIGenerateTab: React.FC<AIGenerateTabProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4">
+      <div className="space-y-4">
         <div className="space-y-2">
           <p className="text-sm text-gray-500">
             Describe the image you would like to generate for this slide:
