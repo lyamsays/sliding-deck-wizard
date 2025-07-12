@@ -65,20 +65,20 @@ const SortableSlideItem: React.FC<SortableSlideItemProps> = ({
 
   return (
     <div ref={setNodeRef} style={style} className="relative">
-      {/* Drag Handle */}
+      {/* Drag Handle - Touch-friendly */}
       {!isEditing && (
         <div
           {...attributes}
           {...listeners}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 opacity-70 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing touch-manipulation"
         >
-          <div className="bg-background/90 backdrop-blur-sm rounded p-1 shadow-sm border">
-            <GripVertical className="h-4 w-4 text-muted-foreground" />
+          <div className="bg-background/90 backdrop-blur-sm rounded p-2 md:p-1 shadow-sm border min-h-[44px] md:min-h-auto min-w-[44px] md:min-w-auto flex items-center justify-center">
+            <GripVertical className="h-5 w-5 md:h-4 md:w-4 text-muted-foreground" />
           </div>
         </div>
       )}
 
-      <div className={`${!isEditing ? 'group pl-8' : ''}`}>
+      <div className={`${!isEditing ? 'group pl-12 md:pl-8' : ''}`}>
         <InlineSlideEditor
           slide={slide}
           isEditing={isEditing}
@@ -120,6 +120,7 @@ const DraggableSlideList: React.FC<DraggableSlideListProps> = ({
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
+        tolerance: 5, // Mobile-friendly tolerance
       },
     }),
     useSensor(KeyboardSensor, {
@@ -195,29 +196,30 @@ const DraggableSlideList: React.FC<DraggableSlideListProps> = ({
 
   return (
     <div className={className}>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
           <h3 className="text-lg font-semibold">Your Slides</h3>
           <p className="text-sm text-muted-foreground">
-            Drag to reorder • Click to edit • {slides.length} slide{slides.length !== 1 ? 's' : ''}
+            <span className="hidden sm:inline">Drag to reorder • Click to edit • </span>
+            {slides.length} slide{slides.length !== 1 ? 's' : ''}
           </p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
             onClick={onAddSlide}
             variant="outline"
-            className="flex items-center gap-2"
+            className="flex items-center justify-center gap-2 min-h-[44px] touch-manipulation"
           >
             <Plus className="h-4 w-4" />
-            Quick Add
+            <span className="sm:inline">Quick Add</span>
           </Button>
           <Button
             onClick={handleQuickAdd}
-            className="flex items-center gap-2"
+            className="flex items-center justify-center gap-2 min-h-[44px] touch-manipulation"
           >
             <Plus className="h-4 w-4" />
-            Advanced Add
+            <span className="sm:inline">Advanced Add</span>
           </Button>
         </div>
       </div>
@@ -288,12 +290,12 @@ const DraggableSlideList: React.FC<DraggableSlideListProps> = ({
             <p className="text-sm text-muted-foreground mb-4">
               Add your first slide to get started with your presentation.
             </p>
-            <div className="flex gap-2 justify-center">
-              <Button onClick={onAddSlide} className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <Button onClick={onAddSlide} className="flex items-center justify-center gap-2 min-h-[44px] touch-manipulation">
                 <Plus className="h-4 w-4" />
                 Quick Add
               </Button>
-              <Button onClick={handleQuickAdd} variant="outline" className="flex items-center gap-2">
+              <Button onClick={handleQuickAdd} variant="outline" className="flex items-center justify-center gap-2 min-h-[44px] touch-manipulation">
                 <Plus className="h-4 w-4" />
                 Advanced Add
               </Button>

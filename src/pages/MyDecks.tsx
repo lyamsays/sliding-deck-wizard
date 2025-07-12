@@ -214,8 +214,8 @@ const MyDecks = () => {
             ) : decks.length === 0 ? (
               <EmptyDeckState />
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className={`lg:col-span-${selectedDeck ? '1' : '3'}`}>
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className={`xl:col-span-${selectedDeck ? '1' : '3'}`}>
                   <Card>
                     <CardHeader>
                       <CardTitle>Your Slide Decks</CardTitle>
@@ -231,17 +231,18 @@ const MyDecks = () => {
                         deleting={deleting}
                       />
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="flex flex-col sm:flex-row gap-2">
                       <Button 
                         onClick={() => navigate('/create')}
                         disabled={!canCreateMoreDecks}
+                        className="w-full sm:w-auto min-h-[44px] touch-manipulation"
                       >
                         Create New Slides
                       </Button>
                       {decks.length > 0 && !feedbackSubmitted && (
                         <Button 
                           variant="outline" 
-                          className="ml-2"
+                          className="w-full sm:w-auto min-h-[44px] touch-manipulation"
                           onClick={() => setFeedbackOpen(true)}
                         >
                           Provide Feedback
@@ -252,7 +253,7 @@ const MyDecks = () => {
                 </div>
                 
                 {selectedDeck && (
-                  <div className="lg:col-span-2">
+                  <div className="xl:col-span-2">
                     <DeckViewer 
                       deck={selectedDeck} 
                       onClose={() => setSelectedDeck(null)}
@@ -287,13 +288,18 @@ const MyDecks = () => {
             </div>
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFeedbackOpen(false)}>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setFeedbackOpen(false)}
+              className="w-full sm:w-auto min-h-[44px] touch-manipulation"
+            >
               Cancel
             </Button>
             <Button 
               onClick={handleSubmitFeedback} 
               disabled={!feedback.trim() || submittingFeedback}
+              className="w-full sm:w-auto min-h-[44px] touch-manipulation"
             >
               {submittingFeedback ? 'Submitting...' : 'Submit Feedback'}
             </Button>

@@ -1,4 +1,5 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -42,4 +43,38 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
-}
+  }
+
+  /* Mobile optimizations */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .bg-muted {
+      background-color: hsl(var(--border));
+    }
+    
+    .border-muted {
+      border-color: hsl(var(--foreground));
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }

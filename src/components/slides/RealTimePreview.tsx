@@ -241,19 +241,19 @@ const RealTimePreview: React.FC<RealTimePreviewProps> = ({
           </motion.div>
         </AnimatePresence>
 
-        {/* Presentation Controls */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-lg flex items-center gap-4">
+        {/* Presentation Controls - Touch-friendly */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-4 py-3 rounded-lg flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={handlePrevSlide}
             disabled={currentSlideIndex === 0}
-            className="text-white hover:bg-white/20"
+            className="text-white hover:bg-white/20 min-h-[44px] px-4 touch-manipulation"
           >
             Previous
           </Button>
           
-          <span className="text-sm">
+          <span className="text-sm px-2">
             {currentSlideIndex + 1} / {slides.length}
           </span>
           
@@ -262,7 +262,7 @@ const RealTimePreview: React.FC<RealTimePreviewProps> = ({
             size="sm"
             onClick={handleNextSlide}
             disabled={currentSlideIndex === slides.length - 1}
-            className="text-white hover:bg-white/20"
+            className="text-white hover:bg-white/20 min-h-[44px] px-4 touch-manipulation"
           >
             Next
           </Button>
@@ -271,7 +271,7 @@ const RealTimePreview: React.FC<RealTimePreviewProps> = ({
             variant="ghost"
             size="sm"
             onClick={togglePresentationMode}
-            className="text-white hover:bg-white/20"
+            className="text-white hover:bg-white/20 min-h-[44px] px-4 touch-manipulation"
           >
             Exit
           </Button>
@@ -294,7 +294,7 @@ const RealTimePreview: React.FC<RealTimePreviewProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 overflow-x-auto">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -403,34 +403,38 @@ const RealTimePreview: React.FC<RealTimePreviewProps> = ({
           </div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex items-center justify-between p-3 border-t bg-muted/30">
+        {/* Navigation - Mobile-optimized */}
+        <div className="flex items-center justify-between p-3 border-t bg-muted/30 gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handlePrevSlide}
             disabled={currentSlideIndex === 0}
+            className="min-h-[44px] px-3 touch-manipulation"
           >
-            Previous
+            <span className="hidden sm:inline">Previous</span>
+            <span className="sm:hidden">Prev</span>
           </Button>
 
-          {/* Slide thumbnails */}
-          <div className="flex items-center gap-1 max-w-xs overflow-x-auto">
-            {slides.map((slide, index) => (
-              <button
-                key={slide.id}
-                onClick={() => setCurrentSlideIndex(index)}
-                className={`w-8 h-6 rounded border-2 transition-colors flex-shrink-0 ${
-                  index === currentSlideIndex 
-                    ? 'border-primary bg-primary/10' 
-                    : 'border-border bg-muted hover:bg-muted/80'
-                }`}
-              >
-                <div className="w-full h-full bg-white rounded-sm border text-xs flex items-center justify-center">
-                  {index + 1}
-                </div>
-              </button>
-            ))}
+          {/* Slide thumbnails - Horizontal scroll on mobile */}
+          <div className="flex-1 max-w-xs mx-2">
+            <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-hide">
+              {slides.map((slide, index) => (
+                <button
+                  key={slide.id}
+                  onClick={() => setCurrentSlideIndex(index)}
+                  className={`min-w-[32px] w-8 h-6 rounded border-2 transition-colors flex-shrink-0 touch-manipulation ${
+                    index === currentSlideIndex 
+                      ? 'border-primary bg-primary/10' 
+                      : 'border-border bg-muted hover:bg-muted/80'
+                  }`}
+                >
+                  <div className="w-full h-full bg-white rounded-sm border text-xs flex items-center justify-center">
+                    {index + 1}
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
 
           <Button
@@ -438,8 +442,10 @@ const RealTimePreview: React.FC<RealTimePreviewProps> = ({
             size="sm"
             onClick={handleNextSlide}
             disabled={currentSlideIndex === slides.length - 1}
+            className="min-h-[44px] px-3 touch-manipulation"
           >
-            Next
+            <span className="hidden sm:inline">Next</span>
+            <span className="sm:hidden">Next</span>
           </Button>
         </div>
       </CardContent>

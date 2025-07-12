@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Layout } from 'lucide-react';
@@ -10,6 +10,8 @@ import RealTimePreview from './RealTimePreview';
 import EditorToolbar from './editor/EditorToolbar';
 import ActionButtons from './editor/ActionButtons';
 import SlideNavigation from './editor/SlideNavigation';
+import SlideSearchAndFilter from './search/SlideSearchAndFilter';
+import { ComponentLoader } from './performance/LazyComponents';
 
 interface AdvancedSlideEditorProps {
   slides: Slide[];
@@ -29,6 +31,7 @@ const AdvancedSlideEditor: React.FC<AdvancedSlideEditorProps> = ({
   className
 }) => {
   const [selectedSlideId, setSelectedSlideId] = useState<string | undefined>(undefined);
+  const [filteredSlides, setFilteredSlides] = useState<Slide[]>(slides);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'preview'>('list');
   
   const {
@@ -110,7 +113,7 @@ const AdvancedSlideEditor: React.FC<AdvancedSlideEditorProps> = ({
       {/* Editor Header */}
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Layout className="h-5 w-5" />
@@ -131,7 +134,7 @@ const AdvancedSlideEditor: React.FC<AdvancedSlideEditorProps> = ({
 
         <CardContent className="space-y-4">
           {/* Toolbar */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <EditorToolbar
               viewMode={viewMode}
               onViewModeChange={setViewMode}
@@ -150,41 +153,51 @@ const AdvancedSlideEditor: React.FC<AdvancedSlideEditorProps> = ({
         </CardContent>
       </Card>
 
+      {/* Search and Filter */}
+      {slides.length > 3 && (
+        <SlideSearchAndFilter
+          slides={slides}
+          onFilteredSlidesChange={setFilteredSlides}
+        />
+      )}
+
       {/* Editor Content */}
-      <motion.div
-        key={viewMode}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-      >
-        {viewMode === 'preview' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <RealTimePreview
-                slides={slides}
-                selectedSlideId={selectedSlideId}
-                onSlideSelect={setSelectedSlideId}
-              />
+      <Suspense fallback={<ComponentLoader />}>
+        <motion.div
+          key={viewMode}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {viewMode === 'preview' ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <RealTimePreview
+                  slides={filteredSlides}
+                  selectedSlideId={selectedSlideId}
+                  onSlideSelect={setSelectedSlideId}
+                />
+              </div>
+              <div className="space-y-4">
+                <SlideNavigation
+                  slides={filteredSlides}
+                  selectedSlideId={selectedSlideId}
+                  onSlideSelect={setSelectedSlideId}
+                />
+              </div>
             </div>
-            <div className="space-y-4">
-              <SlideNavigation
-                slides={slides}
-                selectedSlideId={selectedSlideId}
-                onSlideSelect={setSelectedSlideId}
-              />
-            </div>
-          </div>
-        ) : (
-          <DraggableSlideList
-            slides={slides}
-            onSlidesReorder={handleSlidesReorder}
-            onSlideUpdate={handleSlideUpdate}
-            onSlideDelete={handleSlideDelete}
-            onSlideDuplicate={handleSlideDuplicate}
-            onAddSlide={handleAddSlide}
-          />
-        )}
-      </motion.div>
+          ) : (
+            <DraggableSlideList
+              slides={filteredSlides}
+              onSlidesReorder={handleSlidesReorder}
+              onSlideUpdate={handleSlideUpdate}
+              onSlideDelete={handleSlideDelete}
+              onSlideDuplicate={handleSlideDuplicate}
+              onAddSlide={handleAddSlide}
+            />
+          )}
+        </motion.div>
+      </Suspense>
     </div>
   );
 };
