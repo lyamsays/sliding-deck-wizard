@@ -130,7 +130,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
             <TabsTrigger value="upload">Upload Image</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="ai-generate" className="mt-4">
+          <TabsContent value="ai-generate">
             <AIGenerateTab
               onGenerateImage={onGenerateImage}
               isGenerating={isGenerating}
