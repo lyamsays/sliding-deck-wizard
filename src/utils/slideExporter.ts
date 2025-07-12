@@ -28,11 +28,13 @@ const waitForContent = async (): Promise<void> => {
 
 // Enhanced slide capture function
 const captureSlide = async (slideElement: HTMLElement, index: number): Promise<string> => {
-  // Scroll the element into view
+  console.log(`Attempting to capture slide ${index}:`, slideElement);
+  
+  // Scroll the element into view and ensure it's visible
   slideElement.scrollIntoView({ behavior: 'instant', block: 'center' });
   
-  // Wait for content to stabilize
-  await new Promise(resolve => setTimeout(resolve, 200));
+  // Wait longer for content to stabilize
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
   // Temporarily hide hover elements and buttons
   const actionButtons = slideElement.querySelectorAll('.slide-ui-elements-not-for-export');
@@ -40,44 +42,95 @@ const captureSlide = async (slideElement: HTMLElement, index: number): Promise<s
     (el as HTMLElement).style.display = 'none';
   });
 
+  // Log slide dimensions and styles before capture
+  const computedStyle = window.getComputedStyle(slideElement);
+  console.log(`Slide ${index} dimensions:`, {
+    width: slideElement.offsetWidth,
+    height: slideElement.offsetHeight,
+    background: computedStyle.background,
+    backgroundColor: computedStyle.backgroundColor,
+    backgroundImage: computedStyle.backgroundImage
+  });
+
   try {
     const canvas = await html2canvas(slideElement, {
-      backgroundColor: '#ffffff',
-      scale: 2,
+      backgroundColor: null, // Let the slide's own background show through
+      scale: 1, // Reduce scale to avoid memory issues
       useCORS: true,
       allowTaint: true,
-      foreignObjectRendering: true,
-      logging: false,
+      foreignObjectRendering: false, // Disable to avoid SVG issues
+      logging: true, // Enable logging to debug
       width: slideElement.offsetWidth,
       height: slideElement.offsetHeight,
       windowWidth: window.innerWidth,
       windowHeight: window.innerHeight,
       scrollX: 0,
       scrollY: 0,
-      onclone: (clonedDoc) => {
-        // Ensure the cloned document has all styles
+      ignoreElements: (element) => {
+        // Ignore overlay elements that shouldn't be in export
+        return element.classList.contains('slide-ui-elements-not-for-export');
+      },
+      onclone: (clonedDoc, clonedElement) => {
+        console.log(`Cloning slide ${index}`, clonedElement);
+        
+        // Find the cloned slide element
         const clonedSlide = clonedDoc.getElementById(`slide-content-${index}`);
         if (clonedSlide && slideElement) {
-          // Copy computed styles
+          console.log('Found cloned slide, applying styles...');
+          
+          // Copy ALL computed styles more aggressively
           const originalStyles = window.getComputedStyle(slideElement);
+          
+          // Apply background styles directly
           clonedSlide.style.background = originalStyles.background;
           clonedSlide.style.backgroundImage = originalStyles.backgroundImage;
           clonedSlide.style.backgroundColor = originalStyles.backgroundColor;
+          clonedSlide.style.backgroundSize = originalStyles.backgroundSize;
+          clonedSlide.style.backgroundPosition = originalStyles.backgroundPosition;
+          clonedSlide.style.backgroundRepeat = originalStyles.backgroundRepeat;
           
-          // Ensure all text has proper colors
-          const textElements = clonedSlide.querySelectorAll('*');
-          textElements.forEach(el => {
-            const element = el as HTMLElement;
-            const originalEl = slideElement.querySelector(`#${element.id}`) || 
-                             slideElement.querySelector(`.${Array.from(element.classList).join('.')}`);
-            if (originalEl) {
+          // Force minimum dimensions
+          clonedSlide.style.minHeight = '400px';
+          clonedSlide.style.width = '100%';
+          clonedSlide.style.height = '100%';
+          
+          // Apply all styles to all child elements
+          const walkElements = (original: Element, cloned: Element) => {
+            const originalEl = original as HTMLElement;
+            const clonedEl = cloned as HTMLElement;
+            
+            if (originalEl && clonedEl) {
               const styles = window.getComputedStyle(originalEl);
-              element.style.color = styles.color;
-              element.style.fontFamily = styles.fontFamily;
-              element.style.fontSize = styles.fontSize;
-              element.style.fontWeight = styles.fontWeight;
+              
+              // Copy essential styles
+              clonedEl.style.color = styles.color;
+              clonedEl.style.fontFamily = styles.fontFamily;
+              clonedEl.style.fontSize = styles.fontSize;
+              clonedEl.style.fontWeight = styles.fontWeight;
+              clonedEl.style.lineHeight = styles.lineHeight;
+              clonedEl.style.textAlign = styles.textAlign;
+              clonedEl.style.padding = styles.padding;
+              clonedEl.style.margin = styles.margin;
+              clonedEl.style.background = styles.background;
+              clonedEl.style.backgroundColor = styles.backgroundColor;
+              clonedEl.style.border = styles.border;
+              clonedEl.style.borderRadius = styles.borderRadius;
+              clonedEl.style.display = styles.display;
+              clonedEl.style.flexDirection = styles.flexDirection;
+              clonedEl.style.justifyContent = styles.justifyContent;
+              clonedEl.style.alignItems = styles.alignItems;
+              clonedEl.style.position = styles.position;
+              clonedEl.style.width = styles.width;
+              clonedEl.style.height = styles.height;
             }
-          });
+            
+            // Process children
+            for (let i = 0; i < original.children.length && i < cloned.children.length; i++) {
+              walkElements(original.children[i], cloned.children[i]);
+            }
+          };
+          
+          walkElements(slideElement, clonedSlide);
         }
       }
     });
