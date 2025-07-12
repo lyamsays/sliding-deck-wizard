@@ -34,7 +34,7 @@ const corsHeaders = {
           Authorization: `Bearer ${OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-4o",
+          model: "gpt-4o-mini",
           messages: [
             {
               role: "system",
@@ -191,7 +191,7 @@ And so on for all slides.`
         Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
@@ -244,7 +244,9 @@ And so on for all slides.`
     if (!completion.ok) {
       const error = await completion.json();
       console.error('OpenAI API error:', error);
-      throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+      console.error('Response status:', completion.status);
+      console.error('Response statusText:', completion.statusText);
+      throw new Error(`OpenAI API error (${completion.status}): ${error.error?.message || completion.statusText || 'Unknown error'}`);
     }
 
     const result = await completion.json();
