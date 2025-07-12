@@ -189,17 +189,20 @@ const ContentInput: React.FC<ContentInputProps> = ({
 
           {/* Advanced Options */}
           <div className="space-y-4 p-4 bg-secondary/10 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="font-medium">Auto-generate Images</Label>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex items-center justify-between p-3 bg-background rounded-lg border border-border hover:border-primary/50 transition-colors">
+              <div className="flex-1">
+                <Label className="font-semibold text-base cursor-pointer">Auto-generate Images</Label>
+                <p className="text-sm text-muted-foreground mt-1">
                   Automatically create relevant images for your slides
                 </p>
               </div>
-              <Switch
-                checked={autoGenerateImages}
-                onCheckedChange={setAutoGenerateImages}
-              />
+              <div className="ml-4">
+                <Switch
+                  checked={autoGenerateImages}
+                  onCheckedChange={setAutoGenerateImages}
+                  className="data-[state=checked]:bg-primary scale-125"
+                />
+              </div>
             </div>
             
             {profession === "Consultant" && (
