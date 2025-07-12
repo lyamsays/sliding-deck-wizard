@@ -10,6 +10,8 @@ import { useNavigate } from "react-router-dom";
 import { Slide } from '@/types/deck';
 import { getRandomPastelColor, getIconSuggestion } from '@/types/deck';
 import { useSmartDefaults } from '@/hooks/useSmartDefaults';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 // Import refactored components
 import SlideForm from '@/components/slides/SlideForm';
@@ -131,6 +133,10 @@ const SlideInput = () => {
   
   // Smart defaults hook
   const { addRecentPurpose } = useSmartDefaults();
+  
+  // Enhanced error handling
+  const { handleError, isOffline } = useErrorHandler();
+  const networkStatus = useNetworkStatus();
   
   // Check if this is the user's first visit
   useEffect(() => {
@@ -277,10 +283,21 @@ const SlideInput = () => {
     } catch (error) {
       const err = error as Error;
       console.error('SlideInput: Error auto-generating slides:', err);
-      setError(err.message || "Failed to generate slides. Please try again.");
+      
+      // Use enhanced error handler
+      const enhancedError = handleError(err, {
+        retryAction: () => handleAutoGenerate(setupData),
+        useExampleAction: () => {
+          // Provide example content as fallback
+          setSlideContent("Executive Summary\n\nKey Findings:\n• Market analysis shows 15% growth opportunity\n• Current competitive positioning is strong\n• Recommended strategic initiatives for Q1-Q2\n\nNext Steps:\n• Implement proposed recommendations\n• Monitor key performance indicators\n• Schedule quarterly review");
+          setCurrentCreationStep('input');
+        }
+      });
+      
+      setError(enhancedError.description);
       toast({
-        title: "Auto-generation failed",
-        description: err.message || "Failed to auto-generate slides. Please adjust your content and try again.",
+        title: enhancedError.title,
+        description: enhancedError.description,
         variant: "destructive"
       });
     } finally {
@@ -308,17 +325,27 @@ const SlideInput = () => {
       addRecentPurpose(purpose.trim());
     }
     
+    // Check for offline status
+    if (isOffline) {
+      const offlineError = handleError(new Error('You are currently offline'), {
+        retryAction: () => handleSubmit(e)
+      });
+      setError(offlineError.description);
+      return;
+    }
+    
     // Reset any previous errors
     setError(null);
     
     if (!slideContent.trim()) {
-      console.warn("SlideInput: Empty content submitted");
-      setError("Please enter some content to generate slides.");
-      toast({
-        title: "Content is empty",
-        description: "Please enter some content to generate slides.",
-        variant: "destructive"
+      const validationError = handleError(new Error('validation'), {
+        focusFirstError: () => {
+          // Focus the content textarea
+          const textarea = document.querySelector('textarea');
+          textarea?.focus();
+        }
       });
+      setError(validationError.description);
       return;
     }
     
@@ -414,12 +441,21 @@ const SlideInput = () => {
     } catch (error) {
       const err = error as Error;
       console.error('SlideInput: Error generating slides:', err);
-      setError(err.message || "Failed to generate slides. Please try again.");
-      toast({
-        title: "Generation failed",
-        description: err.message || "Failed to generate slides. Please try again.",
-        variant: "destructive"
+      
+      // Use enhanced error handler
+      const enhancedError = handleError(err, {
+        retryAction: () => handleSubmit(e),
+        useExampleAction: () => {
+          // Provide example content based on profession and purpose
+          const exampleContent = purpose.toLowerCase().includes('client') 
+            ? "Executive Summary\n\nKey Findings:\n• Market analysis shows 15% growth opportunity\n• Current competitive positioning is strong\n• Recommended strategic initiatives for Q1-Q2\n\nNext Steps:\n• Implement proposed recommendations\n• Monitor key performance indicators\n• Schedule quarterly review"
+            : "Project Overview\n\nObjectives:\n• Define project scope and deliverables\n• Establish timeline and milestones\n• Assign roles and responsibilities\n\nKey Activities:\n• Research and analysis phase\n• Development and implementation\n• Testing and quality assurance\n• Deployment and monitoring";
+          
+          setSlideContent(exampleContent);
+        }
       });
+      
+      setError(enhancedError.description);
     } finally {
       clearInterval(progressInterval);
       setIsGenerating(false);
@@ -433,17 +469,13 @@ const SlideInput = () => {
   const handleSave = async () => {
     if (!user) {
       console.warn("SlideInput: Save attempted without being logged in");
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to save your slides.",
-        variant: "destructive"
-      });
-      navigate('/signin');
+      const authError = handleError(new Error('authentication'), {});
       return;
     }
     
     if (generatedSlides.length === 0) {
       console.warn("SlideInput: Save attempted with no slides generated");
+      const validationError = handleError(new Error('validation'), {});
       toast({
         title: "No slides to save",
         description: "Generate some slides first before saving.",
@@ -487,9 +519,14 @@ const SlideInput = () => {
     } catch (error) {
       const err = error as Error;
       console.error('SlideInput: Error saving slides:', err);
+      
+      const enhancedError = handleError(err, {
+        retryAction: () => handleSave()
+      });
+      
       toast({
-        title: "Save failed",
-        description: err.message || "Failed to save slides. Please try again.",
+        title: enhancedError.title,
+        description: enhancedError.description,
         variant: "destructive"
       });
     } finally {

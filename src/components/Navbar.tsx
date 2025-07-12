@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { PresentationIcon, MenuIcon, X, Palette } from 'lucide-react';
 import UserMenu from './UserMenu';
+import NetworkIndicator from './ui/NetworkIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import Logo from './Logo';
 
@@ -75,7 +76,10 @@ const Navbar = () => {
           {/* User menu or auth buttons - remains on the far right */}
           <div className="hidden lg:flex lg:items-center lg:ml-4">
             {user ? (
-              <UserMenu />
+        <div className="flex items-center space-x-4">
+          <NetworkIndicator />
+          <UserMenu />
+        </div>
             ) : (
               <div className="flex gap-4">
                 <Button 
