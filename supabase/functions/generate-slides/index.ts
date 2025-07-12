@@ -160,9 +160,16 @@ And so on for all slides.`
     }
 
     let prompt = `You are a professional ${profession}-level expert presentation creator.
+      
+      IMPORTANT: The following content contains INSTRUCTIONS and CONTEXT for the presentation you should create. 
+      DO NOT copy this content verbatim into slides. Instead, READ and INTERPRET this information to create relevant, meaningful slide content.
+      
+      Based on this information: ${content}
+      
       The presentation's purpose is to ${purpose}.
-      The tone of the presentation should be ${tone}.
-      Create a slide deck from the following content: ${content}.`;
+      The tone should be ${tone}.
+      
+      Create a professional slide deck that fulfills this purpose and addresses the context provided. Generate substantive, relevant content based on the instructions, not generic placeholders.`;
 
     if (framework && profession === "Consultant") {
       prompt += ` Use the ${framework} framework.`;
@@ -188,39 +195,41 @@ And so on for all slides.`
         messages: [
           {
             role: "system",
-            content: `You are a professional presentation creator.
-            You create slide decks from content.
-            You are an expert in visual design and presentation structure.
+            content: `You are a professional presentation creator specialized in ${profession} presentations.
+            
+            CRITICAL INSTRUCTIONS:
+            1. The user input contains CONTEXT and INSTRUCTIONS, not content to copy verbatim
+            2. READ and ANALYZE the provided information to understand what presentation is needed
+            3. CREATE substantive, meaningful content based on the context, not generic templates
+            4. Generate SPECIFIC, actionable content relevant to the topic and audience
+            5. DO NOT use placeholder text or generic examples
+            
+            User Context/Instructions: ${content}
+            Presentation Purpose: ${purpose}
+            Tone: ${tone}
+            ${framework && profession === "Consultant" ? `Framework to incorporate: ${framework}` : ''}
+            
+            Create a professional slide deck that addresses the specific context provided. Each slide should contain:
+            - Specific, relevant content (not generic placeholders)
+            - Actionable insights or information
+            - Professional language appropriate for the audience
+            - Visual suggestions that match the actual content
+            
             YOU MUST RETURN VALID JSON WITHOUT ANY MARKDOWN FORMATTING.
             DO NOT WRAP THE JSON IN CODE BLOCKS OR BACKTICKS.
-            Each slide should have a title and an array of bullets.
-            Include a visualSuggestion field that suggests an image for the slide.
-            Include a speakerNotes field that contains notes for the speaker.
-            The slide deck should be engaging and persuasive.
-            The slide deck should be visually appealing.
-            The slide deck should be well-structured.
-            The slide deck should be easy to follow.
-            The slide deck should be memorable.
-            Each slide should have a title and an array of bullets.
-            Each slide should have a visualSuggestion field that suggests an image for the slide.
-            Each slide should have a speakerNotes field that contains notes for the speaker.
-            The slide deck should be no more than 7 slides.
-            The slide deck should be no less than 3 slides.
-            Here is the content: ${content}.
-            Here are the instructions: ${prompt}.
-            Here is the theme id: ${themeId}.
-            Here is an example of the JSON you should return (WITHOUT ANY MARKDOWN FORMATTING OR CODE BLOCKS):
+            
+            Return format:
             {
               "slides": [
                 {
-                  "title": "Slide 1 Title",
+                  "title": "Specific slide title based on context",
                   "bullets": [
-                    "Bullet 1",
-                    "Bullet 2",
-                    "Bullet 3"
+                    "Specific, actionable bullet point",
+                    "Another relevant bullet point",
+                    "Third meaningful bullet point"
                   ],
-                  "visualSuggestion": "A picture of a cat",
-                  "speakerNotes": "This is a slide about cats."
+                  "visualSuggestion": "Specific image suggestion that matches the content",
+                  "speakerNotes": "Detailed speaker notes explaining this slide's content"
                 }
               ]
             }`
