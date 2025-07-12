@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, Play } from 'lucide-react';
 
 const Hero = () => {
   return (
@@ -27,27 +27,16 @@ const Hero = () => {
             Transform your ideas into professional slide decks in seconds. Designed for consultants, professors, and business leaders who demand excellence.
           </p>
 
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-            <Button 
-              size="lg" 
-              className="bg-purple-600 hover:bg-purple-700 transition-all text-lg px-8 py-6 shadow-lg hover:shadow-xl rounded-xl" 
-              asChild
-            >
-              <Link to="/create" className="flex items-center gap-2">
-                Create your first deck
-                <ArrowRight className="h-5 w-5" />
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <Button size="lg" asChild className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg rounded-xl shadow-lg">
+              <Link to="/instant-creator">
+                <Sparkles className="mr-2 h-5 w-5" />
+                Create Presentation Now
               </Link>
             </Button>
-            
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="border-2 border-purple-200 text-purple-700 hover:bg-purple-50 transition-all text-lg px-8 py-6 rounded-xl" 
-              asChild
-            >
-              <Link to="/themes" className="flex items-center gap-2">
-                View themes
-              </Link>
+            <Button variant="outline" size="lg" className="px-8 py-6 text-lg rounded-xl">
+              <Play className="mr-2 h-5 w-5" />
+              Watch Demo
             </Button>
           </div>
 

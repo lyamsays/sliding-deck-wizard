@@ -8,6 +8,7 @@ import FeatureShowcase from '../components/landing/FeatureShowcase';
 import ProfessionalShowcase from '../components/landing/ProfessionalShowcase';
 import ProfessionalFeatures from '../components/landing/ProfessionalFeatures';
 import ComparisonSection from '../components/landing/ComparisonSection';
+import QuickStart from '../components/landing/QuickStart';
 
 const Index = () => {
   return (
@@ -15,6 +16,7 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <Hero />
+        <QuickStart />
         <FeatureShowcase />
         <ProfessionalFeatures />
         <ProfessionalShowcase />

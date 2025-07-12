@@ -10,6 +10,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import MyDecks from "./pages/MyDecks";
 import Themes from "./pages/Themes";
+import InstantCreator from "./pages/InstantCreator";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -51,6 +52,7 @@ const App = () => {
                 <Route path="/sign-up" element={<SignUp />} />
                 <Route path="/my-decks" element={<MyDecks />} />
                 <Route path="/themes" element={<Themes />} />
+                <Route path="/instant-creator" element={<InstantCreator />} />
                 <Route path="/features" element={<Features />} />
                 <Route path="/how-it-works" element={<HowItWorksPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
