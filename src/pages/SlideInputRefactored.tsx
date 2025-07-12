@@ -124,6 +124,8 @@ const SlideInput = () => {
   const applySmartLayout = (slides: Slide[], themeId: string) => {
     const themeData = themes.find(theme => theme.id === themeId) || themes.find(theme => theme.id === 'creme')!;
     
+    console.log("SlideInput: Applying smart layout with theme:", themeId, themeData);
+    
     return slides.map((slide, index) => ({
       ...slide,
       style: {
