@@ -1,5 +1,5 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
 import "https://deno.land/x/xhr@0.3.0/mod.ts";
 
 const corsHeaders = {
@@ -63,7 +63,7 @@ async function searchUnsplashImages(query: string, page = 1, perPage = 9) {
   }
 }
 
-serve(async (req: Request) => {
+(globalThis as any).Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log("search-images: Handling CORS preflight");

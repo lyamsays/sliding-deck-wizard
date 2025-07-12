@@ -1,5 +1,5 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+
 import "https://deno.land/x/xhr@0.3.0/mod.ts";
 
 const corsHeaders = {
@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req: Request) => {
+(globalThis as any).Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log("generate-image: Handling CORS preflight");
