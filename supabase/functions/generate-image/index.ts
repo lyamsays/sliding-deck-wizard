@@ -33,60 +33,33 @@ const corsHeaders = {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
-    // Try gpt-image-1 first, fall back to dall-e-3 if organization not verified
-    console.log("generate-image: Trying gpt-image-1 first");
-    let response = await fetch('https://api.openai.com/v1/images/generations', {
+    console.log("generate-image: Calling DALL-E 3 API");
+    const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-image-1",
+        model: "dall-e-3",
         prompt: prompt,
         n: 1,
         size: "1024x1024",
-        quality: "high",
-        output_format: "png",
+        quality: "hd",
+        response_format: "b64_json",
       }),
     });
 
-    // If gpt-image-1 fails due to verification, try dall-e-3
     if (!response.ok) {
       const errorData = await response.json();
-      console.log("generate-image: gpt-image-1 failed, trying dall-e-3:", errorData.error?.message);
-      
-      if (errorData.error?.message?.includes('organization must be verified')) {
-        console.log("generate-image: Falling back to dall-e-3");
-        response = await fetch('https://api.openai.com/v1/images/generations', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: "dall-e-3",
-            prompt: prompt,
-            n: 1,
-            size: "1024x1024",
-            quality: "hd",
-            response_format: "b64_json",
-          }),
-        });
-      }
-      
-      // If still failing, return the error
-      if (!response.ok) {
-        const fallbackErrorData = await response.json();
-        console.error("generate-image: Both models failed:", fallbackErrorData);
-        return new Response(
-          JSON.stringify({ 
-            error: `Image generation failed: ${fallbackErrorData.error?.message || errorData.error?.message || 'Unknown error'}`,
-            code: 'api_error'
-          }),
-          { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      console.error("generate-image: DALL-E API Error:", errorData);
+      return new Response(
+        JSON.stringify({ 
+          error: `DALL-E API error: ${errorData.error?.message || 'Unknown error'}`,
+          code: 'api_error'
+        }),
+        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const data = await response.json();
