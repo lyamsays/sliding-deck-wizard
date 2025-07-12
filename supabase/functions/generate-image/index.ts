@@ -41,11 +41,12 @@ const corsHeaders = {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "dall-e-3",
+        model: "gpt-image-1",
         prompt: prompt,
         n: 1,
         size: "1024x1024",
-        quality: "standard",
+        quality: "high",
+        output_format: "png",
       }),
     });
 
@@ -66,8 +67,8 @@ const corsHeaders = {
     
     return new Response(
       JSON.stringify({ 
-        imageUrl: data.data[0].url,
-        revisedPrompt: data.data[0].revised_prompt 
+        imageUrl: `data:image/png;base64,${data.data[0].b64_json}`,
+        revisedPrompt: data.data[0].revised_prompt || prompt
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

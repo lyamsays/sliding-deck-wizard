@@ -599,20 +599,32 @@ const SlideInput = () => {
         
         console.log(`SlideInput: Generating image for slide ${i}: ${slide.title}`);
         
-        // Create a refined prompt for image generation with more emphasis on professional design
-        const imagePrompt = `Create a professional presentation slide visual about "${slide.title}". ${slide.visualSuggestion}. Make it suitable for a business presentation, clean and minimal style with ample white space, no text in the image, elegant professional look, high-quality visual.`;
+        // Create a refined prompt for professional presentation images
+        const imagePrompt = `Create a high-quality, professional presentation visual for "${slide.title}". ${slide.visualSuggestion}. Style: clean, modern, minimal design with professional color palette. No text overlay. Suitable for business presentation. High resolution and professional quality.`;
         
-        const { data, error } = await supabase.functions.invoke('generate-image', {
-          body: { prompt: imagePrompt }
-        });
+        const result = await Promise.race([
+          supabase.functions.invoke('generate-image', {
+            body: { prompt: imagePrompt }
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Image generation timeout')), 15000))
+        ]) as { data: any; error: any };
         
-        if (error) {
-          console.error(`Error generating image for slide ${i}:`, error);
-          continue;
-        }
+        const { data, error } = result;
         
-        if (data.error) {
-          console.error(`API error generating image for slide ${i}:`, data.error);
+        if (error || data.error) {
+          console.error(`Error generating image for slide ${i}:`, error || data.error);
+          
+          // Update progress even on error
+          processedCount++;
+          const progressPercentage = 10 + (processedCount / totalSlides) * 80;
+          setImageProgress(progressPercentage);
+          
+          // Show a toast for image generation failure but continue with other slides
+          toast({
+            title: "Image generation failed",
+            description: `Failed to generate image for "${slide.title}". You can add one manually later.`,
+            variant: "destructive"
+          });
           continue;
         }
         

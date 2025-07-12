@@ -234,15 +234,21 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
             {/* Image Content - Takes up 5 columns when image exists */}
             {slide.imageUrl && (
               <div className="col-span-5 flex justify-center">
-                <div className="rounded-xl overflow-hidden shadow-2xl border-4 border-white/20 w-full max-w-sm">
+                <div className="rounded-2xl overflow-hidden shadow-2xl border-2 border-white/10 w-full max-w-sm transition-all duration-300 hover:shadow-3xl hover:scale-105">
                   <img 
                     src={slide.imageUrl} 
                     alt={slide.title}
-                    className="w-full h-64 object-cover"
+                    className="w-full h-72 object-cover transition-all duration-300"
                     crossOrigin="anonymous"
+                    loading="lazy"
+                    style={{
+                      filter: 'brightness(1.05) contrast(1.1) saturate(1.1)',
+                    }}
                     onError={(e) => {
                       console.error('Image failed to load:', slide.imageUrl);
-                      // Keep the broken image visible for debugging
+                      // Replace with placeholder on error
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
                     }}
                     onLoad={() => {
                       console.log('Image loaded successfully:', slide.imageUrl);
@@ -253,12 +259,29 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
             )}
             
             {/* Placeholder when no image */}
-            {!slide.imageUrl && (
+            {!slide.imageUrl && (slide.visualSuggestion || isGeneratingImage) && (
               <div className="col-span-5 flex justify-center">
-                <div className="w-full h-64 bg-white/10 rounded-xl flex items-center justify-center border-2 border-dashed border-white/30 max-w-sm">
+                <div 
+                  className="w-full h-72 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl flex items-center justify-center border-2 border-dashed border-white/20 max-w-sm cursor-pointer transition-all duration-300 hover:border-white/40 hover:bg-white/15"
+                  onClick={() => setIsImageDialogOpen(true)}
+                >
                   <div className="text-center">
-                    <Image className="h-12 w-12 mx-auto mb-2 text-white/50" />
-                    <p className="text-white/50 text-sm">Click to add image</p>
+                    {isGeneratingImage ? (
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/50 mb-3"></div>
+                        <p className="text-white/70 text-sm">Generating image...</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <Image className="h-12 w-12 mx-auto mb-3 text-white/40" />
+                        <p className="text-white/60 text-sm font-medium">Click to add image</p>
+                        {slide.visualSuggestion && (
+                          <p className="text-white/40 text-xs mt-2 px-4 text-center">
+                            💡 {slide.visualSuggestion}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
