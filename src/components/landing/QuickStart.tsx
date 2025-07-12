@@ -135,20 +135,6 @@ const QuickStart = () => {
         </div>
 
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-          {[
-            { value: '2M+', label: 'Presentations Created' },
-            { value: '30s', label: 'Average Creation Time' },
-            { value: '50K+', label: 'Professional Users' },
-            { value: '99%', label: 'User Satisfaction' }
-          ].map((stat, index) => (
-            <div key={index} className="text-center">
-              <div className="text-3xl font-bold text-primary mb-1">{stat.value}</div>
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
