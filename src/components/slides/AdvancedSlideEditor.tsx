@@ -52,7 +52,7 @@ const AdvancedSlideEditor: React.FC<AdvancedSlideEditorProps> = ({
   onShare,
   className
 }) => {
-  const [selectedSlideId, setSelectedSlideId] = useState<string | null>(null);
+  const [selectedSlideId, setSelectedSlideId] = useState<string | undefined>(undefined);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'preview'>('list');
   const [undoStack, setUndoStack] = useState<Slide[][]>([]);
   const [redoStack, setRedoStack] = useState<Slide[][]>([]);
@@ -101,7 +101,7 @@ const AdvancedSlideEditor: React.FC<AdvancedSlideEditorProps> = ({
     onSlidesChange(newSlides);
     
     if (selectedSlideId === slideId) {
-      setSelectedSlideId(null);
+      setSelectedSlideId(undefined);
     }
   };
 
