@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { ChevronRight, HelpCircle } from "lucide-react";
+import { ChevronRight, HelpCircle, Sparkles } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -29,6 +29,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSmartDefaults } from '@/hooks/useSmartDefaults';
+import { Badge } from "@/components/ui/badge";
 
 interface MetadataStepProps {
   profession: string;
@@ -72,6 +74,51 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
   const navigate = useNavigate();
   const showFrameworkOption = profession === "Consultant";
   const [showThemePreview, setShowThemePreview] = useState(true);
+  const [showPurposeSuggestions, setShowPurposeSuggestions] = useState(false);
+  
+  // Use smart defaults hook
+  const { 
+    preferences, 
+    updatePreferences, 
+    getPurposeSuggestions, 
+    getFrameworkSuggestions 
+  } = useSmartDefaults();
+
+  // Load smart defaults on mount
+  useEffect(() => {
+    if (preferences) {
+      // Only set defaults if values are still default/empty
+      if (profession === 'Consultant' && preferences.profession !== 'Consultant') {
+        setProfession(preferences.profession);
+      }
+      if (tone === 'Professional' && preferences.tone !== 'Professional') {
+        setTone(preferences.tone);
+      }
+      if (selectedTheme === 'creme' && preferences.selectedTheme !== 'creme') {
+        setSelectedTheme(preferences.selectedTheme);
+      }
+      if (autoGenerateImages !== preferences.autoGenerateImages) {
+        setAutoGenerateImages(preferences.autoGenerateImages);
+      }
+      if (framework === 'None' && preferences.framework && preferences.framework !== 'None') {
+        setFramework?.(preferences.framework);
+      }
+    }
+  }, [preferences]);
+
+  // Save preferences when values change
+  useEffect(() => {
+    updatePreferences({
+      profession,
+      tone,
+      selectedTheme,
+      autoGenerateImages,
+      framework
+    });
+  }, [profession, tone, selectedTheme, autoGenerateImages, framework]);
+
+  const purposeSuggestions = getPurposeSuggestions(profession);
+  const frameworkSuggestions = getFrameworkSuggestions(profession, purpose);
 
   // Framework options for consultants
   const frameworkOptions = [
@@ -143,14 +190,47 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
         </div>
         
         <div className="space-y-3">
-          <label className="text-sm font-medium">What's the purpose?</label>
-          <Input
-            type="text"
-            placeholder="e.g., Team update, Client presentation"
-            value={purpose}
-            onChange={(e) => setPurpose(e.target.value)}
-            className="w-full"
-          />
+          <label className="flex items-center gap-2 text-sm font-medium">
+            What's the purpose?
+            {purposeSuggestions.length > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPurposeSuggestions(!showPurposeSuggestions)}
+                className="h-6 p-1 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                Suggestions
+              </Button>
+            )}
+          </label>
+          <div className="space-y-2">
+            <Input
+              type="text"
+              placeholder="e.g., Team update, Client presentation"
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              className="w-full"
+            />
+            {showPurposeSuggestions && purposeSuggestions.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {purposeSuggestions.slice(0, 6).map((suggestion) => (
+                  <Badge
+                    key={suggestion}
+                    variant="secondary"
+                    className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs"
+                    onClick={() => {
+                      setPurpose(suggestion);
+                      setShowPurposeSuggestions(false);
+                    }}
+                  >
+                    {suggestion}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="space-y-3">
@@ -242,13 +322,46 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
         
         {showFrameworkOption && setFramework && (
           <div className="space-y-3">
-            <label className="text-sm font-medium">Consulting Framework</label>
+            <label className="flex items-center gap-2 text-sm font-medium">
+              Consulting Framework
+              {frameworkSuggestions.length > 0 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Sparkles className="h-3 w-3" />
+                        Suggested for this purpose
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-sm">Recommended frameworks for "{purpose}"</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </label>
             <Select value={framework} onValueChange={setFramework}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select framework" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
+                  {frameworkSuggestions.length > 0 && (
+                    <>
+                      <SelectLabel>Suggested for this purpose</SelectLabel>
+                      {frameworkOptions
+                        .filter(option => frameworkSuggestions.includes(option.value))
+                        .map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            <div className="flex items-center gap-2">
+                              <Sparkles className="h-3 w-3 text-primary" />
+                              {option.label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      <SelectLabel>All frameworks</SelectLabel>
+                    </>
+                  )}
                   {frameworkOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}

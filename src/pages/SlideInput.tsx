@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Slide } from '@/types/deck';
 import { getRandomPastelColor, getIconSuggestion } from '@/types/deck';
+import { useSmartDefaults } from '@/hooks/useSmartDefaults';
 
 // Import refactored components
 import SlideForm from '@/components/slides/SlideForm';
@@ -127,6 +128,9 @@ const SlideInput = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const slidePreviewRef = useRef<HTMLDivElement>(null);
+  
+  // Smart defaults hook
+  const { addRecentPurpose } = useSmartDefaults();
   
   // Check if this is the user's first visit
   useEffect(() => {
@@ -298,6 +302,11 @@ const SlideInput = () => {
     
     // Save the selected theme to localStorage
     localStorage.setItem('selectedTheme', selectedTheme);
+    
+    // Save purpose to recent purposes for smart suggestions
+    if (purpose.trim()) {
+      addRecentPurpose(purpose.trim());
+    }
     
     // Reset any previous errors
     setError(null);

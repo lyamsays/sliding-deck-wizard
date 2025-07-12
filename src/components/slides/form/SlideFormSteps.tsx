@@ -113,6 +113,8 @@ const SlideFormSteps: React.FC<SlideFormStepsProps> = ({
             onTryExample={onTryExample}
             autoGenerateImages={autoGenerateImages}
             setAutoGenerateImages={setAutoGenerateImages}
+            profession={profession}
+            purpose={purpose}
           />
         </motion.div>
       )}
