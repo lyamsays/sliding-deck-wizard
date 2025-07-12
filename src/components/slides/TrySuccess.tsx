@@ -43,12 +43,12 @@ const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user, slide
         description: "Capturing slides for export..."
       });
       
-      // Find all slide elements - using multiple selectors to catch slides
-      let slideElements = document.querySelectorAll('.slide-card, [data-slide-content], .styled-slide');
+      // Find all slide elements using the correct ID pattern from StyledSlide
+      let slideElements = document.querySelectorAll('[id^="slide-content-"]');
       
       if (slideElements.length === 0) {
-        // Fallback: try to find any slide-like elements
-        slideElements = document.querySelectorAll('[class*="slide"], .card');
+        // Fallback: try to find styled slides by their container class
+        slideElements = document.querySelectorAll('.group.relative.overflow-hidden, [data-slide-content]');
         if (slideElements.length === 0) {
           throw new Error("No slides found to export. Please make sure slides are visible on the page.");
         }
@@ -80,16 +80,29 @@ const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user, slide
         
         const slideElement = slideElements[i] as HTMLElement;
         
-        // Capture the slide as canvas
+         // Capture the slide as canvas with better settings for styled content
         const canvas = await html2canvas(slideElement, {
           backgroundColor: null,
           scale: 2,
           useCORS: true,
           allowTaint: true,
-          width: 1920,
-          height: 1080,
+          foreignObjectRendering: true,
+          width: slideElement.offsetWidth || 1920,
+          height: slideElement.offsetHeight || 1080,
           scrollX: 0,
-          scrollY: 0
+          scrollY: 0,
+          logging: true,
+          onclone: (clonedDoc) => {
+            // Ensure all images and styles are properly loaded in the clone
+            const clonedElement = clonedDoc.getElementById(`slide-content-${i}`);
+            if (clonedElement) {
+              // Force background styles to be applied
+              const originalElement = slideElement;
+              const computedStyle = window.getComputedStyle(originalElement);
+              clonedElement.style.background = computedStyle.background;
+              clonedElement.style.backgroundColor = computedStyle.backgroundColor;
+            }
+          }
         });
         
         // Convert canvas to image
@@ -133,12 +146,12 @@ const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user, slide
         description: "Capturing slides for export..."
       });
       
-      // Find all slide elements
-      let slideElements = document.querySelectorAll('.slide-card, [data-slide-content], .styled-slide');
+      // Find all slide elements using the correct ID pattern from StyledSlide
+      let slideElements = document.querySelectorAll('[id^="slide-content-"]');
       
       if (slideElements.length === 0) {
-        // Fallback: try to find any slide-like elements
-        slideElements = document.querySelectorAll('[class*="slide"], .card');
+        // Fallback: try to find styled slides by their container class
+        slideElements = document.querySelectorAll('.group.relative.overflow-hidden, [data-slide-content]');
         if (slideElements.length === 0) {
           throw new Error("No slides found to export. Please make sure slides are visible on the page.");
         }
@@ -159,16 +172,29 @@ const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user, slide
         
         const slideElement = slideElements[i] as HTMLElement;
         
-        // Capture the slide as canvas
+         // Capture the slide as canvas with better settings for styled content
         const canvas = await html2canvas(slideElement, {
           backgroundColor: null,
           scale: 2,
           useCORS: true,
           allowTaint: true,
-          width: 1920,
-          height: 1080,
+          foreignObjectRendering: true,
+          width: slideElement.offsetWidth || 1920,
+          height: slideElement.offsetHeight || 1080,
           scrollX: 0,
-          scrollY: 0
+          scrollY: 0,
+          logging: true,
+          onclone: (clonedDoc) => {
+            // Ensure all images and styles are properly loaded in the clone
+            const clonedElement = clonedDoc.getElementById(`slide-content-${i}`);
+            if (clonedElement) {
+              // Force background styles to be applied
+              const originalElement = slideElement;
+              const computedStyle = window.getComputedStyle(originalElement);
+              clonedElement.style.background = computedStyle.background;
+              clonedElement.style.backgroundColor = computedStyle.backgroundColor;
+            }
+          }
         });
         
         // Convert canvas to base64
@@ -212,11 +238,12 @@ const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user, slide
         description: "Capturing slides as images..."
       });
       
-      let slideElements = document.querySelectorAll('.slide-card, [data-slide-content], .styled-slide');
+      // Find all slide elements using the correct ID pattern from StyledSlide
+      let slideElements = document.querySelectorAll('[id^="slide-content-"]');
       
       if (slideElements.length === 0) {
-        // Fallback: try to find any slide-like elements  
-        slideElements = document.querySelectorAll('[class*="slide"], .card');
+        // Fallback: try to find styled slides by their container class
+        slideElements = document.querySelectorAll('.group.relative.overflow-hidden, [data-slide-content]');
         if (slideElements.length === 0) {
           throw new Error("No slides found to export. Please make sure slides are visible on the page.");
         }
@@ -230,15 +257,29 @@ const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user, slide
       for (let i = 0; i < slideElements.length; i++) {
         const slideElement = slideElements[i] as HTMLElement;
         
+         // Capture the slide as canvas with better settings for styled content
         const canvas = await html2canvas(slideElement, {
           backgroundColor: null,
           scale: 2,
           useCORS: true,
           allowTaint: true,
-          width: 1920,
-          height: 1080,
+          foreignObjectRendering: true,
+          width: slideElement.offsetWidth || 1920,
+          height: slideElement.offsetHeight || 1080,
           scrollX: 0,
-          scrollY: 0
+          scrollY: 0,
+          logging: true,
+          onclone: (clonedDoc) => {
+            // Ensure all images and styles are properly loaded in the clone
+            const clonedElement = clonedDoc.getElementById(`slide-content-${i}`);
+            if (clonedElement) {
+              // Force background styles to be applied
+              const originalElement = slideElement;
+              const computedStyle = window.getComputedStyle(originalElement);
+              clonedElement.style.background = computedStyle.background;
+              clonedElement.style.backgroundColor = computedStyle.backgroundColor;
+            }
+          }
         });
         
         const imageData = canvas.toDataURL('image/png', 1.0);
