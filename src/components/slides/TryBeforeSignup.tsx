@@ -44,7 +44,7 @@ const TryBeforeSignup = () => {
 
         <div className="flex items-center justify-center gap-3">
           <Badge variant="secondary" className="bg-green-100 text-green-800">
-            ✓ Free forever plan
+            ✓ Free plan
           </Badge>
           <Badge variant="secondary" className="bg-blue-100 text-blue-800">
             ✓ 30-second signup

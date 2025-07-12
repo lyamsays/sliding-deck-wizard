@@ -96,7 +96,7 @@ const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user }) => 
         {/* Trust indicators */}
         <div className="text-xs text-green-600">
           <Badge variant="secondary" className="mr-2">✓ No credit card</Badge>
-          <Badge variant="secondary" className="mr-2">✓ Free forever plan</Badge>
+          <Badge variant="secondary" className="mr-2">✓ Free plan</Badge>
           <Badge variant="secondary">✓ 30-second signup</Badge>
         </div>
       </CardContent>

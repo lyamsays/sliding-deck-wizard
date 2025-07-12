@@ -34,9 +34,11 @@ const Hero = () => {
                 Create Presentation Now
               </Link>
             </Button>
-            <Button variant="outline" size="lg" className="px-8 py-6 text-lg rounded-xl">
-              <Play className="mr-2 h-5 w-5" />
-              Watch Demo
+            <Button variant="outline" size="lg" asChild className="px-8 py-6 text-lg rounded-xl">
+              <Link to="/how-it-works">
+                <Play className="mr-2 h-5 w-5" />
+                See How It Works
+              </Link>
             </Button>
           </div>
 
@@ -59,7 +61,7 @@ const Hero = () => {
         <div className="mt-20 md:mt-28 max-w-5xl mx-auto">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-100 via-white to-purple-100 rounded-2xl blur-3xl opacity-60"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-purple-100 p-6 md:p-8">
+            <div className="relative bg-white rounded-2xl shadow-2xl border border-purple-100 p-6 md:p-8">
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div>
                   <img 

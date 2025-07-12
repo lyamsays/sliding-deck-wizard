@@ -134,53 +134,6 @@ const QuickStart = () => {
           ))}
         </div>
 
-        {/* Examples Showcase */}
-        <div className="bg-card rounded-2xl p-8 border">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold mb-3">See what others have created</h3>
-            <p className="text-muted-foreground">Real presentations made with Sliding.io</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            {examples.map((example, index) => (
-              <div key={index} className="group cursor-pointer">
-                <div className="relative overflow-hidden rounded-lg mb-4 aspect-video">
-                  <img 
-                    src={example.image} 
-                    alt={example.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors">
-                    <div className="absolute top-4 left-4">
-                      <Badge className="bg-white/90 text-black">
-                        {example.category}
-                      </Badge>
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="bg-white/90 rounded-full p-3">
-                        <Play className="h-6 w-6 text-primary" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-lg mb-1">{example.title}</h4>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>by {example.author}</span>
-                    <span>{example.slides} slides</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center">
-            <Button variant="outline" size="lg">
-              View More Examples
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
