@@ -58,34 +58,6 @@ const ProfessionalShowcase = () => {
           ))}
         </div>
 
-        <div className="text-center">
-          <div className="inline-flex items-center gap-12 mb-8 bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600">10K+</div>
-              <div className="text-gray-600 text-sm">Presentations Created</div>
-            </div>
-            <div className="w-px h-12 bg-gray-200"></div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600">500+</div>
-              <div className="text-gray-600 text-sm">Consultants</div>
-            </div>
-            <div className="w-px h-12 bg-gray-200"></div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600">200+</div>
-              <div className="text-gray-600 text-sm">Universities</div>
-            </div>
-          </div>
-          
-          <Button 
-            size="lg" 
-            className="bg-purple-600 hover:bg-purple-700 text-lg px-8 py-6 rounded-xl"
-            asChild
-          >
-            <Link to="/create">
-              Join thousands of professionals
-            </Link>
-          </Button>
-        </div>
       </div>
     </section>
   );
