@@ -13,314 +13,147 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
-import PptxGenJs from 'pptxgenjs';
-// @ts-ignore - JSZip types issue
+import { exportToPDF, exportToPowerPoint, exportToImages } from '@/utils/slideExporter';
+import { useState } from 'react';
+import { Slide } from '@/types/deck';
 
 interface TrySuccessProps {
   slideCount: number;
   onSave: () => void;
   user: any;
-  slides?: Array<{
-    title: string;
-    bullets: string[];
-    visualSuggestion?: string;
-    speakerNotes?: string;
-    imageUrl?: string;
-  }>;
+  slides?: Slide[];
   deckTitle?: string;
 }
 
 const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user, slides = [], deckTitle = "Presentation" }) => {
   const { toast } = useToast();
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+  const [exportTotal, setExportTotal] = useState(0);
   
   // PDF Export Function
   const handleExportPDF = async () => {
+    if (isExporting) return;
+    
+    setIsExporting(true);
+    setExportProgress(0);
+    
     try {
-      toast({
-        title: "Preparing PDF export",
-        description: "Capturing slides for export..."
-      });
-      
-      // Find all slide elements using the correct ID pattern from StyledSlide
-      let slideElements = document.querySelectorAll('[id^="slide-content-"]');
-      
-      if (slideElements.length === 0) {
-        // Fallback: try to find styled slides by their container class
-        slideElements = document.querySelectorAll('.group.relative.overflow-hidden, [data-slide-content]');
-        if (slideElements.length === 0) {
-          throw new Error("No slides found to export. Please make sure slides are visible on the page.");
+      await exportToPDF({
+        deckTitle,
+        slides,
+        onProgress: (current, total) => {
+          setExportProgress(current);
+          setExportTotal(total);
+          toast({
+            title: "Exporting PDF",
+            description: `Processing slide ${current} of ${total}...`
+          });
+        },
+        onSuccess: (message) => {
+          toast({
+            title: "Export completed",
+            description: message
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "Export failed",
+            description: error,
+            variant: "destructive"
+          });
         }
-        console.log(`Using fallback selectors, found ${slideElements.length} elements`);
-      }
-      
-      console.log(`Found ${slideElements.length} slide elements for PDF export`);
-      
-      // Initialize PDF with 16:9 aspect ratio for presentations
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'pt',
-        format: [1920, 1080]
       });
-      
-      // Get PDF dimensions
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      
-      for (let i = 0; i < slideElements.length; i++) {
-        if (i > 0) {
-          pdf.addPage();
-        }
-        
-        toast({
-          title: "Exporting PDF",
-          description: `Processing slide ${i + 1} of ${slideElements.length}...`
-        });
-        
-        const slideElement = slideElements[i] as HTMLElement;
-        
-         // Capture the slide as canvas with better settings for styled content
-        const canvas = await html2canvas(slideElement, {
-          backgroundColor: null,
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          foreignObjectRendering: true,
-          width: slideElement.offsetWidth || 1920,
-          height: slideElement.offsetHeight || 1080,
-          scrollX: 0,
-          scrollY: 0,
-          logging: true,
-          onclone: (clonedDoc) => {
-            // Ensure all images and styles are properly loaded in the clone
-            const clonedElement = clonedDoc.getElementById(`slide-content-${i}`);
-            if (clonedElement) {
-              // Force background styles to be applied
-              const originalElement = slideElement;
-              const computedStyle = window.getComputedStyle(originalElement);
-              clonedElement.style.background = computedStyle.background;
-              clonedElement.style.backgroundColor = computedStyle.backgroundColor;
-            }
-          }
-        });
-        
-        // Convert canvas to image
-        const imgData = canvas.toDataURL('image/png');
-        
-        // Add the image to PDF
-        pdf.addImage(
-          imgData,
-          'PNG',
-          0,
-          0,
-          pageWidth,
-          pageHeight,
-          '',
-          'FAST'
-        );
-      }
-      
-      // Save the PDF
-      pdf.save(`${deckTitle}.pdf`);
-      
-      toast({
-        title: "PDF exported successfully",
-        description: "Your presentation has been downloaded as a PDF file."
-      });
-    } catch (err: any) {
-      console.error('Error generating PDF:', err);
-      toast({
-        title: "Export failed",
-        description: err.message || "Failed to generate PDF. Please try again.",
-        variant: "destructive"
-      });
+    } catch (error) {
+      console.error('PDF export error:', error);
+    } finally {
+      setIsExporting(false);
+      setExportProgress(0);
+      setExportTotal(0);
     }
   };
   
   // PowerPoint Export Function
   const handleExportPPTX = async () => {
+    if (isExporting) return;
+    
+    setIsExporting(true);
+    setExportProgress(0);
+    
     try {
-      toast({
-        title: "Preparing PowerPoint export",
-        description: "Capturing slides for export..."
-      });
-      
-      // Find all slide elements using the correct ID pattern from StyledSlide
-      let slideElements = document.querySelectorAll('[id^="slide-content-"]');
-      
-      if (slideElements.length === 0) {
-        // Fallback: try to find styled slides by their container class
-        slideElements = document.querySelectorAll('.group.relative.overflow-hidden, [data-slide-content]');
-        if (slideElements.length === 0) {
-          throw new Error("No slides found to export. Please make sure slides are visible on the page.");
+      await exportToPowerPoint({
+        deckTitle,
+        slides,
+        onProgress: (current, total) => {
+          setExportProgress(current);
+          setExportTotal(total);
+          toast({
+            title: "Exporting PowerPoint",
+            description: `Processing slide ${current} of ${total}...`
+          });
+        },
+        onSuccess: (message) => {
+          toast({
+            title: "Export completed",
+            description: message
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "Export failed",
+            description: error,
+            variant: "destructive"
+          });
         }
-        console.log(`Using fallback selectors, found ${slideElements.length} elements`);
-      }
-      
-      console.log(`Found ${slideElements.length} slide elements for PPTX export`);
-      
-      // Create new presentation
-      const pptx = new PptxGenJs();
-      pptx.layout = 'LAYOUT_16x9';
-      
-      for (let i = 0; i < slideElements.length; i++) {
-        toast({
-          title: "Exporting PPTX",
-          description: `Processing slide ${i + 1} of ${slideElements.length}...`
-        });
-        
-        const slideElement = slideElements[i] as HTMLElement;
-        
-         // Capture the slide as canvas with better settings for styled content
-        const canvas = await html2canvas(slideElement, {
-          backgroundColor: null,
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          foreignObjectRendering: true,
-          width: slideElement.offsetWidth || 1920,
-          height: slideElement.offsetHeight || 1080,
-          scrollX: 0,
-          scrollY: 0,
-          logging: true,
-          onclone: (clonedDoc) => {
-            // Ensure all images and styles are properly loaded in the clone
-            const clonedElement = clonedDoc.getElementById(`slide-content-${i}`);
-            if (clonedElement) {
-              // Force background styles to be applied
-              const originalElement = slideElement;
-              const computedStyle = window.getComputedStyle(originalElement);
-              clonedElement.style.background = computedStyle.background;
-              clonedElement.style.backgroundColor = computedStyle.backgroundColor;
-            }
-          }
-        });
-        
-        // Convert canvas to base64
-        const imgData = canvas.toDataURL('image/png');
-        
-        // Add slide to presentation
-        const slide = pptx.addSlide();
-        
-        // Add the captured image to the slide
-        slide.addImage({
-          data: imgData,
-          x: 0,
-          y: 0,
-          w: '100%',
-          h: '100%'
-        });
-      }
-      
-      // Save the presentation
-      await pptx.writeFile({ fileName: `${deckTitle}.pptx` });
-      
-      toast({
-        title: "PowerPoint exported successfully",
-        description: "Your presentation has been downloaded as a PPTX file."
       });
-    } catch (err: any) {
-      console.error('Error generating PPTX:', err);
-      toast({
-        title: "Export failed",
-        description: err.message || "Failed to generate PowerPoint. Please try again.",
-        variant: "destructive"
-      });
+    } catch (error) {
+      console.error('PowerPoint export error:', error);
+    } finally {
+      setIsExporting(false);
+      setExportProgress(0);
+      setExportTotal(0);
     }
   };
   
   // Images Export Function
   const handleExportImages = async () => {
+    if (isExporting) return;
+    
+    setIsExporting(true);
+    setExportProgress(0);
+    
     try {
-      toast({
-        title: "Preparing images export",
-        description: "Capturing slides as images..."
-      });
-      
-      // Find all slide elements using the correct ID pattern from StyledSlide
-      let slideElements = document.querySelectorAll('[id^="slide-content-"]');
-      
-      if (slideElements.length === 0) {
-        // Fallback: try to find styled slides by their container class
-        slideElements = document.querySelectorAll('.group.relative.overflow-hidden, [data-slide-content]');
-        if (slideElements.length === 0) {
-          throw new Error("No slides found to export. Please make sure slides are visible on the page.");
+      await exportToImages({
+        deckTitle,
+        slides,
+        onProgress: (current, total) => {
+          setExportProgress(current);
+          setExportTotal(total);
+          toast({
+            title: "Exporting Images",
+            description: `Processing slide ${current} of ${total}...`
+          });
+        },
+        onSuccess: (message) => {
+          toast({
+            title: "Export completed",
+            description: message
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "Export failed",
+            description: error,
+            variant: "destructive"
+          });
         }
-        console.log(`Using fallback selectors, found ${slideElements.length} elements`);
-      }
-      
-      console.log(`Found ${slideElements.length} slide elements for images export`);
-      
-      const images: string[] = [];
-      
-      for (let i = 0; i < slideElements.length; i++) {
-        const slideElement = slideElements[i] as HTMLElement;
-        
-         // Capture the slide as canvas with better settings for styled content
-        const canvas = await html2canvas(slideElement, {
-          backgroundColor: null,
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          foreignObjectRendering: true,
-          width: slideElement.offsetWidth || 1920,
-          height: slideElement.offsetHeight || 1080,
-          scrollX: 0,
-          scrollY: 0,
-          logging: true,
-          onclone: (clonedDoc) => {
-            // Ensure all images and styles are properly loaded in the clone
-            const clonedElement = clonedDoc.getElementById(`slide-content-${i}`);
-            if (clonedElement) {
-              // Force background styles to be applied
-              const originalElement = slideElement;
-              const computedStyle = window.getComputedStyle(originalElement);
-              clonedElement.style.background = computedStyle.background;
-              clonedElement.style.backgroundColor = computedStyle.backgroundColor;
-            }
-          }
-        });
-        
-        const imageData = canvas.toDataURL('image/png', 1.0);
-        images.push(imageData);
-      }
-      
-      // Create and download ZIP file with all images
-      if (images.length > 0) {
-        const JSZip = (await import('jszip')).default;
-        const zip = new JSZip();
-        const folder = zip.folder(deckTitle);
-        
-        images.forEach((imageData, index) => {
-          const base64Data = imageData.split(',')[1];
-          folder?.file(`slide-${index + 1}.png`, base64Data, { base64: true });
-        });
-        
-        const content = await zip.generateAsync({ type: 'blob' });
-        
-        const url = URL.createObjectURL(content);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${deckTitle}-slides.zip`;
-        document.body.appendChild(link);
-        link.click();
-        
-        URL.revokeObjectURL(url);
-        document.body.removeChild(link);
-        
-        toast({
-          title: "Images exported successfully",
-          description: "Your slides have been downloaded as PNG images."
-        });
-      }
-    } catch (err: any) {
-      console.error('Error generating images:', err);
-      toast({
-        title: "Export failed",
-        description: err.message || "Failed to generate images. Please try again.",
-        variant: "destructive"
       });
+    } catch (error) {
+      console.error('Images export error:', error);
+    } finally {
+      setIsExporting(false);
+      setExportProgress(0);
+      setExportTotal(0);
     }
   };
   
@@ -382,17 +215,32 @@ const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user, slide
             Or download now without signing up:
           </p>
           <div className="flex justify-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleExportPDF}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportPDF}
+              disabled={isExporting}
+            >
               <Download className="h-4 w-4 mr-2" />
-              PDF
+              {isExporting && exportProgress > 0 ? `PDF (${exportProgress}/${exportTotal})` : 'PDF'}
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExportPPTX}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportPPTX}
+              disabled={isExporting}
+            >
               <Download className="h-4 w-4 mr-2" />
-              PowerPoint
+              {isExporting && exportProgress > 0 ? `PowerPoint (${exportProgress}/${exportTotal})` : 'PowerPoint'}
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExportImages}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportImages}
+              disabled={isExporting}
+            >
               <Download className="h-4 w-4 mr-2" />
-              Images
+              {isExporting && exportProgress > 0 ? `Images (${exportProgress}/${exportTotal})` : 'Images'}
             </Button>
           </div>
         </div>
