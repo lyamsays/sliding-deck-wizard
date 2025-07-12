@@ -776,8 +776,8 @@ Why Choose Our Team:
           />
         )}
         
-        {/* Try Success Prompt (for non-logged-in users) */}
-        {editedSlides.length > 0 && (
+        {/* Try Success Prompt (for non-logged-in users) - Only show after images are done */}
+        {editedSlides.length > 0 && !isGeneratingImages && (
           <TrySuccess
             slideCount={editedSlides.length}
             onSave={handleSave}

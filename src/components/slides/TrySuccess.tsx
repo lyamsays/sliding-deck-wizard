@@ -43,12 +43,19 @@ const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user, slide
         description: "Capturing slides for export..."
       });
       
-      // Find all slide elements
-      const slideElements = document.querySelectorAll('[data-slide-id]');
+      // Find all slide elements - using multiple selectors to catch slides
+      let slideElements = document.querySelectorAll('.slide-card, [data-slide-content], .styled-slide');
       
       if (slideElements.length === 0) {
-        throw new Error("No slides found to export");
+        // Fallback: try to find any slide-like elements
+        slideElements = document.querySelectorAll('[class*="slide"], .card');
+        if (slideElements.length === 0) {
+          throw new Error("No slides found to export. Please make sure slides are visible on the page.");
+        }
+        console.log(`Using fallback selectors, found ${slideElements.length} elements`);
       }
+      
+      console.log(`Found ${slideElements.length} slide elements for PDF export`);
       
       // Initialize PDF with 16:9 aspect ratio for presentations
       const pdf = new jsPDF({
@@ -127,11 +134,18 @@ const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user, slide
       });
       
       // Find all slide elements
-      const slideElements = document.querySelectorAll('[data-slide-id]');
+      let slideElements = document.querySelectorAll('.slide-card, [data-slide-content], .styled-slide');
       
       if (slideElements.length === 0) {
-        throw new Error("No slides found to export");
+        // Fallback: try to find any slide-like elements
+        slideElements = document.querySelectorAll('[class*="slide"], .card');
+        if (slideElements.length === 0) {
+          throw new Error("No slides found to export. Please make sure slides are visible on the page.");
+        }
+        console.log(`Using fallback selectors, found ${slideElements.length} elements`);
       }
+      
+      console.log(`Found ${slideElements.length} slide elements for PPTX export`);
       
       // Create new presentation
       const pptx = new PptxGenJs();
@@ -198,11 +212,18 @@ const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user, slide
         description: "Capturing slides as images..."
       });
       
-      const slideElements = document.querySelectorAll('[data-slide-id]');
+      let slideElements = document.querySelectorAll('.slide-card, [data-slide-content], .styled-slide');
       
       if (slideElements.length === 0) {
-        throw new Error("No slides found to export");
+        // Fallback: try to find any slide-like elements  
+        slideElements = document.querySelectorAll('[class*="slide"], .card');
+        if (slideElements.length === 0) {
+          throw new Error("No slides found to export. Please make sure slides are visible on the page.");
+        }
+        console.log(`Using fallback selectors, found ${slideElements.length} elements`);
       }
+      
+      console.log(`Found ${slideElements.length} slide elements for images export`);
       
       const images: string[] = [];
       
