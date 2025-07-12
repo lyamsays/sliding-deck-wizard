@@ -23,6 +23,7 @@ import SlideList from '@/components/slides/slide-list'; // Updated import path
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import OnboardingManager from '@/components/onboarding/OnboardingManager';
 import WelcomeBanner from '@/components/onboarding/WelcomeBanner';
+import AdvancedSlideEditor from '@/components/slides/AdvancedSlideEditor';
 import CreationSteps from '@/components/slides/CreationSteps';
 import FeatureTooltip from '@/components/onboarding/FeatureTooltip';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";

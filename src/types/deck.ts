@@ -3,6 +3,8 @@ export interface Slide {
   id: string;
   title: string;
   bullets: string[];
+  bulletPoints?: string[]; // Add for compatibility
+  slideNumber?: number; // Add for slide numbering
   visualSuggestion?: string;
   speakerNotes?: string;
   imageUrl?: string;
@@ -13,7 +15,7 @@ export interface Slide {
     accentColor?: string;
     titleFont?: string;
     bodyFont?: string;
-    layout?: 'left-image' | 'right-image' | 'centered' | 'title-focus';
+    layout?: 'left-image' | 'right-image' | 'centered' | 'title-focus' | 'top-image' | 'bottom-image' | 'center-image' | 'no-image';
     colorScheme?: string;
     cardDesign?: string;
     iconType?: string;
