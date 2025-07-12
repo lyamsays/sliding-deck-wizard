@@ -143,8 +143,19 @@ const ContentInput: React.FC<ContentInputProps> = ({
             />
             
             {slideContent.length > 0 && (
-              <div className="text-sm text-muted-foreground">
-                {slideContent.length} characters • Recommended: 500+ for best results
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {slideContent.length} characters
+                </span>
+                <span className={`font-medium ${
+                  slideContent.length > 500 ? 'text-green-600' : 
+                  slideContent.length > 200 ? 'text-blue-600' : 
+                  'text-orange-600'
+                }`}>
+                  {slideContent.length > 500 ? '✓ Optimal for best results' : 
+                   slideContent.length > 200 ? '👍 Good length' : 
+                   '💡 Add more detail for better slides'}
+                </span>
               </div>
             )}
           </div>
@@ -216,12 +227,12 @@ const ContentInput: React.FC<ContentInputProps> = ({
               {isGenerating ? (
                 <>
                   <Sparkles className="mr-2 h-5 w-5 animate-spin" />
-                  Creating Slides...
+                  Creating your presentation...
                 </>
               ) : (
                 <>
                   <Sparkles className="mr-2 h-5 w-5" />
-                  Generate Professional Slides
+                  Generate Professional Slides ({slideContent.length > 500 ? 'Optimal' : slideContent.length > 200 ? 'Good' : 'Basic'} quality)
                 </>
               )}
             </Button>

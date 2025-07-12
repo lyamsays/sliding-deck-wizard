@@ -58,12 +58,14 @@ const GenerationProgress: React.FC<GenerationProgressProps> = ({
   };
 
   const getCurrentMessage = () => {
-    if (generationProgress < 20) return "Analyzing your content and requirements...";
-    if (generationProgress < 40) return "Creating professional slide structure...";
-    if (generationProgress < 60) return "Applying design and formatting...";
-    if (generationProgress < 80 && autoGenerateImages) return "Generating relevant images...";
-    if (generationProgress < 90) return "Adding final touches...";
-    return "Almost ready! Finalizing your presentation...";
+    if (generationProgress < 10) return "🔍 Reading your content and understanding context...";
+    if (generationProgress < 25) return "🧠 Analyzing key themes and structuring ideas...";
+    if (generationProgress < 45) return "📋 Creating professional slide outline...";
+    if (generationProgress < 65) return "🎨 Applying your selected design theme...";
+    if (generationProgress < 80 && autoGenerateImages) return "🖼️ Generating relevant visuals for your slides...";
+    if (generationProgress < 90) return "✨ Adding final polish and formatting...";
+    if (generationProgress < 95) return "🔧 Optimizing for your audience and purpose...";
+    return "🎉 Almost ready! Putting the finishing touches...";
   };
 
   if (!isGenerating) return null;

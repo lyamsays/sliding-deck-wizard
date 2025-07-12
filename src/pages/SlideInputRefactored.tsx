@@ -282,8 +282,10 @@ const SlideInput = () => {
       }
       
       toast({
-        title: "Slides generated!",
-        description: `Successfully created ${slidesData.slides.length} slides.`,
+        title: "🎉 Slides generated successfully!",
+        description: `Created ${slidesData.slides.length} professional slides. ${
+          autoGenerateImages ? 'Images will be added automatically.' : ''
+        }`,
       });
       
       setTimeout(scrollToPreview, 1000);
@@ -293,8 +295,8 @@ const SlideInput = () => {
       console.error('SlideInput: Error generating slides:', err);
       setError(err.message || "Failed to generate slides. Please try again.");
       toast({
-        title: "Generation failed",
-        description: err.message || "Failed to generate slides. Please try again.",
+        title: "⚠️ Generation failed",
+        description: `${err.message} Please try adjusting your content or try again.`,
         variant: "destructive"
       });
     } finally {
@@ -357,8 +359,8 @@ const SlideInput = () => {
       
       console.log("SlideInput: Slides saved successfully");
       toast({
-        title: "Slides saved!",
-        description: "Your presentation has been saved to your account.",
+        title: "💾 Presentation saved!",
+        description: "Your slides are now safely stored in your account.",
       });
       
     } catch (error) {
