@@ -47,9 +47,9 @@ const App = () => {
             <ErrorBoundary>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/create" element={<Create />} />
-                <Route path="/slide-input" element={<SlideInput />} />
-                <Route path="/slide-input-new" element={<SlideInputRefactored />} />
+                <Route path="/create" element={<SlideInputRefactored />} />
+                <Route path="/slide-input" element={<SlideInputRefactored />} />
+                <Route path="/instant-creator" element={<SlideInputRefactored />} />
                 <Route path="/sign-in" element={<SignIn />} />
                 <Route path="/sign-up" element={<SignUp />} />
                 <Route path="/my-decks" element={<MyDecks />} />

@@ -51,7 +51,7 @@ const Navbar = () => {
               to="/create" 
               className="text-sm font-semibold leading-6 text-gray-900 hover:text-primary transition-colors px-4 py-2"
             >
-              Create Slides
+              Create Presentation
             </Link>
             
             <Link 
@@ -128,7 +128,7 @@ const Navbar = () => {
                   className="block px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 rounded-md"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Create Slides
+                  Create Presentation
                 </Link>
                 
                 <Link
