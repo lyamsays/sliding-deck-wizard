@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import { RefreshCw, ImageIcon } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
@@ -190,7 +191,7 @@ const SlideInput = () => {
             supabase.functions.invoke('generate-image', {
               body: { prompt: imagePrompt }
             }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Image generation timeout')), 20000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Image generation timeout')), 30000))
           ]) as { data: any; error: any };
           
           const { data, error } = result;
@@ -244,6 +245,20 @@ const SlideInput = () => {
       setIsGeneratingImages(false);
       setTimeout(() => setImageProgress(0), 2000);
     }
+  };
+
+  // Manual Image Generation Function for button trigger
+  const handleManualImageGeneration = () => {
+    if (editedSlides.length === 0) {
+      toast({
+        title: "No slides available",
+        description: "Please generate slides first before adding images.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    generateAllImages(editedSlides);
   };
   
   const handleAutoGenerate = async (setupData: any) => {
@@ -781,6 +796,24 @@ Why Choose Our Team:
             />
           )}
         </div>
+        
+        {/* Generate Images Button - Floating Action */}
+        {editedSlides.length > 0 && (
+          <div className="fixed bottom-8 right-8 z-50">
+            <Button
+              onClick={handleManualImageGeneration}
+              disabled={isGeneratingImages}
+              size="lg"
+              className="bg-purple-600 hover:bg-purple-700 shadow-lg rounded-full h-14 w-14 p-0"
+            >
+              {isGeneratingImages ? (
+                <RefreshCw className="h-6 w-6 animate-spin" />
+              ) : (
+                <ImageIcon className="h-6 w-6" />
+              )}
+            </Button>
+          </div>
+        )}
         
         {/* Error Display */}
         {error && (

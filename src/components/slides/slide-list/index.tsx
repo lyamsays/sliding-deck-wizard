@@ -15,7 +15,9 @@ interface SlideListProps {
   handleSlideUpdate: (index: number, updatedSlide: Slide) => void
   handleRemoveImage: (index: number) => void
   handleDownloadSlides: () => void
+  handleGenerateImages?: () => void
   isSaving: boolean
+  isGeneratingImages?: boolean
 }
 
 const SlideList: React.FC<SlideListProps> = ({
@@ -28,7 +30,9 @@ const SlideList: React.FC<SlideListProps> = ({
   handleSlideUpdate,
   handleRemoveImage,
   handleDownloadSlides,
+  handleGenerateImages,
   isSaving,
+  isGeneratingImages,
 }) => {
   if (editedSlides.length === 0) return null
 
@@ -46,7 +50,9 @@ const SlideList: React.FC<SlideListProps> = ({
         setViewMode={setViewMode}
         handleSave={handleSave}
         handleDownloadSlides={handleDownloadSlides}
+        handleGenerateImages={handleGenerateImages}
         isSaving={isSaving}
+        isGeneratingImages={isGeneratingImages}
         slideCount={editedSlides.length}
         ExportComponent={<ExportToImage slides={editedSlides} deckTitle={deckTitle} />}
       />

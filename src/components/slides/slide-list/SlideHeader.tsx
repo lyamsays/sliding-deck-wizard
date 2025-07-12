@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, Download, Eye, List, Loader2 } from 'lucide-react';
+import { Save, Download, Eye, List, Loader2, ImageIcon } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
 interface SlideHeaderProps {
@@ -12,7 +12,9 @@ interface SlideHeaderProps {
   setViewMode: (mode: 'outline' | 'slide') => void;
   handleSave: () => void;
   handleDownloadSlides: () => void;
+  handleGenerateImages?: () => void;
   isSaving: boolean;
+  isGeneratingImages?: boolean;
   slideCount: number;
   ExportComponent?: React.ReactNode;
 }
@@ -24,7 +26,9 @@ const SlideHeader: React.FC<SlideHeaderProps> = ({
   setViewMode,
   handleSave,
   handleDownloadSlides,
+  handleGenerateImages,
   isSaving,
+  isGeneratingImages,
   slideCount,
   ExportComponent
 }) => {
@@ -70,6 +74,28 @@ const SlideHeader: React.FC<SlideHeaderProps> = ({
           
           {/* Export Options */}
           {ExportComponent}
+          
+          {/* Generate Images Button */}
+          {handleGenerateImages && (
+            <Button
+              onClick={handleGenerateImages}
+              disabled={isGeneratingImages}
+              variant="outline"
+              size="sm"
+            >
+              {isGeneratingImages ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="h-4 w-4 mr-1" />
+                  Generate Images
+                </>
+              )}
+            </Button>
+          )}
           
           <Button
             onClick={handleDownloadSlides}
