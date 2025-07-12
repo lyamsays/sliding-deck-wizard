@@ -434,11 +434,16 @@ const SlideInput = () => {
         }`,
       });
       
-      // Start automatic image generation if enabled
-      if (autoGenerateImages) {
+      // Start automatic image generation if enabled (or always for better UX)
+      if (autoGenerateImages || true) { // Always generate images automatically
+        toast({
+          title: "🎨 Starting image generation",
+          description: "Creating professional visuals for your slides...",
+        });
+        
         setTimeout(() => {
           generateAllImages(styledSlides);
-        }, 1500);
+        }, 1000); // Reduced delay for faster UX
       }
       
       setTimeout(scrollToPreview, 1000);
