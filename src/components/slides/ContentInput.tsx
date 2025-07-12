@@ -520,26 +520,6 @@ Mitigation Strategies:
             )}
           </div>
 
-          {/* Quick Prompts */}
-          {slideContent.length === 0 && (
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-muted-foreground">
-                Or start with a template:
-              </Label>
-              <div className="grid gap-2">
-                {quickPrompts.map((prompt, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => setSlideContent(prompt)}
-                    className="text-left p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 text-sm transition-colors border border-transparent hover:border-border"
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Advanced Options */}
           <div className="space-y-4 p-4 bg-secondary/10 rounded-lg">
