@@ -189,10 +189,10 @@ const ContentInput: React.FC<ContentInputProps> = ({
 
           {/* Advanced Options */}
           <div className="space-y-4 p-4 bg-secondary/10 rounded-lg">
-            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200 hover:border-purple-400 transition-colors">
+            <div className="flex items-center justify-between p-3 bg-background rounded-lg border border-border hover:border-primary/50 transition-colors">
               <div className="flex-1">
-                <Label className="font-semibold text-base cursor-pointer text-purple-900">Auto-generate Images</Label>
-                <p className="text-sm text-purple-700 mt-1">
+                <Label className="font-semibold text-base cursor-pointer">Auto-generate Images</Label>
+                <p className="text-sm text-muted-foreground mt-1">
                   Automatically create relevant images for your slides
                 </p>
               </div>
@@ -200,7 +200,7 @@ const ContentInput: React.FC<ContentInputProps> = ({
                 <Switch
                   checked={autoGenerateImages}
                   onCheckedChange={setAutoGenerateImages}
-                  className="data-[state=checked]:bg-purple-600 scale-125"
+                  className="scale-125 border-2 border-purple-400 data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-background"
                 />
               </div>
             </div>
