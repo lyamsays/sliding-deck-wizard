@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSmartDefaults } from '@/hooks/useSmartDefaults';
 import { Badge } from "@/components/ui/badge";
+import ContextualHelp from '@/components/onboarding/ContextualHelp';
 
 interface MetadataStepProps {
   profession: string;
@@ -172,8 +173,14 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-3">
-          <label className="text-sm font-medium">For what profession?</label>
-          <Select value={profession} onValueChange={setProfession}>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            For what profession?
+            <ContextualHelp
+              title="Why Choose a Profession?"
+              content="Selecting your profession helps us provide tailored slide layouts, content suggestions, and frameworks that match your field and presentation style."
+            />
+          </label>
+          <Select value={profession} onValueChange={setProfession} data-profession-select>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select profession" />
             </SelectTrigger>
@@ -282,7 +289,13 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
         </div>
         
         <div className="space-y-3">
-          <label className="text-sm font-medium">Theme</label>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            Theme
+            <ContextualHelp
+              title="Choosing the Right Theme"
+              content="Themes control the visual style of your slides including colors, fonts, and layouts. You can always change the theme later or browse all available themes."
+            />
+          </label>
           <div className="flex flex-col space-y-2">
             <Collapsible
               open={showThemePreview}
@@ -290,7 +303,7 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
               className="w-full"
             >
               <div className="flex gap-2">
-                <Select value={selectedTheme} onValueChange={setSelectedTheme}>
+                <Select value={selectedTheme} onValueChange={setSelectedTheme} data-theme-select>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select theme" />
                   </SelectTrigger>

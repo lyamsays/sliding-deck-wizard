@@ -6,6 +6,7 @@ import { Wand, Lightbulb, Sparkles } from "lucide-react";
 import { useSmartDefaults } from '@/hooks/useSmartDefaults';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import ContextualHelp from '@/components/onboarding/ContextualHelp';
 
 interface ContentStepProps {
   slideContent: string;
@@ -58,9 +59,27 @@ const ContentStep: React.FC<ContentStepProps> = ({
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-semibold text-center mb-4">Step 2: Content Input</h2>
-        <p className="text-muted-foreground text-center mb-6">
-          Enter your content below and we'll transform it into slides.
-        </p>
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <p className="text-muted-foreground text-center">
+            Enter your content below and we'll transform it into slides.
+          </p>
+          <ContextualHelp
+            title="Content Input Tips"
+            content={
+              <div className="space-y-2">
+                <p>For best results:</p>
+                <ul className="list-disc list-inside text-xs space-y-1">
+                  <li>Use bullet points for key information</li>
+                  <li>Include clear section headings</li>
+                  <li>Add specific details and examples</li>
+                  <li>Mention any data or statistics</li>
+                </ul>
+              </div>
+            }
+            variant="popover"
+            trigger="click"
+          />
+        </div>
       </div>
       
       <div className="space-y-4 relative">

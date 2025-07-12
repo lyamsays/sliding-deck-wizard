@@ -21,6 +21,8 @@ import SlideList from '@/components/slides/slide-list'; // Updated import path
 
 // Import new components
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
+import OnboardingManager from '@/components/onboarding/OnboardingManager';
+import WelcomeBanner from '@/components/onboarding/WelcomeBanner';
 import CreationSteps from '@/components/slides/CreationSteps';
 import FeatureTooltip from '@/components/onboarding/FeatureTooltip';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -806,6 +808,9 @@ Nudge theory`;
             <CreationSteps currentStep={currentCreationStep} />
             
             <div className="section-card animate-fade-up">
+              {/* Welcome Banner for new users */}
+              <WelcomeBanner />
+              
               {showTips && (
                 <FeatureTooltip 
                   title="Create Your Presentation"
@@ -918,6 +923,11 @@ Nudge theory`;
         </main>
         
         <Footer />
+        
+        {/* Enhanced Onboarding System */}
+        <OnboardingManager />
+        
+        {/* Legacy Onboarding modal */}
         
         {/* Onboarding modal */}
         <OnboardingModal 
