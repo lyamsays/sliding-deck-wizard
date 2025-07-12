@@ -51,35 +51,33 @@ const AIGenerateTab: React.FC<AIGenerateTabProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <p className="text-sm text-gray-500">
-            Describe the image you would like to generate for this slide:
-          </p>
-          <Input 
-            placeholder="E.g., 'A professional bar chart showing growth trends'"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-          />
-        </div>
-        
-        {suggestions.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">Suggestions:</p>
-            <div className="grid gap-2">
-              {suggestions.map((suggestion, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className="text-left p-2 text-sm bg-gray-50 hover:bg-gray-100 rounded-md border transition-colors"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+      <div className="space-y-2">
+        <p className="text-sm text-gray-500">
+          Describe the image you would like to generate for this slide:
+        </p>
+        <Input 
+          placeholder="E.g., 'A professional bar chart showing growth trends'"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+        />
       </div>
+      
+      {suggestions.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-gray-700">Suggestions:</p>
+          <div className="grid gap-2">
+            {suggestions.map((suggestion, index) => (
+              <button
+                key={index}
+                onClick={() => handleSuggestionClick(suggestion)}
+                className="text-left p-2 text-sm bg-gray-50 hover:bg-gray-100 rounded-md border transition-colors"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       
       {isGenerating && (
         <div className="space-y-2">
