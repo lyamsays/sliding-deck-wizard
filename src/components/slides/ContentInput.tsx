@@ -256,12 +256,12 @@ const ContentInput: React.FC<ContentInputProps> = ({
           </div>
 
           {/* Submit Button */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex justify-center">
             <Button
               type="submit"
               size="lg"
               disabled={!slideContent.trim() || isGenerating}
-              className="flex-1 text-lg py-6"
+              className="w-full max-w-md text-lg py-6"
             >
               {isGenerating ? (
                 <>
@@ -274,16 +274,6 @@ const ContentInput: React.FC<ContentInputProps> = ({
                   Generate Professional Slides ({slideContent.length > 500 ? 'Optimal' : slideContent.length > 200 ? 'Good' : 'Basic'} quality)
                 </>
               )}
-            </Button>
-            
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="sm:w-auto text-lg py-6"
-            >
-              <ArrowRight className="mr-2 h-4 w-4" />
-              Next
             </Button>
           </div>
         </form>
