@@ -418,6 +418,8 @@ const SlideInput = () => {
             setFramework={setFramework}
             autoGenerateImages={autoGenerateImages}
             setAutoGenerateImages={setAutoGenerateImages}
+            selectedTheme={selectedTheme}
+            setSelectedTheme={setSelectedTheme}
             onSubmit={handleSubmit}
             isGenerating={isGenerating}
             onTryExample={onTryExample}

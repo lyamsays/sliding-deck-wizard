@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Lightbulb, Sparkles, Upload, FileText, ArrowRight } from 'lucide-react';
+import { themes } from '@/components/themes/theme-data';
+import ThemePreview from '@/components/themes/ThemePreview';
 
 interface ContentInputProps {
   slideContent: string;
@@ -20,6 +22,8 @@ interface ContentInputProps {
   setFramework: (framework: string) => void;
   autoGenerateImages: boolean;
   setAutoGenerateImages: (auto: boolean) => void;
+  selectedTheme: string;
+  setSelectedTheme: (theme: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   isGenerating: boolean;
   onTryExample: () => void;
@@ -38,6 +42,8 @@ const ContentInput: React.FC<ContentInputProps> = ({
   setFramework,
   autoGenerateImages,
   setAutoGenerateImages,
+  selectedTheme,
+  setSelectedTheme,
   onSubmit,
   isGenerating,
   onTryExample
@@ -214,6 +220,39 @@ const ContentInput: React.FC<ContentInputProps> = ({
                 </Select>
               </div>
             )}
+
+            {/* Theme Selection */}
+            <div className="space-y-3">
+              <Label className="font-medium">Presentation Theme</Label>
+              <p className="text-sm text-muted-foreground">
+                Choose a visual style for your presentation
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {themes.slice(0, 6).map((theme) => (
+                  <div
+                    key={theme.id}
+                    className={`relative cursor-pointer rounded-lg border-2 transition-all ${
+                      selectedTheme === theme.id
+                        ? 'border-primary ring-2 ring-primary/20'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                    onClick={() => setSelectedTheme(theme.id)}
+                  >
+                    <ThemePreview themeId={theme.id} />
+                    <div className="absolute bottom-2 left-2 right-2">
+                      <div className="bg-black/70 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                        {theme.name}
+                      </div>
+                    </div>
+                    {selectedTheme === theme.id && (
+                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                        ✓
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Submit Button */}
