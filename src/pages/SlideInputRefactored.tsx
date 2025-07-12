@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,8 @@ import GenerationProgress from '@/components/slides/GenerationProgress';
 import SlideEditor from '@/components/slides/SlideEditor';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import ImageGenerationProgress from '@/components/slides/ImageGenerationProgress';
+import TrySuccess from '@/components/slides/TrySuccess';
+import TryBeforeSignup from '@/components/slides/TryBeforeSignup';
 
 interface SlidesResponse {
   slides: Slide[];
@@ -305,12 +308,21 @@ const SlideInput = () => {
   
   const handleSave = async () => {
     if (!user) {
+      // Show sign-up prompt instead of redirecting immediately
       toast({
-        title: "Authentication required",
-        description: "Please sign in to save your slides.",
-        variant: "destructive"
+        title: "Save your amazing presentation!",
+        description: "Sign up free to save and access your slides anytime.",
+        action: (
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => navigate('/signin')}>
+              Sign In
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => navigate('/signup')}>
+              Sign Up Free
+            </Button>
+          </div>
+        ),
       });
-      navigate('/signin');
       return;
     }
     
@@ -384,6 +396,11 @@ const SlideInput = () => {
       <Navbar />
       
       <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Try Before Signup Banner (for non-logged-in users) */}
+        {!user && editedSlides.length === 0 && (
+          <TryBeforeSignup />
+        )}
+        
         {/* Content Input Section */}
         {editedSlides.length === 0 && (
           <ContentInput
@@ -418,6 +435,15 @@ const SlideInput = () => {
           <ImageGenerationProgress 
             isGeneratingImages={isGeneratingImages}
             imageProgress={imageProgress}
+          />
+        )}
+        
+        {/* Try Success Prompt (for non-logged-in users) */}
+        {editedSlides.length > 0 && (
+          <TrySuccess
+            slideCount={editedSlides.length}
+            onSave={handleSave}
+            user={user}
           />
         )}
         

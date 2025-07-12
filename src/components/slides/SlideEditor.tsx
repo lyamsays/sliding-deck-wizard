@@ -101,11 +101,12 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
               
               <Button 
                 onClick={onSave}
-                disabled={isSaving || !user}
+                disabled={isSaving}
                 size="sm"
+                className={!user ? "animate-pulse bg-green-600 hover:bg-green-700" : ""}
               >
                 <Save className="h-4 w-4 mr-2" />
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? 'Saving...' : !user ? 'Save (Sign up free!)' : 'Save'}
               </Button>
             </div>
           </div>
