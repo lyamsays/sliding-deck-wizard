@@ -11,6 +11,7 @@ import SignUp from "./pages/SignUp";
 import MyDecks from "./pages/MyDecks";
 import Themes from "./pages/Themes";
 import InstantCreator from "./pages/InstantCreator";
+import SlideInputRefactored from "./pages/SlideInputRefactored";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -48,6 +49,7 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/create" element={<Create />} />
                 <Route path="/slide-input" element={<SlideInput />} />
+                <Route path="/slide-input-new" element={<SlideInputRefactored />} />
                 <Route path="/sign-in" element={<SignIn />} />
                 <Route path="/sign-up" element={<SignUp />} />
                 <Route path="/my-decks" element={<MyDecks />} />

@@ -826,7 +826,12 @@ Nudge theory`;
               </p>
             )}
             
-            <GenerationProgress isGenerating={isGenerating} />
+        <GenerationProgress 
+          isGenerating={isGenerating}
+          generationProgress={generationProgress}
+          currentStep="generating"
+          autoGenerateImages={autoGenerateImages}
+        />
             
             <div ref={slidePreviewRef}>
               {showTips && editedSlides.length > 0 ? (
