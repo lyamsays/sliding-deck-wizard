@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Lightbulb, Sparkles, Upload, FileText } from 'lucide-react';
+import { Lightbulb, Sparkles, Upload, FileText, ArrowRight } from 'lucide-react';
 
 interface ContentInputProps {
   slideContent: string;
@@ -243,8 +243,8 @@ const ContentInput: React.FC<ContentInputProps> = ({
               size="lg"
               className="sm:w-auto text-lg py-6"
             >
-              <Upload className="mr-2 h-4 w-4" />
-              Upload File
+              <ArrowRight className="mr-2 h-4 w-4" />
+              Next
             </Button>
           </div>
         </form>
