@@ -1,39 +1,15 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Layout, 
-  Palette, 
-  Type, 
-  Image, 
-  Layers,
-  Undo,
-  Redo,
-  Save,
-  Download,
-  Share2,
-  Grid,
-  List,
-  Eye
-} from 'lucide-react';
+import { Layout } from 'lucide-react';
 import { Slide } from '@/types/deck';
+import { motion } from 'framer-motion';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
 import DraggableSlideList from './DraggableSlideList';
 import RealTimePreview from './RealTimePreview';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { motion } from 'framer-motion';
+import EditorToolbar from './editor/EditorToolbar';
+import ActionButtons from './editor/ActionButtons';
+import SlideNavigation from './editor/SlideNavigation';
 
 interface AdvancedSlideEditorProps {
   slides: Slide[];
@@ -54,32 +30,14 @@ const AdvancedSlideEditor: React.FC<AdvancedSlideEditorProps> = ({
 }) => {
   const [selectedSlideId, setSelectedSlideId] = useState<string | undefined>(undefined);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'preview'>('list');
-  const [undoStack, setUndoStack] = useState<Slide[][]>([]);
-  const [redoStack, setRedoStack] = useState<Slide[][]>([]);
-
-  // Undo/Redo functionality
-  const pushToUndoStack = (currentSlides: Slide[]) => {
-    setUndoStack(prev => [...prev.slice(-9), currentSlides]); // Keep last 10 states
-    setRedoStack([]); // Clear redo stack on new action
-  };
-
-  const handleUndo = () => {
-    if (undoStack.length > 0) {
-      const previousState = undoStack[undoStack.length - 1];
-      setRedoStack(prev => [slides, ...prev]);
-      setUndoStack(prev => prev.slice(0, -1));
-      onSlidesChange(previousState);
-    }
-  };
-
-  const handleRedo = () => {
-    if (redoStack.length > 0) {
-      const nextState = redoStack[0];
-      setUndoStack(prev => [...prev, slides]);
-      setRedoStack(prev => prev.slice(1));
-      onSlidesChange(nextState);
-    }
-  };
+  
+  const {
+    pushToUndoStack,
+    handleUndo,
+    handleRedo,
+    canUndo,
+    canRedo
+  } = useUndoRedo(slides, onSlidesChange);
 
   const handleSlidesReorder = (reorderedSlides: Slide[]) => {
     pushToUndoStack(slides);
@@ -174,95 +132,20 @@ const AdvancedSlideEditor: React.FC<AdvancedSlideEditorProps> = ({
         <CardContent className="space-y-4">
           {/* Toolbar */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {/* Undo/Redo */}
-              <div className="flex items-center border rounded-md">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleUndo}
-                  disabled={undoStack.length === 0}
-                  className="h-8 px-2 rounded-r-none border-r"
-                >
-                  <Undo className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRedo}
-                  disabled={redoStack.length === 0}
-                  className="h-8 px-2 rounded-l-none"
-                >
-                  <Redo className="h-3 w-3" />
-                </Button>
-              </div>
+            <EditorToolbar
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              canUndo={canUndo}
+              canRedo={canRedo}
+            />
 
-              {/* View Mode */}
-              <Select value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
-                <SelectTrigger className="w-32 h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="list">
-                    <div className="flex items-center gap-2">
-                      <List className="h-3 w-3" />
-                      List View
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="grid">
-                    <div className="flex items-center gap-2">
-                      <Grid className="h-3 w-3" />
-                      Grid View
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="preview">
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-3 w-3" />
-                      Preview
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2">
-              {onSave && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onSave}
-                  className="flex items-center gap-1"
-                >
-                  <Save className="h-3 w-3" />
-                  Save
-                </Button>
-              )}
-
-              {onExport && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onExport}
-                  className="flex items-center gap-1"
-                >
-                  <Download className="h-3 w-3" />
-                  Export
-                </Button>
-              )}
-
-              {onShare && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onShare}
-                  className="flex items-center gap-1"
-                >
-                  <Share2 className="h-3 w-3" />
-                  Share
-                </Button>
-              )}
-            </div>
+            <ActionButtons
+              onSave={onSave}
+              onExport={onExport}
+              onShare={onShare}
+            />
           </div>
         </CardContent>
       </Card>
@@ -284,27 +167,11 @@ const AdvancedSlideEditor: React.FC<AdvancedSlideEditorProps> = ({
               />
             </div>
             <div className="space-y-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">Slides</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {slides.map((slide, index) => (
-                    <button
-                      key={slide.id}
-                      onClick={() => setSelectedSlideId(slide.id)}
-                  className={`w-full p-2 text-left text-xs rounded border transition-colors ${
-                    selectedSlideId === slide.id
-                          ? 'bg-primary/10 border-primary'
-                          : 'bg-muted/30 border-border hover:bg-muted'
-                      }`}
-                    >
-                      <div className="font-medium line-clamp-1">{slide.title}</div>
-                      <div className="text-muted-foreground">Slide {index + 1}</div>
-                    </button>
-                  ))}
-                </CardContent>
-              </Card>
+              <SlideNavigation
+                slides={slides}
+                selectedSlideId={selectedSlideId}
+                onSlideSelect={setSelectedSlideId}
+              />
             </div>
           </div>
         ) : (
