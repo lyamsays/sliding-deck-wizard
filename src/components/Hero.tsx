@@ -71,25 +71,25 @@ const Hero = () => {
                   />
                 </div>
                 <div className="space-y-6">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-foreground">
                     From rough notes to polished presentations
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
                       <div className="w-2 h-2 bg-purple-500 rounded-full mt-3"></div>
-                      <p className="text-gray-600">Paste your content or upload documents</p>
+                      <p className="text-muted-foreground">Paste your content or upload documents</p>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="w-2 h-2 bg-purple-500 rounded-full mt-3"></div>
-                      <p className="text-gray-600">AI generates slides with professional design</p>
+                      <p className="text-muted-foreground">AI generates slides with professional design</p>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="w-2 h-2 bg-purple-500 rounded-full mt-3"></div>
-                      <p className="text-gray-600">Auto-generated images and visual elements</p>
+                      <p className="text-muted-foreground">Auto-generated images and visual elements</p>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="w-2 h-2 bg-purple-500 rounded-full mt-3"></div>
-                      <p className="text-gray-600">Export and present with confidence</p>
+                      <p className="text-muted-foreground">Export and present with confidence</p>
                     </div>
                   </div>
                 </div>
