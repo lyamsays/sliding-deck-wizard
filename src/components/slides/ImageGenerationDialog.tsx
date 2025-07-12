@@ -116,7 +116,7 @@ const ImageGenerationDialog: React.FC<ImageGenerationDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto gap-2">
         <DialogHeader>
           <DialogTitle>Add Image to Slide</DialogTitle>
           <DialogDescription>
