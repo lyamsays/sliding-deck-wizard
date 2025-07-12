@@ -782,6 +782,8 @@ Why Choose Our Team:
             slideCount={editedSlides.length}
             onSave={handleSave}
             user={user}
+            slides={editedSlides}
+            deckTitle={deckTitle}
           />
         )}
         

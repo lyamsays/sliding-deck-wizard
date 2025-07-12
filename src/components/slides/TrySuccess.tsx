@@ -12,14 +12,256 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useToast } from "@/hooks/use-toast";
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import PptxGenJs from 'pptxgenjs';
+// @ts-ignore - JSZip types issue
 
 interface TrySuccessProps {
   slideCount: number;
   onSave: () => void;
   user: any;
+  slides?: Array<{
+    title: string;
+    bullets: string[];
+    visualSuggestion?: string;
+    speakerNotes?: string;
+    imageUrl?: string;
+  }>;
+  deckTitle?: string;
 }
 
-const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user }) => {
+const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user, slides = [], deckTitle = "Presentation" }) => {
+  const { toast } = useToast();
+  
+  // PDF Export Function
+  const handleExportPDF = async () => {
+    try {
+      toast({
+        title: "Preparing PDF export",
+        description: "Capturing slides for export..."
+      });
+      
+      // Find all slide elements
+      const slideElements = document.querySelectorAll('[data-slide-id]');
+      
+      if (slideElements.length === 0) {
+        throw new Error("No slides found to export");
+      }
+      
+      // Initialize PDF with 16:9 aspect ratio for presentations
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'pt',
+        format: [1920, 1080]
+      });
+      
+      // Get PDF dimensions
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      for (let i = 0; i < slideElements.length; i++) {
+        if (i > 0) {
+          pdf.addPage();
+        }
+        
+        toast({
+          title: "Exporting PDF",
+          description: `Processing slide ${i + 1} of ${slideElements.length}...`
+        });
+        
+        const slideElement = slideElements[i] as HTMLElement;
+        
+        // Capture the slide as canvas
+        const canvas = await html2canvas(slideElement, {
+          backgroundColor: null,
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          width: 1920,
+          height: 1080,
+          scrollX: 0,
+          scrollY: 0
+        });
+        
+        // Convert canvas to image
+        const imgData = canvas.toDataURL('image/png');
+        
+        // Add the image to PDF
+        pdf.addImage(
+          imgData,
+          'PNG',
+          0,
+          0,
+          pageWidth,
+          pageHeight,
+          '',
+          'FAST'
+        );
+      }
+      
+      // Save the PDF
+      pdf.save(`${deckTitle}.pdf`);
+      
+      toast({
+        title: "PDF exported successfully",
+        description: "Your presentation has been downloaded as a PDF file."
+      });
+    } catch (err: any) {
+      console.error('Error generating PDF:', err);
+      toast({
+        title: "Export failed",
+        description: err.message || "Failed to generate PDF. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // PowerPoint Export Function
+  const handleExportPPTX = async () => {
+    try {
+      toast({
+        title: "Preparing PowerPoint export",
+        description: "Capturing slides for export..."
+      });
+      
+      // Find all slide elements
+      const slideElements = document.querySelectorAll('[data-slide-id]');
+      
+      if (slideElements.length === 0) {
+        throw new Error("No slides found to export");
+      }
+      
+      // Create new presentation
+      const pptx = new PptxGenJs();
+      pptx.layout = 'LAYOUT_16x9';
+      
+      for (let i = 0; i < slideElements.length; i++) {
+        toast({
+          title: "Exporting PPTX",
+          description: `Processing slide ${i + 1} of ${slideElements.length}...`
+        });
+        
+        const slideElement = slideElements[i] as HTMLElement;
+        
+        // Capture the slide as canvas
+        const canvas = await html2canvas(slideElement, {
+          backgroundColor: null,
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          width: 1920,
+          height: 1080,
+          scrollX: 0,
+          scrollY: 0
+        });
+        
+        // Convert canvas to base64
+        const imgData = canvas.toDataURL('image/png');
+        
+        // Add slide to presentation
+        const slide = pptx.addSlide();
+        
+        // Add the captured image to the slide
+        slide.addImage({
+          data: imgData,
+          x: 0,
+          y: 0,
+          w: '100%',
+          h: '100%'
+        });
+      }
+      
+      // Save the presentation
+      await pptx.writeFile({ fileName: `${deckTitle}.pptx` });
+      
+      toast({
+        title: "PowerPoint exported successfully",
+        description: "Your presentation has been downloaded as a PPTX file."
+      });
+    } catch (err: any) {
+      console.error('Error generating PPTX:', err);
+      toast({
+        title: "Export failed",
+        description: err.message || "Failed to generate PowerPoint. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Images Export Function
+  const handleExportImages = async () => {
+    try {
+      toast({
+        title: "Preparing images export",
+        description: "Capturing slides as images..."
+      });
+      
+      const slideElements = document.querySelectorAll('[data-slide-id]');
+      
+      if (slideElements.length === 0) {
+        throw new Error("No slides found to export");
+      }
+      
+      const images: string[] = [];
+      
+      for (let i = 0; i < slideElements.length; i++) {
+        const slideElement = slideElements[i] as HTMLElement;
+        
+        const canvas = await html2canvas(slideElement, {
+          backgroundColor: null,
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          width: 1920,
+          height: 1080,
+          scrollX: 0,
+          scrollY: 0
+        });
+        
+        const imageData = canvas.toDataURL('image/png', 1.0);
+        images.push(imageData);
+      }
+      
+      // Create and download ZIP file with all images
+      if (images.length > 0) {
+        const JSZip = (await import('jszip')).default;
+        const zip = new JSZip();
+        const folder = zip.folder(deckTitle);
+        
+        images.forEach((imageData, index) => {
+          const base64Data = imageData.split(',')[1];
+          folder?.file(`slide-${index + 1}.png`, base64Data, { base64: true });
+        });
+        
+        const content = await zip.generateAsync({ type: 'blob' });
+        
+        const url = URL.createObjectURL(content);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${deckTitle}-slides.zip`;
+        document.body.appendChild(link);
+        link.click();
+        
+        URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Images exported successfully",
+          description: "Your slides have been downloaded as PNG images."
+        });
+      }
+    } catch (err: any) {
+      console.error('Error generating images:', err);
+      toast({
+        title: "Export failed",
+        description: err.message || "Failed to generate images. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+  
   if (user) return null; // Don't show if already logged in
 
   return (
@@ -78,15 +320,15 @@ const TrySuccess: React.FC<TrySuccessProps> = ({ slideCount, onSave, user }) => 
             Or download now without signing up:
           </p>
           <div className="flex justify-center gap-2">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleExportPDF}>
               <Download className="h-4 w-4 mr-2" />
               PDF
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleExportPPTX}>
               <Download className="h-4 w-4 mr-2" />
               PowerPoint
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleExportImages}>
               <Download className="h-4 w-4 mr-2" />
               Images
             </Button>
