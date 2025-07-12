@@ -16,15 +16,20 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({
   
   return (
     <div className="w-full mt-2 space-y-2">
-      <div className="h-2 w-full bg-gray-200 rounded">
+      <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
         <div 
-          className="h-2 bg-blue-600 rounded" 
+          className="h-full bg-gradient-to-r from-primary via-purple-500 to-blue-500 rounded-full transition-all duration-500 ease-out" 
           style={{ width: `${imageProgress}%` }}
         ></div>
       </div>
-      <p className="text-sm text-center text-gray-500 italic">
-        Generating images for your slides... {Math.round(imageProgress)}%
-      </p>
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-muted-foreground">
+          🎨 Generating professional images...
+        </p>
+        <span className="text-sm font-medium text-primary">
+          {Math.round(imageProgress)}%
+        </span>
+      </div>
     </div>
   );
 };

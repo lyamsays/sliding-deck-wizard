@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { Slide } from '@/types/deck';
+import { getRandomPastelColor, getIconSuggestion } from '@/types/deck';
+import { themes } from '@/components/themes/theme-data';
 
 // Import new modular components
 import ContentInput from '@/components/slides/ContentInput';
@@ -115,6 +117,130 @@ const SlideInput = () => {
         behavior: 'smooth',
         block: 'start'
       });
+    }
+  };
+  
+  // Smart Layout Function - Applies intelligent styling and layout to slides
+  const applySmartLayout = (slides: Slide[], themeId: string) => {
+    const themeData = themes.find(theme => theme.id === themeId) || themes.find(theme => theme.id === 'creme')!;
+    
+    return slides.map((slide, index) => ({
+      ...slide,
+      style: {
+        backgroundColor: themeData.background,
+        iconType: getIconSuggestion(slide.title, slide.visualSuggestion),
+        layout: Math.random() > 0.5 ? 'right-image' : 'left-image' as 'right-image' | 'left-image',
+        colorScheme: themeData.id,
+        accentColor: themeData.accentColor,
+        textColor: themeData.textColor,
+        titleFont: themeData.titleFont,
+        bodyFont: themeData.bodyFont,
+        cardDesign: themeData.cardDesign
+      }
+    }));
+  };
+  
+  // Automatic Image Generation Function
+  const generateAllImages = async (slidesToProcess: Slide[]) => {
+    if (slidesToProcess.length === 0) {
+      toast({
+        title: "No slides to generate images for",
+        description: "Generate some slides first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    console.log("SlideInput: Starting automatic image generation for all slides");
+    const slidesWithSuggestions = slidesToProcess.filter(slide => slide.visualSuggestion && !slide.imageUrl);
+    
+    if (slidesWithSuggestions.length === 0) {
+      console.log("SlideInput: No slides need image generation");
+      return;
+    }
+    
+    setIsGeneratingImages(true);
+    setImageProgress(10);
+    
+    const updatedSlides = [...slidesToProcess];
+    const totalSlides = slidesWithSuggestions.length;
+    let processedCount = 0;
+    
+    toast({
+      title: "🎨 Generating images automatically",
+      description: `Creating professional visuals for ${totalSlides} slides...`,
+    });
+    
+    try {
+      for (let i = 0; i < slidesToProcess.length; i++) {
+        const slide = slidesToProcess[i];
+        
+        if (!slide.visualSuggestion || slide.imageUrl) {
+          continue;
+        }
+        
+        console.log(`SlideInput: Generating image for slide ${i}: ${slide.title}`);
+        
+        const imagePrompt = `Create a high-quality, professional presentation visual for "${slide.title}". ${slide.visualSuggestion}. Style: clean, modern, minimal design with professional color palette. No text overlay. Suitable for business presentation. High resolution and professional quality.`;
+        
+        try {
+          const result = await Promise.race([
+            supabase.functions.invoke('generate-image', {
+              body: { prompt: imagePrompt }
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Image generation timeout')), 20000))
+          ]) as { data: any; error: any };
+          
+          const { data, error } = result;
+          
+          if (error || data.error) {
+            console.error(`Error generating image for slide ${i}:`, error || data.error);
+            processedCount++;
+            const progressPercentage = 10 + (processedCount / totalSlides) * 80;
+            setImageProgress(progressPercentage);
+            continue;
+          }
+          
+          const { imageUrl, revisedPrompt } = data;
+          console.log(`SlideInput: Successfully generated image for slide ${i}`);
+          
+          updatedSlides[i] = {
+            ...slide,
+            imageUrl,
+            revisedPrompt
+          };
+          
+          processedCount++;
+          const progressValue = 10 + Math.round((processedCount / totalSlides) * 80);
+          setImageProgress(progressValue);
+          
+        } catch (error) {
+          console.error(`Error generating image for slide ${i}:`, error);
+          processedCount++;
+          const progressPercentage = 10 + (processedCount / totalSlides) * 80;
+          setImageProgress(progressPercentage);
+        }
+      }
+      
+      setEditedSlides(updatedSlides);
+      setImageProgress(100);
+      
+      toast({
+        title: "✨ Images generated successfully!",
+        description: `Created ${processedCount} professional images automatically.`,
+      });
+      
+    } catch (error) {
+      const err = error as Error;
+      console.error("Error in automatic image generation:", err);
+      toast({
+        title: "Some images failed",
+        description: err.message || "Some images could not be generated. You can add them manually.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingImages(false);
+      setTimeout(() => setImageProgress(0), 2000);
     }
   };
   
@@ -272,8 +398,11 @@ const SlideInput = () => {
       console.log("SlideInput: Successfully generated slides:", slidesData.slides.length);
       
       setGenerationProgress(100);
-      setGeneratedSlides(slidesData.slides);
-      setEditedSlides(slidesData.slides);
+      
+      // Apply smart layout and styling to slides
+      const styledSlides = applySmartLayout(slidesData.slides, selectedTheme);
+      setGeneratedSlides(styledSlides);
+      setEditedSlides(styledSlides);
       
       if (slidesData.slides.length > 0) {
         setDeckTitle(slidesData.slides[0].title);
@@ -284,9 +413,16 @@ const SlideInput = () => {
       toast({
         title: "🎉 Slides generated successfully!",
         description: `Created ${slidesData.slides.length} professional slides. ${
-          autoGenerateImages ? 'Images will be added automatically.' : ''
+          autoGenerateImages ? 'Starting automatic image generation...' : ''
         }`,
       });
+      
+      // Start automatic image generation if enabled
+      if (autoGenerateImages) {
+        setTimeout(() => {
+          generateAllImages(styledSlides);
+        }, 1500);
+      }
       
       setTimeout(scrollToPreview, 1000);
       
