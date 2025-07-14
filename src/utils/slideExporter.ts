@@ -144,37 +144,78 @@ const captureSlide = async (slideElement: HTMLElement, index: number): Promise<s
   }
 };
 
-// Find all slide elements with better detection
+// Find all slide elements with improved detection
 const findSlideElements = (): HTMLElement[] => {
-  // Try multiple selectors to find slides
-  const selectors = [
-    '[id^="slide-content-"]',  // Primary selector for StyledSlide
-    '.group.relative.overflow-hidden',  // Fallback based on StyledSlide classes
-    '[data-slide-content]',  // Alternative data attribute
-    '.styled-slide'  // Generic slide class
-  ];
-
-  for (const selector of selectors) {
-    const elements = document.querySelectorAll(selector) as NodeListOf<HTMLElement>;
-    if (elements.length > 0) {
-      console.log(`Found ${elements.length} slides using selector: ${selector}`);
-      return Array.from(elements);
+  console.log('Starting slide detection...');
+  
+  // Wait a moment for slides to fully render
+  const slideContainer = document.querySelector('#slides-grid-container, .slides-container');
+  if (slideContainer) {
+    console.log('Found slide container:', slideContainer);
+  }
+  
+  // Strategy 1: Look for slide-content elements specifically
+  let elements = document.querySelectorAll('[id^="slide-content-"]') as NodeListOf<HTMLElement>;
+  if (elements.length > 0) {
+    console.log(`Found ${elements.length} slides using slide-content IDs`);
+    return Array.from(elements).filter(el => {
+      // Ensure the element is visible and has content
+      const rect = el.getBoundingClientRect();
+      const hasContent = el.offsetHeight > 0 && el.offsetWidth > 0;
+      console.log(`Slide ${el.id}:`, { width: rect.width, height: rect.height, hasContent });
+      return hasContent;
+    });
+  }
+  
+  // Strategy 2: Look for slide containers and find their content
+  const slideContainers = document.querySelectorAll('[id^="slide-"], .slide-container') as NodeListOf<HTMLElement>;
+  if (slideContainers.length > 0) {
+    console.log(`Found ${slideContainers.length} slide containers`);
+    const slideContents: HTMLElement[] = [];
+    
+    slideContainers.forEach((container, index) => {
+      // Look for the actual slide content within each container
+      const contentElement = container.querySelector('[id^="slide-content-"]') as HTMLElement;
+      if (contentElement) {
+        slideContents.push(contentElement);
+        console.log(`Found content in container ${index}:`, contentElement.id);
+      }
+    });
+    
+    if (slideContents.length > 0) {
+      return slideContents;
     }
   }
+  
+  // Strategy 3: Look for StyledSlide component elements
+  const styledSlides = document.querySelectorAll('.group.relative.overflow-hidden') as NodeListOf<HTMLElement>;
+  if (styledSlides.length > 0) {
+    console.log(`Found ${styledSlides.length} styled slide elements`);
+    return Array.from(styledSlides).filter(el => {
+      const hasSlideContent = el.offsetHeight > 200; // Slides should be reasonably tall
+      return hasSlideContent;
+    });
+  }
 
-  throw new Error('No slides found on the page. Please ensure slides are visible.');
+  console.error('No slides found with any detection strategy');
+  throw new Error('No slides found on the page. Please ensure slides are visible and fully loaded.');
 };
 
 export const exportToPDF = async (options: ExportOptions): Promise<void> => {
   const { deckTitle, onProgress, onSuccess, onError } = options;
 
   try {
+    console.log('Starting PDF export...');
     await waitForContent();
     
+    // Wait additional time for slides to fully load
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
     const slideElements = findSlideElements();
+    console.log(`PDF Export: Found ${slideElements.length} slides to export`);
     
     if (slideElements.length === 0) {
-      throw new Error('No slides found to export');
+      throw new Error('No slides found to export. Please ensure slides are visible and try again.');
     }
 
     onProgress?.(0, slideElements.length);
@@ -226,12 +267,17 @@ export const exportToPowerPoint = async (options: ExportOptions): Promise<void> 
   const { deckTitle, onProgress, onSuccess, onError } = options;
 
   try {
+    console.log('Starting PowerPoint export...');
     await waitForContent();
     
+    // Wait additional time for slides to fully load
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
     const slideElements = findSlideElements();
+    console.log(`PowerPoint Export: Found ${slideElements.length} slides to export`);
     
     if (slideElements.length === 0) {
-      throw new Error('No slides found to export');
+      throw new Error('No slides found to export. Please ensure slides are visible and try again.');
     }
 
     onProgress?.(0, slideElements.length);
@@ -273,12 +319,17 @@ export const exportToImages = async (options: ExportOptions): Promise<void> => {
   const { deckTitle, onProgress, onSuccess, onError } = options;
 
   try {
+    console.log('Starting Images export...');
     await waitForContent();
     
+    // Wait additional time for slides to fully load
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
     const slideElements = findSlideElements();
+    console.log(`Images Export: Found ${slideElements.length} slides to export`);
     
     if (slideElements.length === 0) {
-      throw new Error('No slides found to export');
+      throw new Error('No slides found to export. Please ensure slides are visible and try again.');
     }
 
     onProgress?.(0, slideElements.length);
