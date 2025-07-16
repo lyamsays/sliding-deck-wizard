@@ -62,38 +62,34 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
     setIsGeneratingImage(true);
     
     try {
-      const imagePrompt = `Create a professional presentation slide visual about "${slide.title}". ${prompt}. Make it suitable for a business presentation, clean and minimal style, no text in the image.`;
-      
       toast({
-        title: "Generating image",
-        description: "Creating a visual for your slide...",
+        title: "Generating high-quality image",
+        description: "Creating a professional visual with GPT-Image-1...",
       });
       
-      const { data, error } = await supabase.functions.invoke('generate-image', {
-        body: { prompt: imagePrompt }
+      const { ImageGenerationService } = await import('@/services/imageGeneration');
+      
+      const result = await ImageGenerationService.generateImage({
+        prompt,
+        slideTitle: slide.title,
+        slideContext: slide.bullets?.join(', '),
+        timeout: 60000 // Increased timeout for better quality
       });
-      
-      if (error) {
-        throw new Error(error.message || "Failed to generate image");
-      }
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      
-      const { imageUrl, revisedPrompt } = data;
       
       onSlideUpdate(index, {
         ...slide,
-        imageUrl,
-        revisedPrompt
+        imageUrl: result.imageUrl,
+        revisedPrompt: result.revisedPrompt
       });
       
       setIsImageDialogOpen(false);
       
+      // Quality assessment
+      const isHighQuality = await ImageGenerationService.assessImageQuality(result.imageUrl);
+      
       toast({
-        title: "Image generated",
-        description: "Visual has been added to your slide.",
+        title: "Premium image generated",
+        description: `Professional quality visual ${isHighQuality ? 'with excellent resolution' : ''} added to your slide.`,
       });
       
     } catch (error) {

@@ -33,7 +33,10 @@ const corsHeaders = {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
-    console.log("generate-image: Calling DALL-E 3 API");
+    // Enhanced prompt engineering for professional presentations
+    const enhancedPrompt = `Professional presentation image: ${prompt}. Style: Clean, modern, corporate aesthetic with sophisticated color palette. High resolution, photorealistic quality suitable for business presentations. Minimal distractions, focus on clarity and professional appeal.`;
+    
+    console.log("generate-image: Calling GPT-Image-1 API with enhanced prompt");
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -41,12 +44,13 @@ const corsHeaders = {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "dall-e-3",
-        prompt: prompt,
-        n: 1,
-        size: "1024x1024",
-        quality: "hd",
-        response_format: "b64_json",
+        model: "gpt-image-1",
+        prompt: enhancedPrompt,
+        size: "1536x1024",
+        quality: "high",
+        background: "auto",
+        output_format: "webp",
+        output_compression: 90,
       }),
     });
 
@@ -65,10 +69,14 @@ const corsHeaders = {
     const data = await response.json();
     console.log("generate-image: Image generated successfully");
     
+    // GPT-Image-1 returns base64 directly, no need for data wrapper
+    const imageData = data.data || data;
+    const base64Image = typeof imageData === 'string' ? imageData : imageData[0];
+    
     return new Response(
       JSON.stringify({ 
-        imageUrl: `data:image/png;base64,${data.data[0].b64_json}`,
-        revisedPrompt: data.data[0].revised_prompt || prompt
+        imageUrl: `data:image/webp;base64,${base64Image}`,
+        revisedPrompt: data.revised_prompt || enhancedPrompt
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

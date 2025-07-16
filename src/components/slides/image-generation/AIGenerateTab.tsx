@@ -53,7 +53,7 @@ const AIGenerateTab: React.FC<AIGenerateTabProps> = ({
     <div className="space-y-4">
       <div className="space-y-2">
         <p className="text-sm text-gray-500">
-          Describe the image you would like to generate for this slide:
+          ✨ Enhanced with GPT-Image-1 for professional presentation quality:
         </p>
         <Input 
           placeholder="E.g., 'A professional bar chart showing growth trends'"

@@ -184,33 +184,22 @@ const SlideInput = () => {
         
         console.log(`SlideInput: Generating image for slide ${i}: ${slide.title}`);
         
-        const imagePrompt = `Create a high-quality, professional presentation visual for "${slide.title}". ${slide.visualSuggestion}. Style: clean, modern, minimal design with professional color palette. No text overlay. Suitable for business presentation. High resolution and professional quality.`;
-        
         try {
-          const result = await Promise.race([
-            supabase.functions.invoke('generate-image', {
-              body: { prompt: imagePrompt }
-            }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Image generation timeout')), 30000))
-          ]) as { data: any; error: any };
+          const { ImageGenerationService } = await import('@/services/imageGeneration');
           
-          const { data, error } = result;
+          const result = await ImageGenerationService.generateImage({
+            prompt: slide.visualSuggestion || `Visual for ${slide.title}`,
+            slideTitle: slide.title,
+            slideContext: slide.bullets?.join(', '),
+            timeout: 60000 // Extended timeout for better quality
+          });
           
-          if (error || data.error) {
-            console.error(`Error generating image for slide ${i}:`, error || data.error);
-            processedCount++;
-            const progressPercentage = 10 + (processedCount / totalSlides) * 80;
-            setImageProgress(progressPercentage);
-            continue;
-          }
-          
-          const { imageUrl, revisedPrompt } = data;
           console.log(`SlideInput: Successfully generated image for slide ${i}`);
           
           updatedSlides[i] = {
             ...slide,
-            imageUrl,
-            revisedPrompt
+            imageUrl: result.imageUrl,
+            revisedPrompt: result.revisedPrompt
           };
           
           processedCount++;
