@@ -159,17 +159,19 @@ And so on for all slides.`
       throw new Error('Content is required to generate slides');
     }
 
-    let prompt = `You are a professional ${profession}-level expert presentation creator.
-      
-      IMPORTANT: The following content contains INSTRUCTIONS and CONTEXT for the presentation you should create. 
-      DO NOT copy this content verbatim into slides. Instead, READ and INTERPRET this information to create relevant, meaningful slide content.
-      
-      Based on this information: ${content}
-      
-      The presentation's purpose is to ${purpose}.
-      The tone should be ${tone}.
-      
-      Create a professional slide deck that fulfills this purpose and addresses the context provided. Generate substantive, relevant content based on the instructions, not generic placeholders.`;
+    let prompt = `You are a world-class presentation expert and copywriter with expertise in ${profession}. Create slides that are concise, impactful, and audience-focused.
+
+Topic: ${content}
+Target audience: ${profession} professionals
+Tone: ${tone}
+Purpose: ${purpose}
+
+Structure each slide with:
+- Slide title (max 8 words)
+- 2–4 bullet points or sentences (each under 20 words)
+- Optional: vivid quote or compelling statistic
+
+Focus on clarity, impact, and professional excellence. Generate substantive, relevant content that delivers immediate value to the audience.`;
 
     if (framework && profession === "Consultant") {
       prompt += ` Use the ${framework} framework.`;
@@ -195,25 +197,28 @@ And so on for all slides.`
         messages: [
           {
             role: "system",
-            content: `You are a professional presentation creator specialized in ${profession} presentations.
+            content: `You are a world-class presentation expert and copywriter specialized in ${profession} presentations.
             
-            CRITICAL INSTRUCTIONS:
-            1. The user input contains CONTEXT and INSTRUCTIONS, not content to copy verbatim
-            2. READ and ANALYZE the provided information to understand what presentation is needed
-            3. CREATE substantive, meaningful content based on the context, not generic templates
-            4. Generate SPECIFIC, actionable content relevant to the topic and audience
-            5. DO NOT use placeholder text or generic examples
+            EXPERT INSTRUCTIONS:
+            1. Create concise, impactful slides that are audience-focused
+            2. Each slide title: maximum 8 words, compelling and clear
+            3. Each bullet point: under 20 words, actionable and specific
+            4. Include vivid quotes or statistics when relevant
+            5. Professional language that delivers immediate value
             
-            User Context/Instructions: ${content}
+            Topic: ${content}
+            Target audience: ${profession} professionals
             Presentation Purpose: ${purpose}
             Tone: ${tone}
-            ${framework && profession === "Consultant" ? `Framework to incorporate: ${framework}` : ''}
+            ${framework && profession === "Consultant" ? `Framework: ${framework}` : ''}
             
-            Create a professional slide deck that addresses the specific context provided. Each slide should contain:
-            - Specific, relevant content (not generic placeholders)
-            - Actionable insights or information
-            - Professional language appropriate for the audience
-            - Visual suggestions that match the actual content
+            For visual suggestions, act as an AI image designer creating sleek, modern slide backgrounds:
+            - Style: modern, abstract, clean
+            - Color palette: muted tones with slight contrast
+            - Composition: leave space for text, avoid faces
+            - Format: widescreen presentation layout
+            
+            Return short image prompts that DALL·E can understand (no words in image).
             
             YOU MUST RETURN VALID JSON WITHOUT ANY MARKDOWN FORMATTING.
             DO NOT WRAP THE JSON IN CODE BLOCKS OR BACKTICKS.
