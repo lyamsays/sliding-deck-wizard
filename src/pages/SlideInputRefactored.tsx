@@ -51,7 +51,7 @@ const SlideInput = () => {
   const [tone, setTone] = useState<string>("Professional");
   const [framework, setFramework] = useState<string>("None");
   const [autoGenerateImages, setAutoGenerateImages] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState<string>('creme');
+  const [selectedTheme, setSelectedTheme] = useState<string>('pristine');
   
   // UI state
   const [viewMode, setViewMode] = useState<'outline' | 'slide'>('slide');
@@ -76,7 +76,7 @@ const SlideInput = () => {
         setProfession(setupData.profession || 'Consultant');
         setPurpose(setupData.purpose || '');
         setTone(setupData.tone || 'Professional');
-        setSelectedTheme(setupData.selectedTheme || 'creme');
+        setSelectedTheme(setupData.selectedTheme || 'pristine');
         setAutoGenerateImages(setupData.autoGenerateImages !== undefined ? setupData.autoGenerateImages : true);
         
         localStorage.removeItem('setupData');
@@ -123,7 +123,7 @@ const SlideInput = () => {
   
   // Smart Layout Function - Applies intelligent styling and layout to slides
   const applySmartLayout = (slides: Slide[], themeId: string) => {
-    const themeData = themes.find(theme => theme.id === themeId) || themes.find(theme => theme.id === 'creme')!;
+    const themeData = themes.find(theme => theme.id === themeId) || themes.find(theme => theme.id === 'pristine')!;
     
     console.log("SlideInput: Applying smart layout with theme:", themeId, themeData);
     

@@ -16,7 +16,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   profession: 'Consultant',
   tone: 'Professional',
   autoGenerateImages: true,
-  selectedTheme: 'creme',
+  selectedTheme: 'pristine',
   framework: 'None',
   recentPurposes: [],
   contentSuggestions: []

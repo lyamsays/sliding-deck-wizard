@@ -72,7 +72,7 @@ const SlideInput = () => {
         setProfession(setupData.profession || 'Consultant');
         setPurpose(setupData.purpose || '');
         setTone(setupData.tone || 'Professional');
-        setSelectedTheme(setupData.selectedTheme || 'creme');
+        setSelectedTheme(setupData.selectedTheme || 'pristine');
         setAutoGenerateImages(setupData.autoGenerateImages !== undefined ? setupData.autoGenerateImages : true);
         
         // Clear the setup data from localStorage
@@ -120,7 +120,7 @@ const SlideInput = () => {
   const [selectedTheme, setSelectedTheme] = useState<string>(() => {
     // Try to get the saved theme from localStorage
     const savedTheme = localStorage.getItem('selectedTheme');
-    return savedTheme || 'creme'; // Default to 'creme' if no theme is saved
+    return savedTheme || 'pristine'; // Default to 'pristine' if no theme is saved
   });
   
   // New state variables for enhanced UX
@@ -170,7 +170,7 @@ const SlideInput = () => {
     if (generatedSlides.length > 0) {
       console.log("SlideInput: Applying theme to slides. Selected theme:", selectedTheme);
       // Find the selected theme from themes array
-      const themeData = themes.find(theme => theme.id === selectedTheme) || themes.find(theme => theme.id === 'creme')!;
+      const themeData = themes.find(theme => theme.id === selectedTheme) || themes.find(theme => theme.id === 'pristine')!;
       console.log("SlideInput: Theme data found:", themeData.name);
       
       // Add style properties to each slide based on the selected theme

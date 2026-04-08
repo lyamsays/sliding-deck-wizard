@@ -41,7 +41,7 @@ interface RealTimePreviewProps {
 const RealTimePreview: React.FC<RealTimePreviewProps> = ({
   slides,
   selectedSlideId,
-  theme = 'creme',
+  theme = 'pristine',
   className,
   onSlideSelect
 }) => {

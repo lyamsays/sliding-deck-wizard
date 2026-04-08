@@ -30,7 +30,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, onCancel }) => {
     profession: 'Consultant',
     purpose: '',
     tone: 'Professional',
-    selectedTheme: 'creme',
+    selectedTheme: 'pristine',
     content: '',
     autoGenerateImages: true,
   });

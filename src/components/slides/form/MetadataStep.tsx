@@ -95,7 +95,7 @@ const MetadataStep: React.FC<MetadataStepProps> = ({
       if (tone === 'Professional' && preferences.tone !== 'Professional') {
         setTone(preferences.tone);
       }
-      if (selectedTheme === 'creme' && preferences.selectedTheme !== 'creme') {
+      if (selectedTheme === 'pristine' && preferences.selectedTheme !== 'pristine') {
         setSelectedTheme(preferences.selectedTheme);
       }
       if (autoGenerateImages !== preferences.autoGenerateImages) {
