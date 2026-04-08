@@ -69,9 +69,9 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onContentExtracted, dis
   };
 
   const handleFile = async (file: File) => {
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = 20 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      setError('File too large. Maximum size is 10MB.');
+      setError('File too large. Maximum size is 20MB.');
       setState('error');
       return;
     }
@@ -147,7 +147,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onContentExtracted, dis
           <Upload className="h-5 w-5 mx-auto mb-2 text-purple-400" />
           <p className="text-sm font-medium text-foreground">Upload your notes or materials</p>
           <p className="text-xs text-muted-foreground mt-1">
-            PDF, Word (.docx), or text file · max 10MB
+            PDF, Word (.docx), or text file · max 20MB
           </p>
           <p className="text-xs text-purple-600 mt-1 font-medium">
             Drag & drop or click to browse

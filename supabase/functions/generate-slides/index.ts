@@ -59,22 +59,29 @@ This presentation is for ${purposeDesc}.
 TONE: ${toneDesc}
 
 SLIDE DESIGN PRINCIPLES:
-- Each slide must have ONE clear idea. No information overload.
-- Titles: maximum 8 words, action-oriented or concept-focused
-- Bullets: maximum 4 per slide, each under 20 words, concrete and specific
-- Use real numbers, examples, and evidence from the content — never add vague generalities
-- The first slide must be a strong title/overview slide
-- The last slide must be a memorable conclusion or call-to-action
-- Vary slide types: title slides, content slides, data slides, quote slides, summary slides
+- Each slide covers ONE clear idea with substance. Do not over-simplify.
+- Titles: maximum 8 words, punchy and specific — a claim or question, not a generic label.
+- Bullets: 3-4 per content slide. Each bullet is one concrete, evidence-based insight under 20 words.
+- Use real numbers, specific findings, and named researchers/studies — never vague generalities.
+- Bullets should be dense with value: a professor should be able to teach from them directly.
+- First slide: compelling title slide that frames the lecture's central argument.
+- Last slide: actionable synthesis — what students should walk away knowing/doing.
+- Vary slide types: title, content, data/stat, quote, summary.
 
-SPEAKER NOTES — THIS IS CRITICAL:
-Write speaker notes that actually help the presenter TEACH, not just repeat the bullets.
-- Explain the "why" behind each point
-- Include transition phrases to the next slide
-- Suggest where to pause for questions or discussion
-- Add real-world examples or anecdotes the presenter can use
-- For educators: include pedagogical cues ("This is a good moment to ask students...")
-- Keep notes 2-4 sentences per slide — enough to guide, not a script
+WHAT GOES ON SLIDES vs IN SPEAKER NOTES:
+SLIDES get: the key facts, statistics, named concepts, and evidence that anchor the lecture.
+  Good bullet: "Spaced repetition yields 80% better retention than massed practice (Cepeda et al., 2006)"
+  Good bullet: "70% of wrongful convictions involve mistaken eyewitness identification"
+
+SPEAKER NOTES get: the elaboration, stories, transitions, and pedagogical moves — NOT a restatement of the bullets.
+  Bad notes: "As I mentioned on this slide, spaced repetition is better than cramming..."
+  Good notes: "Draw a forgetting curve on the board here. Ask: how many of you crammed for your last exam? Then tell them about Ebbinghaus testing himself on nonsense syllables..."
+
+SPEAKER NOTES — 3-4 sentences max per slide:
+- Write in first person as the professor speaking.
+- One concrete example or story not already on the slide.
+- A specific pedagogical move (discussion question, activity, pause point).
+- A transition sentence to the next slide.
 
 IMAGE SUGGESTIONS:
 - Suggest a specific, concrete Unsplash-searchable photograph or illustration

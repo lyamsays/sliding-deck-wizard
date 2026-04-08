@@ -414,7 +414,7 @@ Mitigation Strategies:
           Create Your Presentation
         </CardTitle>
         <p className="text-muted-foreground">
-          Upload your notes, research papers, or lecture materials — or paste text directly. Claude will generate audience-specific slides with speaker notes.
+          Upload your notes, research papers, or lecture materials — or paste text directly. Our AI will generate audience-specific slides with speaker notes.
         </p>
       </CardHeader>
       
