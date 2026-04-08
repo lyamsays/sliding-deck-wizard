@@ -13,7 +13,7 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-1">
             <Logo />
             <p className="mt-4 text-gray-600 text-sm">
-              Transform your raw content into beautiful slide decks using AI.
+              Turn your lecture notes into audience-ready slides in seconds.
             </p>
           </div>
           

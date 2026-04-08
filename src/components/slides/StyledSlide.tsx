@@ -72,6 +72,17 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }
               <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${bg.startsWith('#') ? bg : '#0d1b2a'} 0%, transparent 55%)` }} />
             </div>
           )}
+          {/* Decorative shapes for title slide visual interest */}
+          {!hasImage && (
+            <>
+              <div className="absolute bottom-0 right-0 rounded-tl-full opacity-[0.06]"
+                style={{ width: '45%', height: '80%', backgroundColor: accent }} />
+              <div className="absolute bottom-8 right-8 rounded-full opacity-[0.08]"
+                style={{ width: '18%', aspectRatio: '1', backgroundColor: accent }} />
+              <div className="absolute top-6 right-16 rounded-full opacity-[0.05]"
+                style={{ width: '8%', aspectRatio: '1', backgroundColor: accent }} />
+            </>
+          )}
           <div className="absolute inset-0 flex flex-col justify-center"
             style={{ padding: '8% 8% 8% 6%', paddingRight: hasImage ? '44%' : '8%' }}>
             {renderEyebrow()}
@@ -258,7 +269,6 @@ const EditBtn = ({ onClick }: { onClick: () => void }) => (
 
 const EditDialog = ({ slide, open, onClose, onSave }: any) => {
   if (!open) return null;
-  const SlideEditDialog = require('./SlideEditDialog').default;
   return <SlideEditDialog slide={slide} open={open} onOpenChange={(v: boolean) => { if (!v) onClose(); }} onSlideUpdate={onSave} />;
 };
 

@@ -48,7 +48,7 @@ const SlideInput = () => {
   
   // Form state
   const [profession, setProfession] = useState<string>("Professor");
-  const [purpose, setPurpose] = useState<string>("");
+  const [purpose, setPurpose] = useState<string>("Undergraduates");
   const [tone, setTone] = useState<string>("Professional");
   const [framework, setFramework] = useState<string>("None");
   const [autoGenerateImages, setAutoGenerateImages] = useState(false);
