@@ -541,190 +541,38 @@ const SlideInput = () => {
   };
   
   const onTryExample = () => {
-    const examples = [
-      `Quarterly Business Review Q3 2024 - Executive Summary
-Prepared for: Board of Directors
-Revenue Performance: $47.2M (vs $44.1M target, +7% beat)
+    setSlideContent(`Introduction to Psychology — Memory & Learning
+PSYC 101 | Week 7 | Professor Sarah Chen
 
-Q3 2024 Financial Highlights
-Revenue Growth Analysis:
-• Total Revenue: $47.2M (+12% YoY, +7% vs target of $44.1M)
-• Recurring Revenue: $32.8M (+18% YoY, now 69% of total revenue)
-• New Customer Acquisition: 847 new accounts (+23% vs Q3 2023)
-• Customer Retention Rate: 94.2% (industry benchmark: 89%)
-• Average Deal Size: $28,400 (+15% YoY improvement)
+THE THREE STAGES OF MEMORY
 
-Operating Metrics Performance:
-• Gross Margin: 68.4% (vs 65.2% target, +3.2 pts improvement)
-• Operating Margin: 22.1% (+4.7 pts YoY expansion)
-• EBITDA: $12.3M (+28% YoY growth)
-• Free Cash Flow: $8.9M (+35% YoY increase)
-• Customer Acquisition Cost (CAC): $1,250 (down 18% from $1,525 in Q2)
+Encoding: Information enters working memory through our senses. Deep processing — connecting new information to meaning and prior knowledge — leads to 3x better retention than shallow processing like re-reading.
 
-Market Position and Competitive Analysis:
-• Market share in core segment: 23.4% (+2.1 pts YoY growth)
-• Net Promoter Score: 68 (up from 61 in Q2)
-• Win rate against top 3 competitors: 72% (vs 65% target)
-• Product adoption rate: 89% of customers using 2+ products
-• Expansion revenue: $5.2M from existing customers
+Storage: The hippocampus consolidates short-term memories into long-term storage during sleep. Sleep deprivation reduces memory consolidation by up to 40%. This is why all-nighters before exams backfire scientifically.
 
-Q4 2024 Strategic Initiatives:
-Product Development Roadmap:
-• AI-powered analytics module launch (targeting $2M ARR)
-• Mobile app enhancement with offline capabilities
-• API marketplace launch for third-party integrations
-• Enterprise security certification (SOC 2 Type II completion)
+Retrieval: Memory is reconstructive, not like replaying a video. Each time we recall something, we slightly alter it. This explains why 70% of wrongful convictions involve mistaken eyewitness identification.
 
-Market Expansion Strategy:
-• European market entry: UK and Germany pilot programs
-• Vertical expansion: Healthcare and education sectors
-• Partnership program: 3 strategic technology integrations
-• Sales team expansion: 12 new account executives in Q4
+KEY RESEARCH FINDINGS
 
-Financial Projections Q4 2024:
-• Revenue Target: $52.1M (+10% sequential growth)
-• New Customer Target: 950 new accounts
-• Gross Margin Target: 69.5%
-• Operating Expense Budget: $24.8M`,
+Ebbinghaus Forgetting Curve (1885): Without review, 50% of new information is forgotten within 1 hour, and 70% within 24 hours.
 
-      `Research Methodology: Machine Learning Applications in Predictive Healthcare Analytics
-Submitted to: Journal of Medical Informatics
-Research Team: Dr. Sarah Chen, Dr. Michael Rodriguez, Dr. Lisa Zhang
-Institution: Stanford Medical AI Research Laboratory
+Spaced Repetition Effect: Reviewing material at increasing intervals (1 day, 3 days, 1 week, 1 month) leads to 80% better long-term retention compared to cramming.
 
-Research Objective and Hypothesis
-Primary Research Question:
-Can ensemble machine learning models predict patient readmission risk within 30 days with accuracy exceeding 85% using electronic health record (EHR) data alone?
+Testing Effect: Being tested on material produces 50% better retention after one week than students who re-study the same content.
 
-Hypothesis:
-We hypothesize that a combination of Random Forest, Gradient Boosting, and Neural Network algorithms, trained on structured EHR data including demographics, diagnoses, medications, and laboratory values, will achieve >85% accuracy in predicting 30-day readmission risk.
+Elaborative Interrogation: Asking "why" and "how" while studying forces deeper processing — students using this technique scored 72% higher on delayed tests.
 
-Data Collection Methodology
-Dataset Composition:
-• Source: Multi-hospital EHR system (Epic Systems) across 4 medical centers
-• Patient Population: 127,439 adult patients (age ≥18) with index admissions
-• Time Period: January 2019 - December 2023 (5-year retrospective study)
-• Inclusion Criteria: Minimum 24-hour stay, complete EHR documentation
-• Exclusion Criteria: Psychiatric admissions, planned readmissions, transfers
+WHY WE FORGET
+Interference Theory: New memories interfere with old ones (retroactive) and vice versa (proactive). This is why studying similar subjects back-to-back hurts both.
+Motivated Forgetting: The prefrontal cortex actively suppresses hippocampal retrieval of painful memories — modern neuroscience confirms Freud's repression theory.
+Decay Theory: Memory traces fade over time without rehearsal, though interference is now considered the stronger factor.
 
-Feature Engineering Process:
-Clinical Variables (47 features):
-• Primary and secondary diagnoses (ICD-10 codes, grouped into 18 categories)
-• Comorbidity burden (Charlson Comorbidity Index calculation)
-• Vital signs at admission and discharge (mean, min, max values)
-• Laboratory values: Complete metabolic panel, CBC with differential
-• Medication count and high-risk medication flags
-
-Machine Learning Pipeline:
-Base Models Evaluated:
-• Logistic Regression (baseline clinical model)
-• Random Forest (n_estimators=500, max_depth=15)
-• Gradient Boosting (XGBoost with hyperparameter tuning)
-• Neural Network (3 hidden layers: 128, 64, 32 neurons)
-
-Results and Performance:
-• Ensemble Model AUC: 0.887 (95% CI: 0.881-0.893)
-• Sensitivity: 82.4% (identifying high-risk patients)
-• Specificity: 79.1% (avoiding false alarms)
-• Clinical deployment: Integration with Epic EHR system via FHIR API`,
-
-      `Digital Transformation Consulting Proposal
-Client: ABC Manufacturing Corp
-Proposal Date: March 15, 2025
-Project Value: $2.54M over 24 months
-
-Executive Summary
-ABC Manufacturing Corp faces critical digital transformation challenges that threaten competitive positioning. Our comprehensive analysis reveals:
-• Current digital maturity score: 1.8/5 (below industry average of 2.3/5)
-• Legacy ERP system (SAP R/3 from 2008) limiting operational efficiency
-• Manual processes consuming 65% of operational resources
-• Competitors investing $500K+ annually in digital initiatives
-
-Our Proven Digital Transformation Framework
-Phase 1: Foundation and Assessment (Months 1-4)
-• Technology infrastructure audit and gap analysis
-• Business process mapping using BPMN 2.0 standards
-• Current state documentation across 5 departments
-• Cloud readiness assessment for AWS migration
-• Stakeholder alignment and change management planning
-
-Phase 2: Core Systems Implementation (Months 5-12)
-• SAP S/4HANA Cloud deployment with manufacturing modules
-• IoT sensor integration: 150 temperature/pressure sensors across 3 production lines
-• Real-time dashboard development with 15 critical KPIs
-• API-first integration strategy connecting 8 disparate systems
-
-Phase 3: Optimization and Advanced Analytics (Months 13-18)
-• Machine learning implementation for predictive maintenance
-• Supply chain optimization using constraint-based planning
-• Quality prediction algorithms reducing defects by 75%
-• Customer behavior analysis improving retention by 8%
-
-Proven Case Studies and Results
-Case Study 1: Peterson Industries (Similar Manufacturing Company)
-• Challenge: Legacy systems, manual quality control, inventory inaccuracies
-• Solution: Complete digital transformation following our framework
-• Results: 23% efficiency improvement, $890K annual cost savings, 18-month ROI
-
-Case Study 2: Wilson Manufacturing (Mid-market Competitor)
-• Challenge: Disconnected IoT sensors, limited real-time visibility
-• Solution: IoT platform implementation with predictive analytics
-• Results: 40% reduction in unplanned downtime, 25% improvement in OEE
-
-Financial Impact and ROI Analysis
-Investment Breakdown:
-• Software licenses and cloud infrastructure: $847,000
-• Professional services and implementation: $920,000
-• Hardware and IoT sensors: $445,000
-• Change management and training: $325,000
-• Total Investment: $2,537,000
-
-Projected Annual Benefits:
-• Labor cost reduction: $425,000/year (automation and efficiency gains)
-• Material cost savings: $315,000/year (inventory optimization, waste reduction)
-• Revenue enhancement: $680,000/year (capacity utilization, quality improvements)
-• Total Annual Benefits: $1,420,000
-
-ROI Calculations:
-• Payback period: 20 months
-• 5-year NPV (8% discount): $3,124,000
-• Internal Rate of Return: 43.2%
-
-Implementation Timeline and Milestones
-Key Deliverables by Quarter:
-Q1 2025: Infrastructure setup, team formation, requirements gathering
-Q2 2025: ERP system deployment, data migration, user training
-Q3 2025: IoT implementation, dashboard development, process automation
-Q4 2025: Advanced analytics, optimization, performance monitoring
-
-Success Metrics and KPIs:
-• Overall Equipment Effectiveness: 67% → 82% improvement
-• Inventory accuracy: 87% → 99.5% improvement
-• Customer on-time delivery: 87% → 96% improvement
-• Cost per unit: 12% reduction through efficiency gains
-
-Risk Mitigation Strategy:
-• Phased implementation approach minimizing business disruption
-• Comprehensive testing environments for all integrations
-• 24/7 support during critical migration periods
-• Change management program ensuring 95% user adoption
-
-Next Steps:
-• Executive approval and budget allocation by March 30
-• Project kickoff and team formation by April 15
-• Infrastructure assessment completion by May 15
-• Go-live milestone achievement by December 2025
-
-Why Choose Our Team:
-• 15+ years digital transformation experience
-• 89% client satisfaction rate across 127 implementations
-• Certified implementation partners: SAP, Microsoft, AWS
-• Dedicated project management with agile methodology
-• Post-implementation support and optimization services`
-    ];
-    
-    const randomExample = examples[Math.floor(Math.random() * examples.length)];
-    setSlideContent(randomExample);
+PRACTICAL STUDY STRATEGIES FOR STUDENTS
+1. Practice retrieval daily — close your notes and try to recall key concepts without looking
+2. Sleep 7-9 hours before exams — memory consolidation happens during slow-wave and REM sleep
+3. Avoid studying similar subjects consecutively — reduces proactive and retroactive interference
+4. Teach concepts to others — the Protégé Effect improves your own retention by 90%
+5. Use spaced repetition apps like Anki — they automate the optimal review schedule`);
   };
   
   return (
