@@ -129,29 +129,58 @@ const SlideInput = () => {
     
     console.log("SlideInput: Applying smart layout with theme:", themeId, themeData);
     
-    return slides.map((slide, index) => ({
-      // Normalize all fields — Claude may return null for optional fields
-      id: slide.id || `slide-${index}`,
-      title: slide.title || `Slide ${index + 1}`,
-      subtitle: slide.subtitle || undefined,
-      slideType: slide.slideType || 'content',
-      bullets: Array.isArray(slide.bullets) ? slide.bullets : [],
-      visualSuggestion: slide.visualSuggestion || '',
-      speakerNotes: slide.speakerNotes || '',
-      imageUrl: slide.imageUrl || '',
-      revisedPrompt: slide.revisedPrompt || '',
-      style: {
-        backgroundColor: themeData.background,
-        iconType: getIconSuggestion(slide.title, slide.visualSuggestion),
-        layout: Math.random() > 0.5 ? 'right-image' : 'left-image' as 'right-image' | 'left-image',
-        colorScheme: themeData.id,
-        accentColor: themeData.accentColor,
-        textColor: themeData.textColor,
-        titleFont: themeData.titleFont,
-        bodyFont: themeData.bodyFont,
-        cardDesign: themeData.cardDesign
+    // Layout assignment: intelligent variety based on slide type + position
+    const layoutSequence = ['right-image', 'text-only', 'left-image', 'text-only', 'right-image', 'left-image', 'text-only', 'full-bleed', 'right-image', 'text-only', 'left-image', 'text-only'];
+
+    return slides.map((slide, index) => {
+      const slideType = slide.slideType || 'content';
+      const hasSuggestion = !!(slide.visualSuggestion && slide.visualSuggestion.trim().length > 3);
+
+      // Smart layout selection
+      let layout: string;
+      if (index === 0 || slideType === 'title') {
+        // Title slide: full-bleed or centered — always impactful
+        layout = 'title-focus';
+      } else if (slideType === 'quote') {
+        // Quote slides: always centered, no image
+        layout = 'centered';
+      } else if (slideType === 'summary' || index === slides.length - 1) {
+        // Last slide / summary: text-only with large text
+        layout = 'text-only';
+      } else if (slideType === 'data') {
+        // Data slides: left-image so stats are prominent on right
+        layout = hasSuggestion ? 'left-image' : 'text-only';
+      } else if (!hasSuggestion) {
+        // No image suggestion: text-only
+        layout = 'text-only';
+      } else {
+        // Content slides: rotate through variety
+        layout = layoutSequence[index % layoutSequence.length] || 'right-image';
       }
-    }));
+
+      return {
+        id: slide.id || `slide-${index}`,
+        title: slide.title || `Slide ${index + 1}`,
+        subtitle: slide.subtitle || undefined,
+        slideType,
+        bullets: Array.isArray(slide.bullets) ? slide.bullets : [],
+        visualSuggestion: slide.visualSuggestion || '',
+        speakerNotes: slide.speakerNotes || '',
+        imageUrl: slide.imageUrl || '',
+        revisedPrompt: slide.revisedPrompt || '',
+        style: {
+          backgroundColor: themeData.background,
+          iconType: getIconSuggestion(slide.title, slide.visualSuggestion),
+          layout: layout as any,
+          colorScheme: themeData.id,
+          accentColor: themeData.accentColor,
+          textColor: themeData.textColor,
+          titleFont: themeData.titleFont,
+          bodyFont: themeData.bodyFont,
+          cardDesign: themeData.cardDesign,
+        }
+      };
+    });
   };
   
   // Automatic Image Generation Function
