@@ -196,7 +196,7 @@ export const themes: Theme[] = [
     cardDesign: 'rgba(255, 255, 255, 0.7)',
     isDark: false,
     categories: ['academic', 'modern']
-  }
+  },
   // ── EDUCATOR COLLECTION ──────────────────────────────────────────────────────
   {
     id: 'nova',
