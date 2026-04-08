@@ -539,7 +539,11 @@ Mitigation Strategies:
                   key={n}
                   type="button"
                   onClick={() => setNumSlides(n)}
-                  className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${numSlides === n ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/50 hover:bg-muted'}`}
+                  className="flex-1 py-2 rounded-lg border text-sm font-medium transition-all"
+                  style={numSlides === n
+                    ? { backgroundColor: '#7c3aed', color: '#ffffff', borderColor: '#7c3aed' }
+                    : { borderColor: '#e5e7eb', backgroundColor: 'transparent' }
+                  }
                 >
                   {n}
                 </button>

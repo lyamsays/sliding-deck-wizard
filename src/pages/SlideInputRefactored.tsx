@@ -541,7 +541,9 @@ const SlideInput = () => {
   };
   
   const onTryExample = () => {
-    setSlideContent(`Introduction to Psychology — Memory & Learning
+    const examples = [
+      // 1. Psychology — Memory & Learning
+      `Introduction to Psychology — Memory & Learning
 PSYC 101 | Week 7 | Professor Sarah Chen
 
 THE THREE STAGES OF MEMORY
@@ -564,15 +566,92 @@ Elaborative Interrogation: Asking "why" and "how" while studying forces deeper p
 
 WHY WE FORGET
 Interference Theory: New memories interfere with old ones (retroactive) and vice versa (proactive). This is why studying similar subjects back-to-back hurts both.
-Motivated Forgetting: The prefrontal cortex actively suppresses hippocampal retrieval of painful memories — modern neuroscience confirms Freud's repression theory.
+Motivated Forgetting: The prefrontal cortex actively suppresses hippocampal retrieval of painful memories.
 Decay Theory: Memory traces fade over time without rehearsal, though interference is now considered the stronger factor.
 
 PRACTICAL STUDY STRATEGIES FOR STUDENTS
 1. Practice retrieval daily — close your notes and try to recall key concepts without looking
-2. Sleep 7-9 hours before exams — memory consolidation happens during slow-wave and REM sleep
-3. Avoid studying similar subjects consecutively — reduces proactive and retroactive interference
-4. Teach concepts to others — the Protégé Effect improves your own retention by 90%
-5. Use spaced repetition apps like Anki — they automate the optimal review schedule`);
+2. Sleep 7-9 hours before exams — consolidation happens during slow-wave and REM sleep
+3. Avoid studying similar subjects consecutively — reduces interference
+4. Teach concepts to others — the Protégé Effect improves your own retention by 90%`,
+
+      // 2. Macroeconomics — Market Structures & Competition
+      `Principles of Macroeconomics — Market Structures & Competition
+ECON 201 | Week 9 | Professor James Okafor
+
+MARKET STRUCTURES OVERVIEW
+
+Perfect Competition: Many sellers, identical products, free entry and exit. Price equals marginal cost in the long run. Firms are price takers — no individual seller influences the market price. Real-world example: agricultural commodities like wheat.
+
+Monopolistic Competition: Many sellers, differentiated products, free entry. Short-run profits eroded by entry in the long run. Examples: restaurants, clothing brands, hairdressers. Firms have some pricing power through differentiation.
+
+Oligopoly: Few dominant sellers, high barriers to entry, strategic interdependence. Decisions of one firm directly affect others — firms must anticipate rivals' responses. Examples: airlines, smartphones (Apple vs Samsung), oil (OPEC).
+
+Monopoly: Single seller with no close substitutes, high barriers to entry. Sets price above marginal cost, creating deadweight loss. Examples: utility companies, patented pharmaceuticals, De Beers diamonds (historically).
+
+KEY ECONOMIC CONCEPTS
+
+Deadweight Loss: The efficiency cost of monopoly power. When P > MC, mutually beneficial transactions don't occur. Estimated at $100B+ annually in the US economy from monopolistic pricing.
+
+Price Discrimination: Charging different prices to different consumers based on willingness to pay. First-degree (perfect): individualized pricing. Third-degree: student/senior discounts, airline fare classes. Increases producer surplus, reduces deadweight loss.
+
+Herfindahl-Hirschman Index (HHI): Market concentration measure. Sum of squared market shares. HHI below 1,500: competitive market. HHI above 2,500: highly concentrated — triggers antitrust review.
+
+GAME THEORY IN OLIGOPOLY
+
+Prisoner's Dilemma: Firms have incentive to undercut each other even when cooperation would maximize joint profits. This drives competitive pricing despite oligopolistic structure.
+
+Nash Equilibrium: Each firm's strategy is optimal given competitors' strategies. Neither player benefits from unilaterally changing their decision. Airline pricing wars often reach Nash equilibria.
+
+ANTITRUST POLICY
+Sherman Act (1890): Prohibits restraint of trade and monopolization.
+Clayton Act (1914): Bans price discrimination that reduces competition.
+FTC Act (1914): Establishes Federal Trade Commission to enforce competition law.
+Recent cases: Google (search monopoly, $1.7B EU fine), Meta (Instagram/WhatsApp acquisitions).`,
+
+      // 3. Molecular Biology — DNA Replication & Gene Expression
+      `Molecular Biology — DNA Replication & Gene Expression
+BIOL 302 | Week 5 | Professor Amara Diallo
+
+DNA REPLICATION
+
+Semiconservative Replication: Each daughter DNA molecule retains one original strand. Confirmed by Meselson-Stahl experiment (1958) using N-15/N-14 isotope labeling. The most elegant experiment in molecular biology.
+
+Key Enzymes in Replication:
+- DNA Helicase: Unwinds and separates the double helix at replication forks. Moves at 1,000 bp/second in prokaryotes.
+- DNA Primase: Synthesizes short RNA primers (5-10 nucleotides) needed to initiate synthesis. DNA polymerase cannot start de novo.
+- DNA Polymerase III: Primary replication enzyme in prokaryotes. Adds nucleotides 5' to 3' only — explains why one strand is synthesized continuously (leading) and one discontinuously (lagging).
+- DNA Ligase: Joins Okazaki fragments on the lagging strand by sealing nicks in the phosphodiester backbone.
+
+Okazaki Fragments: Short DNA segments (1,000-2,000 bp in prokaryotes, 100-200 bp in eukaryotes) synthesized on the lagging strand. Each requires its own RNA primer. Discovered by Reiji and Tsuneko Okazaki in 1968.
+
+GENE EXPRESSION: TRANSCRIPTION
+
+RNA Polymerase II: Transcribes protein-coding genes in eukaryotes. Requires general transcription factors (TFIID, TFIIH) to assemble at the promoter. Does not need a primer — unlike DNA polymerase.
+
+Promoter Elements:
+- TATA Box: Located ~30 bp upstream of transcription start. Bound by TFIID (TBP subunit). Determines precise start site.
+- Enhancers: Can be thousands of bp upstream or downstream. Bound by activators that loop DNA to contact Mediator complex. Increase transcription rate up to 1,000-fold.
+
+mRNA Processing in Eukaryotes:
+- 5' Capping: 7-methylguanosine cap added co-transcriptionally. Protects mRNA from exonucleases. Required for ribosome recognition.
+- Splicing: Introns removed by the spliceosome (5 snRNPs + ~200 proteins). Alternative splicing generates ~100,000 proteins from ~20,000 genes.
+- Poly-A Tail: 200+ adenine nucleotides added to 3' end. Increases mRNA stability and assists nuclear export.
+
+TRANSLATION
+
+Ribosome Structure: Large (60S) + Small (40S) subunits in eukaryotes. Three tRNA binding sites: A (aminoacyl), P (peptidyl), E (exit). Peptide bond formation catalyzed by 23S rRNA — the ribosome is a ribozyme.
+
+Genetic Code Properties:
+- Degenerate: 64 codons encode 20 amino acids — most amino acids have multiple codons (redundancy)
+- Unambiguous: Each codon specifies exactly one amino acid
+- Nearly universal: Same code in bacteria, plants, fungi, and humans (with minor exceptions in mitochondria)
+
+POST-TRANSLATIONAL MODIFICATION
+Phosphorylation, glycosylation, ubiquitination — regulate protein activity, localization, and degradation lifetime.`
+    ];
+    const randomExample = examples[Math.floor(Math.random() * examples.length)];
+    setSlideContent(randomExample);
   };
   
   return (
