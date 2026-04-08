@@ -432,28 +432,30 @@ Mitigation Strategies:
                   <SelectValue placeholder="Select your profession" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Consultant">Management Consultant</SelectItem>
-                  <SelectItem value="Educator">Professor/Educator</SelectItem>
-                  <SelectItem value="Executive">Business Executive</SelectItem>
-                  <SelectItem value="Student">Student</SelectItem>
-                  <SelectItem value="Other">Other Professional</SelectItem>
+                  <SelectItem value="Professor">Professor / Lecturer</SelectItem>
+                  <SelectItem value="K-12 Teacher">K-12 Teacher</SelectItem>
+                  <SelectItem value="Researcher">Researcher</SelectItem>
+                  <SelectItem value="Corporate Trainer">Corporate Trainer</SelectItem>
+                  <SelectItem value="Consultant">Consultant</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="purpose">Purpose</Label>
+              <Label htmlFor="purpose">Audience</Label>
               <Select value={purpose} onValueChange={setPurpose}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Presentation purpose" />
+                  <SelectValue placeholder="Who are you presenting to?" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Client Meeting">Client Meeting</SelectItem>
-                  <SelectItem value="Board Presentation">Board Presentation</SelectItem>
-                  <SelectItem value="Academic Lecture">Academic Lecture</SelectItem>
-                  <SelectItem value="Team Update">Team Update</SelectItem>
-                  <SelectItem value="Conference Talk">Conference Talk</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="Undergraduates">Undergraduates</SelectItem>
+                  <SelectItem value="Graduate Students">Graduate Students</SelectItem>
+                  <SelectItem value="PhD Students">PhD Students</SelectItem>
+                  <SelectItem value="High School Students">High School Students</SelectItem>
+                  <SelectItem value="Middle School Students">Middle School Students</SelectItem>
+                  <SelectItem value="Corporate Professionals">Corporate Professionals</SelectItem>
+                  <SelectItem value="Executive Leadership">Executive Leadership</SelectItem>
+                  <SelectItem value="General Audience">General Audience</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -465,11 +467,11 @@ Mitigation Strategies:
                   <SelectValue placeholder="Select tone" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Professional">Professional</SelectItem>
-                  <SelectItem value="Formal">Formal</SelectItem>
-                  <SelectItem value="Casual">Casual</SelectItem>
                   <SelectItem value="Academic">Academic</SelectItem>
-                  <SelectItem value="Creative">Creative</SelectItem>
+                  <SelectItem value="Professional">Professional</SelectItem>
+                  <SelectItem value="Conversational">Conversational</SelectItem>
+                  <SelectItem value="Engaging">Engaging</SelectItem>
+                  <SelectItem value="Formal">Formal</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -539,25 +541,6 @@ Mitigation Strategies:
               </div>
             </div>
             
-            {profession === "Consultant" && (
-              <div className="space-y-2">
-                <Label htmlFor="framework">Consulting Framework (Optional)</Label>
-                <Select value={framework} onValueChange={setFramework}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a framework" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="None">None</SelectItem>
-                    <SelectItem value="BCG Matrix">BCG Growth-Share Matrix</SelectItem>
-                    <SelectItem value="Porter's Five Forces">Porter's Five Forces</SelectItem>
-                    <SelectItem value="SWOT">SWOT Analysis</SelectItem>
-                    <SelectItem value="McKinsey 7S">McKinsey 7S Framework</SelectItem>
-                    <SelectItem value="Value Chain">Value Chain Analysis</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
             {/* Theme Selection */}
             <div className="space-y-3">
               <Label className="font-medium">Presentation Theme</Label>

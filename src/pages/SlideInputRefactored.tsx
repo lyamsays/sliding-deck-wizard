@@ -46,11 +46,11 @@ const SlideInput = () => {
   const [error, setError] = useState<string | null>(null);
   
   // Form state
-  const [profession, setProfession] = useState<string>("Consultant");
+  const [profession, setProfession] = useState<string>("Professor");
   const [purpose, setPurpose] = useState<string>("");
   const [tone, setTone] = useState<string>("Professional");
   const [framework, setFramework] = useState<string>("None");
-  const [autoGenerateImages, setAutoGenerateImages] = useState(true);
+  const [autoGenerateImages, setAutoGenerateImages] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<string>('creme');
   
   // UI state
@@ -372,12 +372,13 @@ const SlideInput = () => {
       const responsePromise = supabase.functions.invoke('generate-slides', {
         body: { 
           content: slideContent,
-          profession: profession,
-          purpose: purpose,
+          role: profession,
+          audience: purpose,
           tone: tone,
-          framework: profession === "Consultant" ? framework : undefined,
+          purpose: purpose,
           themeId: selectedTheme,
-          autoGenerateImages: autoGenerateImages
+          autoGenerateImages: autoGenerateImages,
+          numSlides: 8,
         }
       });
       
@@ -424,7 +425,7 @@ const SlideInput = () => {
       });
       
       // Start automatic image generation if enabled (or always for better UX)
-      if (autoGenerateImages || true) { // Always generate images automatically
+      if (autoGenerateImages) {
         toast({
           title: "🎨 Starting image generation",
           description: "Creating professional visuals for your slides...",

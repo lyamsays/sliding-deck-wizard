@@ -1,78 +1,119 @@
-
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-(globalThis as any).Deno.serve(async (req: Request) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
 
-  try {
-    const OPENAI_API_KEY = (globalThis as any).Deno?.env?.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      console.error('Missing OpenAI API key');
-      throw new Error('Missing OpenAI API key');
+function buildSystemPrompt(role: string, audience: string, tone: string, purpose: string): string {
+  const roleContext: Record<string, string> = {
+    'Professor': 'a university professor preparing lecture slides for higher education students',
+    'K-12 Teacher': 'a K-12 classroom teacher creating engaging lesson presentations',
+    'Corporate Trainer': 'a corporate trainer developing professional development content',
+    'Researcher': 'an academic researcher presenting findings to a scholarly audience',
+    'Consultant': 'a management consultant preparing client-facing strategy presentations',
+  };
+
+  const audienceContext: Record<string, string> = {
+    'Undergraduates': 'undergraduate students (ages 18-22) who need foundational concepts explained clearly with concrete examples',
+    'Graduate Students': 'graduate-level students with strong domain knowledge who expect rigorous, detailed content',
+    'PhD Students': 'doctoral researchers who expect precise academic language, citations, and methodological depth',
+    'High School Students': 'high school students (ages 14-18) who need engaging, accessible explanations with relatable examples',
+    'Middle School Students': 'middle school students (ages 11-14) who need simple, visual, and highly engaging content',
+    'Corporate Professionals': 'business professionals who value concise, data-driven insights with clear action items',
+    'Executive Leadership': 'C-suite executives who need high-level strategic summaries with strong ROI framing',
+    'General Audience': 'a general mixed audience — use clear, jargon-free language and strong visuals',
+  };
+
+  const purposeContext: Record<string, string> = {
+    'Lecture / Class': 'a classroom lecture — structure content for progressive learning with clear takeaways per slide',
+    'Research Presentation': 'an academic research presentation — include methodology, findings, and implications',
+    'Course Introduction': 'a course/syllabus introduction — set expectations, outline topics, and motivate the subject',
+    'Exam Review': 'an exam review session — emphasize key concepts, definitions, formulas, and common pitfalls',
+    'Workshop': 'an interactive workshop — include activities, discussion prompts, and hands-on exercises',
+    'Keynote / Talk': 'a keynote presentation — build a compelling narrative arc with memorable moments',
+    'Consulting Report': 'a client-facing consulting presentation — lead with the insight, support with data, end with recommendations',
+    'Conference Paper': 'an academic conference presentation — concise, precise, and peer-credible',
+  };
+
+  const toneMap: Record<string, string> = {
+    'Academic': 'Use formal academic language, precise terminology, and cite evidence where relevant.',
+    'Conversational': 'Use a warm, accessible tone. Write as if speaking directly to the audience.',
+    'Professional': 'Use clear, polished business language. Confident and authoritative.',
+    'Engaging': 'Use dynamic, energetic language. Ask rhetorical questions. Create curiosity.',
+    'Formal': 'Use strictly formal language, appropriate for official or institutional settings.',
+  };
+
+  const roleDesc = roleContext[role] || `a professional creating a ${purpose || 'presentation'}`;
+  const audienceDesc = audienceContext[audience] || 'a general audience';
+  const purposeDesc = purposeContext[purpose] || 'a professional presentation';
+  const toneDesc = toneMap[tone] || 'Use a professional, clear tone.';
+
+  return `You are an expert presentation designer and educator working as ${roleDesc}.
+
+YOUR TASK: Transform the provided content into a polished, professional slide deck tailored for ${audienceDesc}.
+
+This presentation is for ${purposeDesc}.
+
+TONE: ${toneDesc}
+
+SLIDE DESIGN PRINCIPLES:
+- Each slide must have ONE clear idea. No information overload.
+- Titles: maximum 8 words, action-oriented or concept-focused
+- Bullets: maximum 4 per slide, each under 20 words, concrete and specific
+- Use real numbers, examples, and evidence from the content — never add vague generalities
+- The first slide must be a strong title/overview slide
+- The last slide must be a memorable conclusion or call-to-action
+- Vary slide types: title slides, content slides, data slides, quote slides, summary slides
+
+SPEAKER NOTES — THIS IS CRITICAL:
+Write speaker notes that actually help the presenter TEACH, not just repeat the bullets.
+- Explain the "why" behind each point
+- Include transition phrases to the next slide
+- Suggest where to pause for questions or discussion
+- Add real-world examples or anecdotes the presenter can use
+- For educators: include pedagogical cues ("This is a good moment to ask students...")
+- Keep notes 2-4 sentences per slide — enough to guide, not a script
+
+IMAGE SUGGESTIONS:
+- Suggest a specific, concrete Unsplash-searchable photograph or illustration
+- Example: "aerial view of university campus at sunset" not "education image"
+- Example: "data scientist working at computer with multiple screens" not "technology"
+- Be specific enough that a photo search will return a great, relevant result
+
+OUTPUT FORMAT — Return ONLY valid JSON, no markdown, no backticks, no explanation text before or after:
+{
+  "deckTitle": "The main title of the presentation",
+  "slides": [
+    {
+      "title": "Slide title max 8 words",
+      "subtitle": "Optional subtitle for title slides or null",
+      "bullets": [
+        "First specific evidence-based bullet point",
+        "Second bullet with concrete detail",
+        "Third bullet that is actionable or insightful"
+      ],
+      "speakerNotes": "Speaker notes that help the presenter teach this slide effectively. Include transitions, examples, and pedagogical cues for the specific audience.",
+      "visualSuggestion": "Specific searchable Unsplash photo description",
+      "slideType": "title"
     }
+  ]
+}
 
-    const requestData = await req.json();
-    console.log('Received request data:', JSON.stringify(requestData, null, 2));
-    
-    const { content, mode } = requestData;
+slideType must be one of: title, content, data, quote, summary, split`;
+}
 
-    // Handle narrative mode generation
-    if (mode === "narrative") {
-      console.log("Generating narrative for slides...");
+function buildNarrativeSystemPrompt(): string {
+  return `You are a professional presentation coach and academic writing expert.
 
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "system",
-              content: `You are a professional AI presentation coach that helps create compelling narratives for slide decks.
+Analyze the provided slide deck and generate two things:
 
-When a user activates Narrative Mode, your task is to analyze the slide deck they created.
+1. A PITCH SUMMARY (2-3 paragraphs) — an opening monologue the presenter uses to introduce the entire presentation. Written in first person, as if the presenter is speaking. Persuasive, clear, and appropriate for the audience.
 
-You must return two outputs:
+2. SLIDE-BY-SLIDE SPEAKER NOTES — for each slide, 2-4 sentences the presenter should say. Written in first person, natural spoken language. Expand on the bullets rather than repeating them. Include transitions between slides. For educational content, include moments to pause or check understanding.
 
----
-
-1. 🎙 **Pitch Summary** (2–3 paragraphs)  
-This is an opening monologue the presenter can use to introduce the entire presentation.  
-It should:
-- Summarize the topic and purpose of the deck
-- Flow naturally, using persuasive and confident language
-- Be clear and professional — suitable for clients, investors, or students
-
----
-
-2. 📝 **Slide-by-Slide Speaker Notes**  
-For each slide:
-- Write a short paragraph (1–3 sentences) of what to say while presenting the slide
-- Write in first person perspective as if you are the presenter
-- Use language that is engaging and easy to deliver verbally
-- Maintain a consistent and logical tone across slides
-- Include natural transitions between slides
-
----
-
-**Tone Guidelines:**  
-- Always professional, clear, and natural to speak  
-- Adapt slightly to the content (academic, consulting, business pitch)  
-- Avoid repeating bullet points verbatim — *expand, explain, or reframe them*
-- Focus on what the presenter should SAY, not what they should DO
-- Write in first person perspective, as if the presenter is speaking
-
-Your response must follow this exact format:
+Return ONLY this exact format:
 
 🎙 Pitch Summary:
 [Your pitch summary paragraphs]
@@ -80,228 +121,145 @@ Your response must follow this exact format:
 📝 Speaker Notes:
 
 **Slide 1 – [Title]:**
-[Notes written in first person as if the presenter is speaking]
+[Notes written in first person]
 
 **Slide 2 – [Title]:**
-[Notes written in first person as if the presenter is speaking]
+[Notes written in first person]`;
+}
 
-And so on for all slides.`
-            },
-            {
-              role: "user",
-              content
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 2000,
+(globalThis as any).Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const ANTHROPIC_API_KEY = (globalThis as any).Deno?.env?.get('ANTHROPIC_API_KEY');
+    if (!ANTHROPIC_API_KEY) {
+      console.error('Missing ANTHROPIC_API_KEY');
+      throw new Error('Missing ANTHROPIC_API_KEY — add it to Supabase Edge Function secrets');
+    }
+
+    const requestData = await req.json();
+    const { content, mode } = requestData;
+
+    if (!content || content.trim() === '') {
+      throw new Error('Content is required to generate slides');
+    }
+
+    // ── NARRATIVE MODE ──────────────────────────────────────────────
+    if (mode === 'narrative') {
+      console.log('generate-slides: narrative mode');
+      const response = await fetch(ANTHROPIC_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: ANTHROPIC_MODEL,
+          max_tokens: 2048,
+          system: buildNarrativeSystemPrompt(),
+          messages: [{ role: 'user', content }],
         }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        console.error('OpenAI API error:', error);
-        throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+        const err = await response.json();
+        throw new Error(`Claude API error: ${err.error?.message || 'Unknown error'}`);
       }
 
       const result = await response.json();
-      const responseText = result.choices[0].message?.content || '';
+      const responseText = result.content?.[0]?.text || '';
 
-      console.log("Generated narrative response");
-
-      // Parse the response to separate pitch summary and slide notes
       const pitchSummaryMatch = responseText.match(/🎙 Pitch Summary:([\s\S]*?)(?:📝 Speaker Notes:)/);
       const pitchSummary = pitchSummaryMatch ? pitchSummaryMatch[1].trim() : '';
-
-      // Extract individual slide notes
       const slideNotesSection = responseText.split('📝 Speaker Notes:')[1] || '';
       const slideNoteMatches = slideNotesSection.match(/\*\*Slide \d+ – .*?\*\*:([\s\S]*?)(?=\*\*Slide \d+|$)/g) || [];
-      
       const slideNotes = slideNoteMatches.map((match: string) => {
-        const noteContent = match.split('*:')[1] || '';
-        return noteContent.trim();
+        return (match.split('*:')[1] || '').trim();
       });
 
       return new Response(
-        JSON.stringify({
-          narrative: {
-            pitchSummary,
-            slideNotes,
-          }
-        }),
+        JSON.stringify({ narrative: { pitchSummary, slideNotes } }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // For all other modes, continue with regular slide generation
+    // ── SLIDE GENERATION MODE ────────────────────────────────────────
     const {
-      profession = "Consultant",
-      purpose = "",
-      tone = "Professional", 
-      framework,
-      themeId = "creme",
-      editInstruction,
-      singleSlide,
-      autoGenerateImages = true
+      role = 'Professor',
+      audience = 'Undergraduates',
+      tone = 'Academic',
+      purpose = 'Lecture / Class',
+      numSlides = 8,
     } = requestData;
 
-    console.log("generate-slides: mode", mode);
-    console.log("generate-slides: profession", profession);
-    console.log("generate-slides: purpose", purpose);
-    console.log("generate-slides: tone", tone);
-    console.log("generate-slides: framework", framework);
-    console.log("generate-slides: themeId", themeId);
-    console.log("generate-slides: editInstruction", editInstruction);
-    console.log("generate-slides: singleSlide", singleSlide);
-    console.log("generate-slides: autoGenerateImages", autoGenerateImages);
+    console.log(`generate-slides: role=${role} | audience=${audience} | purpose=${purpose} | tone=${tone}`);
 
-    if (!content || content.trim() === '') {
-      console.error('No content provided');
-      throw new Error('Content is required to generate slides');
-    }
+    const systemPrompt = buildSystemPrompt(role, audience, tone, purpose);
+    const userMessage = `Create a ${numSlides}-slide presentation from the content below. Extract key ideas, structure them logically, and write slides that genuinely help the audience learn and retain this material.
 
-    let prompt = `You are a world-class presentation expert and copywriter with expertise in ${profession}. Create slides that are concise, impactful, and audience-focused.
+CONTENT:
+---
+${content}
+---
 
-Topic: ${content}
-Target audience: ${profession} professionals
-Tone: ${tone}
-Purpose: ${purpose}
+Return ONLY valid JSON. No markdown. No extra text outside the JSON object.`;
 
-Structure each slide with:
-- Slide title (max 8 words)
-- 2–4 bullet points or sentences (each under 20 words)
-- Optional: vivid quote or compelling statistic
-
-Focus on clarity, impact, and professional excellence. Generate substantive, relevant content that delivers immediate value to the audience.`;
-
-    if (framework && profession === "Consultant") {
-      prompt += ` Use the ${framework} framework.`;
-    }
-
-    if (editInstruction) {
-      prompt = `You are a professional presentation editor. Edit the following content: ${content}.
-        Here are the instructions: ${editInstruction}.
-        Return the edited content.`;
-    }
-
-    console.log("Prompt being used:", prompt);
-
-    // Using the fetch API directly instead of the OpenAI SDK
-    const completion = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
+    const response = await fetch(ANTHROPIC_API_URL, {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: `You are a world-class presentation expert and copywriter specialized in ${profession} presentations.
-            
-            EXPERT INSTRUCTIONS:
-            1. Create concise, impactful slides that are audience-focused
-            2. Each slide title: maximum 8 words, compelling and clear
-            3. Each bullet point: under 20 words, actionable and specific
-            4. Include vivid quotes or statistics when relevant
-            5. Professional language that delivers immediate value
-            
-            Topic: ${content}
-            Target audience: ${profession} professionals
-            Presentation Purpose: ${purpose}
-            Tone: ${tone}
-            ${framework && profession === "Consultant" ? `Framework: ${framework}` : ''}
-            
-            For visual suggestions, act as an AI image designer creating sleek, modern slide backgrounds:
-            - Style: modern, abstract, clean
-            - Color palette: muted tones with slight contrast
-            - Composition: leave space for text, avoid faces
-            - Format: widescreen presentation layout
-            
-            Return short image prompts that DALL·E can understand (no words in image).
-            
-            YOU MUST RETURN VALID JSON WITHOUT ANY MARKDOWN FORMATTING.
-            DO NOT WRAP THE JSON IN CODE BLOCKS OR BACKTICKS.
-            
-            Return format:
-            {
-              "slides": [
-                {
-                  "title": "Specific slide title based on context",
-                  "bullets": [
-                    "Specific, actionable bullet point",
-                    "Another relevant bullet point",
-                    "Third meaningful bullet point"
-                  ],
-                  "visualSuggestion": "Specific image suggestion that matches the content",
-                  "speakerNotes": "Detailed speaker notes explaining this slide's content"
-                }
-              ]
-            }`
-          },
-          { role: "user", content: prompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 2048,
+        model: ANTHROPIC_MODEL,
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }],
       }),
     });
 
-    if (!completion.ok) {
-      const error = await completion.json();
-      console.error('OpenAI API error:', error);
-      console.error('Response status:', completion.status);
-      console.error('Response statusText:', completion.statusText);
-      throw new Error(`OpenAI API error (${completion.status}): ${error.error?.message || completion.statusText || 'Unknown error'}`);
+    if (!response.ok) {
+      const err = await response.json();
+      console.error('Claude API error:', err);
+      throw new Error(`Claude API error (${response.status}): ${err.error?.message || 'Unknown error'}`);
     }
 
-    const result = await completion.json();
-    const response = result.choices[0].message?.content;
+    const result = await response.json();
+    const rawText = result.content?.[0]?.text || '';
+    console.log('generate-slides: response length:', rawText.length);
 
-    if (!response) {
-      console.error('No response from OpenAI');
-      throw new Error("No response from OpenAI");
-    }
+    let cleanedText = rawText.trim();
+    const fenceMatch = cleanedText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (fenceMatch) cleanedText = fenceMatch[1];
 
-    console.log("Response from OpenAI:", response);
-
+    let parsed: any;
     try {
-      // Clean the response before parsing to handle cases where it might be wrapped in markdown code blocks
-      let cleanedResponse = response;
-      // Remove markdown code block formatting if present
-      const codeBlockMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (codeBlockMatch) {
-        cleanedResponse = codeBlockMatch[1];
-        console.log("Cleaned response from markdown:", cleanedResponse);
-      }
-
-      const parsedResponse = JSON.parse(cleanedResponse);
-
-      if (!parsedResponse || !parsedResponse.slides) {
-        console.error('Invalid response format:', parsedResponse);
-        throw new Error("Invalid response format from OpenAI");
-      }
-
-      console.log("Successfully parsed response, returning slides:", parsedResponse.slides.length);
-
-      return new Response(
-        JSON.stringify(parsedResponse),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    } catch (parseError) {
-      console.error("Error parsing JSON response:", parseError);
-      console.error("Raw response from OpenAI:", response);
-      throw new Error("Failed to parse JSON response from OpenAI");
+      parsed = JSON.parse(cleanedText);
+    } catch (parseErr) {
+      console.error('JSON parse failed. Raw:', rawText.substring(0, 300));
+      throw new Error('Failed to parse response from Claude. Please try again.');
     }
-  } catch (error) {
-    console.error("Error processing request:", error);
+
+    if (!parsed.slides || !Array.isArray(parsed.slides) || parsed.slides.length === 0) {
+      throw new Error('Invalid response from Claude — no slides found');
+    }
+
+    console.log('generate-slides: success —', parsed.slides.length, 'slides generated');
+
     return new Response(
-      JSON.stringify({
-        error: (error as Error).message || "An error occurred during processing."
-      }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify(parsed),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('generate-slides error:', error);
+    return new Response(
+      JSON.stringify({ error: (error as Error).message || 'An error occurred during slide generation.' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

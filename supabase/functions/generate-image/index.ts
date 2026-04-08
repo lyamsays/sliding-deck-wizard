@@ -1,91 +1,124 @@
-
-
-import "https://deno.land/x/xhr@0.3.0/mod.ts";
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function extractSearchQuery(prompt: string, slideTitle: string): string {
+  // Use slide title as primary search signal, clean it up for Unsplash
+  const base = slideTitle && slideTitle.trim().length > 3 ? slideTitle : prompt;
+  
+  // Remove academic/presentation-specific words that won't help image search
+  const cleaned = base
+    .replace(/\b(slide|presentation|lecture|chapter|module|section|week|part)\b/gi, '')
+    .replace(/\b(introduction|overview|summary|conclusion|review)\b/gi, '')
+    .replace(/[^a-zA-Z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return cleaned.length > 3 ? cleaned : prompt.substring(0, 60);
+}
+
 (globalThis as any).Deno.serve(async (req: Request) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log("generate-image: Handling CORS preflight");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { prompt } = await req.json();
-    console.log("generate-image: Received prompt:", prompt);
-    
-    if (!prompt || prompt.trim() === '') {
-      console.error("generate-image: Empty prompt provided");
+    const UNSPLASH_ACCESS_KEY = (globalThis as any).Deno?.env?.get('UNSPLASH_ACCESS_KEY');
+    if (!UNSPLASH_ACCESS_KEY) {
+      throw new Error('Missing UNSPLASH_ACCESS_KEY — add it to Supabase Edge Function secrets');
+    }
+
+    const { prompt, slideTitle } = await req.json();
+
+    if (!prompt && !slideTitle) {
       return new Response(
-        JSON.stringify({ error: 'Prompt cannot be empty' }),
+        JSON.stringify({ error: 'prompt or slideTitle is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Use globalThis to access Deno in a more compatible way
-    const openAIApiKey = (globalThis as any).Deno?.env?.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      console.error("generate-image: Missing OPENAI_API_KEY");
-      throw new Error('OPENAI_API_KEY is not set');
-    }
+    const searchQuery = extractSearchQuery(prompt || '', slideTitle || '');
+    console.log(`generate-image: searching Unsplash for: "${searchQuery}"`);
 
-    // Enhanced prompt engineering for professional presentations
-    const enhancedPrompt = `Professional presentation image: ${prompt}. Style: Clean, modern, corporate aesthetic with sophisticated color palette. High resolution, photorealistic quality suitable for business presentations. Minimal distractions, focus on clarity and professional appeal.`;
-    
-    console.log("generate-image: Calling GPT-Image-1 API with enhanced prompt");
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
+    const url = new URL('https://api.unsplash.com/search/photos');
+    url.searchParams.set('query', searchQuery);
+    url.searchParams.set('per_page', '5');
+    url.searchParams.set('orientation', 'landscape');
+    url.searchParams.set('content_filter', 'high');
+
+    const response = await fetch(url.toString(), {
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
+        'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`,
+        'Accept-Version': 'v1',
       },
-      body: JSON.stringify({
-        model: "gpt-image-1",
-        prompt: enhancedPrompt,
-        size: "1536x1024",
-        quality: "high",
-        background: "auto",
-        output_format: "webp",
-        output_compression: 90,
-      }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("generate-image: DALL-E API Error:", errorData);
-      return new Response(
-        JSON.stringify({ 
-          error: `DALL-E API error: ${errorData.error?.message || 'Unknown error'}`,
-          code: 'api_error'
-        }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      const errorText = await response.text();
+      console.error('Unsplash API error:', response.status, errorText);
+      throw new Error(`Unsplash API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log("generate-image: Image generated successfully");
-    
-    // GPT-Image-1 returns base64 directly, no need for data wrapper
-    const imageData = data.data || data;
-    const base64Image = typeof imageData === 'string' ? imageData : imageData[0];
-    
+
+    if (!data.results || data.results.length === 0) {
+      // Fallback: try a simpler, broader search
+      console.log('generate-image: no results, trying fallback search');
+      const fallbackQuery = searchQuery.split(' ').slice(0, 2).join(' ');
+      const fallbackUrl = new URL('https://api.unsplash.com/search/photos');
+      fallbackUrl.searchParams.set('query', fallbackQuery || 'education professional');
+      fallbackUrl.searchParams.set('per_page', '3');
+      fallbackUrl.searchParams.set('orientation', 'landscape');
+
+      const fallbackResponse = await fetch(fallbackUrl.toString(), {
+        headers: { 'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`, 'Accept-Version': 'v1' },
+      });
+
+      if (fallbackResponse.ok) {
+        const fallbackData = await fallbackResponse.json();
+        if (fallbackData.results && fallbackData.results.length > 0) {
+          const photo = fallbackData.results[0];
+          return new Response(
+            JSON.stringify({
+              imageUrl: photo.urls.regular,
+              imageThumb: photo.urls.small,
+              photographer: photo.user.name,
+              photographerUrl: photo.user.links.html,
+              unsplashUrl: photo.links.html,
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ imageUrl: null, error: 'No images found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Pick the best result — prefer photos with good dimensions
+    const photo = data.results[0];
+
+    console.log(`generate-image: found photo by ${photo.user.name} — ${photo.urls.regular}`);
+
     return new Response(
-      JSON.stringify({ 
-        imageUrl: `data:image/webp;base64,${base64Image}`,
-        revisedPrompt: data.revised_prompt || enhancedPrompt
+      JSON.stringify({
+        imageUrl: photo.urls.regular,    // 1080px wide — perfect for slides
+        imageThumb: photo.urls.small,    // 400px — for previews
+        photographer: photo.user.name,
+        photographerUrl: photo.user.links.html,
+        unsplashUrl: photo.links.html,
+        altDescription: photo.alt_description,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-    
+
   } catch (error) {
-    console.error("generate-image: Error generating image:", error);
-    
+    console.error('generate-image error:', error);
     return new Response(
-      JSON.stringify({ error: (error as Error).message || 'An error occurred during image generation' }),
+      JSON.stringify({ error: (error as Error).message || 'Image fetch failed', imageUrl: null }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
