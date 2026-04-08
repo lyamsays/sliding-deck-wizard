@@ -1,12 +1,10 @@
-
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, MessageSquare } from "lucide-react";
+import { RefreshCw, Wand2, Pencil, ChevronRight } from "lucide-react";
 import { Slide } from '@/types/deck';
 
 interface SlideEditDialogProps {
@@ -16,197 +14,158 @@ interface SlideEditDialogProps {
   onSlideUpdate: (updatedSlide: Slide) => void;
 }
 
-const SlideEditDialog: React.FC<SlideEditDialogProps> = ({ 
-  open, 
-  onOpenChange, 
-  slide,
-  onSlideUpdate
-}) => {
-  const [customInstruction, setCustomInstruction] = useState("");
+const QUICK_ACTIONS = [
+  { id: 'refine',      label: 'Make bullets more concise',         icon: '✂️' },
+  { id: 'examples',   label: 'Add real-world examples',            icon: '🔬' },
+  { id: 'academic',   label: 'More academic & formal tone',        icon: '📖' },
+  { id: 'accessible', label: 'Simpler language for undergrads',    icon: '🎓' },
+  { id: 'evidence',   label: 'Add statistics & citations',         icon: '📊' },
+  { id: 'notes',      label: 'Improve speaker notes',              icon: '🎤' },
+];
+
+const SlideEditDialog: React.FC<SlideEditDialogProps> = ({ open, onOpenChange, slide, onSlideUpdate }) => {
+  const [mode, setMode] = useState<'choose' | 'custom' | 'regenerate'>('choose');
+  const [instruction, setInstruction] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [editMode, setEditMode] = useState<string>("preset");
   const { toast } = useToast();
-  
-  const handlePresetEdit = async (preset: string) => {
+
+  const reset = () => { setMode('choose'); setInstruction(''); };
+
+  const runEdit = async (instr: string, fullRegenerate = false) => {
     setIsProcessing(true);
-    
-    let instruction = "";
-    switch (preset) {
-      case "refine":
-        instruction = "Make these bullet points more concise and impactful, keeping the same overall meaning.";
-        break;
-      case "examples":
-        instruction = "Add relevant examples or case studies to these bullet points.";
-        break;
-      case "academic":
-        instruction = "Rewrite these bullet points in a more academic, formal tone with proper terminology.";
-        break;
-      case "casual":
-        instruction = "Rewrite these bullet points in a more conversational, accessible tone.";
-        break;
-      default:
-        instruction = "Improve these bullet points.";
-    }
-    
-    await processAiEdit(instruction);
-  };
-  
-  const handleCustomEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (customInstruction.trim()) {
-      setIsProcessing(true);
-      await processAiEdit(customInstruction);
-    }
-  };
-  
-  const processAiEdit = async (instruction: string) => {
     try {
-      // Create content for the AI to edit
-      const slideContent = {
-        title: slide.title,
-        bullets: slide.bullets
-      };
-      
-      toast({
-        title: "Processing edit",
-        description: "Applying your requested changes...",
-      });
-      
+      toast({ title: fullRegenerate ? 'Regenerating slide...' : 'Applying edit...' });
+
       const { data, error } = await supabase.functions.invoke('generate-slides', {
-        body: { 
-          content: JSON.stringify(slideContent),
-          editInstruction: instruction,
-          mode: "edit",
-          singleSlide: true
+        body: {
+          content: fullRegenerate
+            ? `Slide title: "${slide.title}"\n\nInstruction: ${instr}\n\nOriginal bullets:\n${(slide.bullets || []).map(b => `- ${b}`).join('\n')}`
+            : JSON.stringify({ title: slide.title, bullets: slide.bullets, speakerNotes: slide.speakerNotes }),
+          editInstruction: instr,
+          mode: 'edit',
+          singleSlide: true,
         }
       });
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      if (!data || !data.slides || !data.slides[0]) {
-        throw new Error("Invalid response from AI");
-      }
-      
-      // Update the slide with the AI-edited content
-      const updatedSlide = {
+
+      if (error) throw new Error(error.message);
+      if (!data?.slides?.[0]) throw new Error('No slide returned');
+
+      const updated: Slide = {
         ...slide,
-        bullets: data.slides[0].bullets,
+        ...(data.slides[0].title && fullRegenerate ? { title: data.slides[0].title } : {}),
+        bullets: data.slides[0].bullets || slide.bullets,
+        speakerNotes: data.slides[0].speakerNotes || slide.speakerNotes,
       };
-      
-      // If there are speaker notes in the response, add them
-      if (data.slides[0].speakerNotes) {
-        updatedSlide.speakerNotes = data.slides[0].speakerNotes;
-      }
-      
-      onSlideUpdate(updatedSlide);
-      
-      toast({
-        title: "Edit complete",
-        description: "The slide has been updated with AI suggestions.",
-      });
-      
+
+      onSlideUpdate(updated);
+      toast({ title: 'Slide updated ✓' });
       onOpenChange(false);
-    } catch (error) {
-      const err = error as Error;
-      console.error("Error editing slide with AI:", err);
-      toast({
-        title: "Edit failed",
-        description: err.message || "Failed to edit slide. Please try again.",
-        variant: "destructive"
-      });
+    } catch (err: any) {
+      toast({ title: 'Edit failed', description: err.message, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
     }
   };
-  
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { reset(); } onOpenChange(v); }}>
+      <DialogContent className="sm:max-w-[460px]">
         <DialogHeader>
-          <DialogTitle>Improve this slide with AI</DialogTitle>
+          <DialogTitle className="text-base">
+            {mode === 'choose' ? 'Edit slide' : mode === 'regenerate' ? 'Regenerate slide' : 'Custom instruction'}
+          </DialogTitle>
         </DialogHeader>
-        
-        <Tabs defaultValue="preset" value={editMode} onValueChange={setEditMode} className="mt-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="preset">Quick Edits</TabsTrigger>
-            <TabsTrigger value="custom">Custom Instructions</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="preset" className="mt-4 space-y-4">
-            <p className="text-sm text-gray-500">Choose how you'd like to improve this slide:</p>
-            <div className="grid grid-cols-2 gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => handlePresetEdit("refine")}
-                disabled={isProcessing}
-                className="h-16"
+
+        {mode === 'choose' && (
+          <div className="space-y-4 mt-2">
+            {/* Current slide preview */}
+            <div className="rounded-xl p-3 border border-border bg-muted/30 text-sm">
+              <div className="font-semibold text-foreground mb-1 text-xs">{slide.title}</div>
+              {(slide.bullets || []).slice(0, 2).map((b, i) => (
+                <div key={i} className="text-muted-foreground text-xs truncate">▸ {b}</div>
+              ))}
+              {(slide.bullets || []).length > 2 && <div className="text-muted-foreground text-xs">+{(slide.bullets||[]).length - 2} more</div>}
+            </div>
+
+            {/* Quick actions */}
+            <div>
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Quick edit</div>
+              <div className="grid grid-cols-2 gap-2">
+                {QUICK_ACTIONS.map(a => (
+                  <button
+                    key={a.id}
+                    onClick={() => runEdit(a.label)}
+                    disabled={isProcessing}
+                    className="flex items-center gap-2 text-left px-3 py-2.5 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-sm disabled:opacity-50"
+                  >
+                    <span style={{ fontSize: '14px' }}>{a.icon}</span>
+                    <span className="leading-tight text-xs">{a.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Other options */}
+            <div className="flex gap-2 pt-1 border-t border-border">
+              <button
+                onClick={() => setMode('custom')}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-sm"
               >
-                Refine Bullet Points
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handlePresetEdit("examples")}
-                disabled={isProcessing}
-                className="h-16"
+                <Pencil className="h-3.5 w-3.5" />
+                Custom instruction
+              </button>
+              <button
+                onClick={() => setMode('regenerate')}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-border hover:border-purple-400/50 hover:bg-purple-50 transition-all text-sm text-purple-700"
               >
-                Add Examples
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handlePresetEdit("academic")}
-                disabled={isProcessing}
-                className="h-16"
-              >
-                More Academic Tone
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handlePresetEdit("casual")}
-                disabled={isProcessing}
-                className="h-16"
-              >
-                More Conversational Tone
+                <RefreshCw className="h-3.5 w-3.5" />
+                Regenerate slide
+              </button>
+            </div>
+          </div>
+        )}
+
+        {mode === 'custom' && (
+          <div className="space-y-3 mt-2">
+            <p className="text-sm text-muted-foreground">Tell the AI exactly how to change this slide:</p>
+            <Textarea
+              placeholder="e.g. 'Focus only on the retrieval stage of memory', 'Add the Atkinson–Shiffrin model', 'Make it suitable for PhD students'..."
+              value={instruction}
+              onChange={e => setInstruction(e.target.value)}
+              disabled={isProcessing}
+              className="min-h-[100px] text-sm"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={reset} disabled={isProcessing}>← Back</Button>
+              <Button size="sm" className="flex-1" onClick={() => runEdit(instruction)} disabled={isProcessing || !instruction.trim()}>
+                {isProcessing ? <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />Editing...</> : <><Wand2 className="h-3.5 w-3.5 mr-1.5" />Apply</>}
               </Button>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="custom" className="mt-4">
-            <form onSubmit={handleCustomEdit} className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500 mb-2">Tell me how to improve this slide:</p>
-                <Textarea
-                  placeholder="e.g., 'make it more engaging', 'add definitions', 'include examples'"
-                  value={customInstruction}
-                  onChange={(e) => setCustomInstruction(e.target.value)}
-                  disabled={isProcessing}
-                  className="min-h-[100px]"
-                />
-              </div>
-              
-              <Button 
-                type="submit"
-                disabled={isProcessing || !customInstruction.trim()} 
-                className="w-full"
-              >
-                {isProcessing ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Apply Changes"
-                )}
+          </div>
+        )}
+
+        {mode === 'regenerate' && (
+          <div className="space-y-3 mt-2">
+            <p className="text-sm text-muted-foreground">Completely rewrite this slide. Optionally give a direction:</p>
+            <Textarea
+              placeholder="Optional: 'Focus on the Ebbinghaus curve only', 'Make it a data-heavy statistics slide', 'Turn this into a question slide for discussion'..."
+              value={instruction}
+              onChange={e => setInstruction(e.target.value)}
+              disabled={isProcessing}
+              className="min-h-[90px] text-sm"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={reset} disabled={isProcessing}>← Back</Button>
+              <Button size="sm" className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={() => runEdit(instruction || 'Rewrite this slide with fresh content on the same topic', true)}
+                disabled={isProcessing}>
+                {isProcessing ? <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />Regenerating...</> : <><RefreshCw className="h-3.5 w-3.5 mr-1.5" />Regenerate</>}
               </Button>
-            </form>
-          </TabsContent>
-        </Tabs>
-        
-        <DialogFooter className="flex items-center justify-between">
-          <p className="text-xs text-gray-500">Powered by AI</p>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-        </DialogFooter>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -1,84 +1,63 @@
-
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, Zap, Brain } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Upload, Wand2, Presentation, Download } from 'lucide-react';
 
-const FeatureShowcase = () => {
-  return (
-    <section className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Professional presentations made 
-            <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent"> effortless</span>
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Transform your expertise into compelling slide decks with AI-powered design and content generation
-          </p>
-        </div>
+const steps = [
+  {
+    icon: Upload,
+    step: '01',
+    title: 'Upload your materials',
+    desc: 'Drop in a PDF, Word doc, or paste your notes directly. Research papers, syllabi, lecture outlines — anything works. Up to 20MB.',
+  },
+  {
+    icon: Wand2,
+    step: '02',
+    title: 'AI builds your deck',
+    desc: 'Set your audience (undergrads, PhD students, executives), pick a theme, choose slide count. Our AI generates structured slides with speaker notes in seconds.',
+  },
+  {
+    icon: Presentation,
+    step: '03',
+    title: 'Edit, reorder, present',
+    desc: 'Drag to reorder, swap themes live, add or delete slides. Hit Present for fullscreen mode with keyboard navigation and speaker notes.',
+  },
+  {
+    icon: Download,
+    step: '04',
+    title: 'Export in any format',
+    desc: 'Download as editable PowerPoint (with speaker notes embedded), PDF, or individual slide images. Your slides, your format.',
+  },
+];
 
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          <div className="bg-gradient-to-br from-purple-50 to-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-purple-100">
-            <div className="bg-purple-100 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
-              <Brain className="h-6 w-6 text-purple-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-4">AI Content Creation</h3>
-            <p className="text-gray-600 mb-6">
-              Our advanced AI understands your content and creates professional slides with compelling narratives and visual suggestions.
-            </p>
-            <Link to="/create" className="text-purple-600 font-medium flex items-center hover:text-purple-700 transition-colors">
-              Try it now <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </div>
-
-          <div className="bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100">
-            <div className="bg-indigo-100 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
-              <Zap className="h-6 w-6 text-indigo-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Lightning Fast</h3>
-            <p className="text-gray-600 mb-6">
-              Generate complete presentations in under 30 seconds. From rough notes to polished slides instantly.
-            </p>
-            <Link to="/themes" className="text-purple-600 font-medium flex items-center hover:text-purple-700 transition-colors">
-              View themes <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-50 to-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-blue-100">
-            <div className="bg-blue-100 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
-              <Sparkles className="h-6 w-6 text-blue-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Auto-Generated Visuals</h3>
-            <p className="text-gray-600 mb-6">
-              Automatically generate professional images for your slides using AI, or choose from curated stock photos.
-            </p>
-            <Link to="/create" className="text-purple-600 font-medium flex items-center hover:text-purple-700 transition-colors">
-              Generate slides <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl p-12 text-center text-white">
-          <h3 className="text-3xl font-bold mb-4">Ready to transform your presentations?</h3>
-          <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
-            Upload your notes, research papers, or syllabi and get lecture-ready slides in seconds.
-          </p>
-          <Button 
-            size="lg" 
-            variant="secondary"
-            className="bg-white text-purple-600 hover:bg-gray-50 text-lg px-8 py-6 rounded-xl"
-            asChild
-          >
-            <Link to="/create" className="flex items-center">
-              Start creating for free
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
-        </div>
+const FeatureShowcase = () => (
+  <section className="py-24 bg-gray-50">
+    <div className="max-w-6xl mx-auto px-4">
+      <div className="text-center mb-16">
+        <div className="text-sm font-semibold text-purple-600 uppercase tracking-wider mb-3">How it works</div>
+        <h2 className="text-4xl font-bold text-gray-900 mb-4">From notes to classroom-ready in 4 steps</h2>
+        <p className="text-lg text-gray-500 max-w-2xl mx-auto">No design skills needed. No starting from a blank slide. Just your content, transformed.</p>
       </div>
-    </section>
-  );
-};
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {steps.map(({ icon: Icon, step, title, desc }) => (
+          <div key={step} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
+                <Icon className="h-5 w-5 text-purple-600" />
+              </div>
+              <span className="text-3xl font-bold text-gray-100">{step}</span>
+            </div>
+            <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
+            <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+          </div>
+        ))}
+      </div>
+      <div className="text-center mt-10">
+        <Link to="/create" className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium text-sm transition-colors shadow-lg shadow-purple-200">
+          Try it free →
+        </Link>
+      </div>
+    </div>
+  </section>
+);
 
 export default FeatureShowcase;

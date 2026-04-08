@@ -1,108 +1,59 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { Check, X, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Check, Minus, X } from 'lucide-react';
 
-const ComparisonSection = () => {
-  const features = [
-    { name: "AI-Powered Content Generation", sliding: true, competitors: "Limited" },
-    { name: "Professional Consulting Templates", sliding: true, competitors: false },
-    { name: "Academic Presentation Formats", sliding: true, competitors: "Basic" },
-    { name: "Multi-Format Export (PPT/PDF/Web)", sliding: true, competitors: "Limited" },
-    { name: "Real-time Collaboration", sliding: true, competitors: true },
-    { name: "Custom Branding & Themes", sliding: true, competitors: "Premium Only" },
-    { name: "Strategy Framework Templates", sliding: true, competitors: false },
-    { name: "Data Visualization Intelligence", sliding: true, competitors: "Basic" },
-    { name: "Speed of Creation", sliding: "10x Faster", competitors: "Standard" },
-    { name: "Professional Focus", sliding: true, competitors: "General Use" }
-  ];
+const rows = [
+  { feature: 'Upload lecture notes / PDFs',      sliding: true,   gamma: false,  powerpoint: false },
+  { feature: 'Educator-specific audiences',       sliding: true,   gamma: false,  powerpoint: false },
+  { feature: 'Pedagogical speaker notes',         sliding: true,   gamma: false,  powerpoint: false },
+  { feature: 'Live theme switching',              sliding: true,   gamma: true,   powerpoint: false },
+  { feature: 'Drag to reorder slides',            sliding: true,   gamma: true,   powerpoint: true  },
+  { feature: 'Fullscreen present mode',           sliding: true,   gamma: true,   powerpoint: true  },
+  { feature: 'Export editable .pptx',             sliding: true,   gamma: 'paid', powerpoint: true  },
+  { feature: 'Free to start',                     sliding: true,   gamma: true,   powerpoint: false },
+  { feature: 'AI content generation',             sliding: true,   gamma: true,   powerpoint: false },
+  { feature: 'Professor / educator focus',        sliding: true,   gamma: false,  powerpoint: false },
+];
 
-
-  const renderFeatureValue = (value: boolean | string) => {
-    if (value === true) {
-      return <Check className="h-5 w-5 text-green-500" />;
-    } else if (value === false) {
-      return <X className="h-5 w-5 text-red-400" />;
-    } else {
-      return <span className="text-sm text-muted-foreground">{value}</span>;
-    }
-  };
-
-  return (
-    <section className="py-20 bg-secondary/30">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <Badge variant="outline" className="mb-4">
-            Competitive Analysis
-          </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Why professionals choose
-            <span className="text-primary"> Sliding.io</span>
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            See how we stack up against other presentation platforms when it comes to professional needs
-          </p>
-        </div>
-
-        {/* Comparison Table */}
-        <div className="bg-card rounded-2xl overflow-hidden shadow-lg mb-16 border">
-          <div className="grid grid-cols-3 gap-0">
-            {/* Header */}
-            <div className="p-6 border-b border-r">
-              <h3 className="font-semibold text-lg">Features</h3>
-            </div>
-            <div className="p-6 border-b border-r bg-primary/5">
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-lg text-primary">Sliding.io</h3>
-                <Badge className="bg-primary text-white">Pro</Badge>
-              </div>
-            </div>
-            <div className="p-6 border-b">
-              <h3 className="font-semibold text-lg text-muted-foreground">Other Tools</h3>
-            </div>
-
-            {/* Feature Rows */}
-            {features.map((feature, index) => (
-              <React.Fragment key={index}>
-                <div className="p-4 border-r border-b bg-background/50">
-                  <span className="text-sm font-medium">{feature.name}</span>
-                </div>
-                <div className="p-4 border-r border-b bg-primary/5 text-center">
-                  {renderFeatureValue(feature.sliding)}
-                </div>
-                <div className="p-4 border-b text-center">
-                  {renderFeatureValue(feature.competitors)}
-                </div>
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-
-
-        {/* Migration CTA */}
-        <div className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-8 text-center text-white">
-          <h3 className="text-3xl font-bold mb-4">
-            Ready to make the switch?
-          </h3>
-          <p className="text-lg opacity-90 mb-6 max-w-2xl mx-auto">
-            Join the thousands of consultants, professors, and business leaders who've already upgraded their presentation workflow
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button size="lg" variant="secondary" asChild className="font-semibold">
-              <Link to="/create">
-                Try Sliding.io Free
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <span className="text-sm opacity-75">No credit card required</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+const Cell = ({ val }: { val: boolean | string }) => {
+  if (val === true)    return <div className="flex justify-center"><Check className="h-4 w-4 text-purple-600" /></div>;
+  if (val === false)   return <div className="flex justify-center"><X className="h-4 w-4 text-gray-300" /></div>;
+  return <div className="flex justify-center"><span className="text-xs text-amber-600 font-medium">{val}</span></div>;
 };
+
+const ComparisonSection = () => (
+  <section className="py-24 bg-gray-50">
+    <div className="max-w-3xl mx-auto px-4">
+      <div className="text-center mb-12">
+        <div className="text-sm font-semibold text-purple-600 uppercase tracking-wider mb-3">Why Sliding.io</div>
+        <h2 className="text-4xl font-bold text-gray-900 mb-4">Built for professors, not everyone</h2>
+        <p className="text-lg text-gray-500">Gamma is great. PowerPoint is powerful. Neither was built for how professors actually work.</p>
+      </div>
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-100">
+          <div className="p-4 text-sm font-medium text-gray-500">Feature</div>
+          <div className="p-4 text-center">
+            <div className="text-sm font-bold text-purple-700 bg-purple-50 rounded-lg px-2 py-1">Sliding.io</div>
+          </div>
+          <div className="p-4 text-center"><div className="text-sm font-medium text-gray-500">Gamma</div></div>
+          <div className="p-4 text-center"><div className="text-sm font-medium text-gray-500">PowerPoint</div></div>
+        </div>
+        {rows.map((row, i) => (
+          <div key={row.feature} className={`grid grid-cols-4 border-b border-gray-50 ${i % 2 === 0 ? '' : 'bg-gray-50/50'}`}>
+            <div className="p-3.5 text-sm text-gray-700">{row.feature}</div>
+            <Cell val={row.sliding} />
+            <Cell val={row.gamma} />
+            <Cell val={row.powerpoint} />
+          </div>
+        ))}
+      </div>
+      <div className="text-center mt-8">
+        <Link to="/create" className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium text-sm transition-colors shadow-lg shadow-purple-200">
+          Start free — no credit card needed →
+        </Link>
+      </div>
+    </div>
+  </section>
+);
 
 export default ComparisonSection;

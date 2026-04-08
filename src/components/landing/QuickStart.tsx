@@ -1,143 +1,42 @@
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
-import { 
-  Sparkles, 
-  Zap, 
-  FileText, 
-  Upload, 
-  Brain,
-  ArrowRight,
-  Play,
-  Clock
-} from 'lucide-react';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 
-const QuickStart = () => {
-  const [hoveredMethod, setHoveredMethod] = useState<string | null>(null);
+const testimonials = [
+  { quote: "I prepped a full 90-minute lecture on cellular respiration in under 10 minutes. The speaker notes are genuinely useful — not just bullet repetitions.", name: "Dr. M. Thompson", role: "Biology Professor" },
+  { quote: "Finally a tool that understands I'm presenting to undergrads, not a sales team. The audience-specific depth adjustment is exactly what I needed.", name: "Prof. J. Okafor", role: "Economics, State University" },
+  { quote: "Uploaded my 40-page syllabus and got a full semester overview deck with discussion questions in the notes. Saved me an entire afternoon.", name: "Sarah K.", role: "High School AP Chemistry" },
+];
 
-  const creationMethods = [
-    {
-      id: 'ai-prompt',
-      icon: Brain,
-      title: 'Start with AI',
-      description: 'Describe your presentation and let AI create it',
-      time: '30 seconds',
-      example: 'Create a presentation about renewable energy trends...',
-      color: 'from-blue-500 to-blue-600',
-      route: '/create?method=ai'
-    },
-    {
-      id: 'template',
-      icon: Sparkles,
-      title: 'Choose Template',
-      description: 'Pick from professional consulting & academic templates',
-      time: '1 minute',
-      example: 'Strategy consulting, Research presentation, Board deck...',
-      color: 'from-purple-500 to-purple-600',
-      route: '/themes'
-    },
-    {
-      id: 'file-upload',
-      icon: Upload,
-      title: 'Upload Content',
-      description: 'Transform your existing documents into slides',
-      time: '2 minutes',
-      example: 'Word docs, PDFs, research papers...',
-      color: 'from-green-500 to-green-600',
-      route: '/create?method=upload'
-    }
-  ];
-
-  const examples = [
-    {
-      title: 'Q3 Marketing Strategy',
-      author: 'Marketing Team',
-      slides: 12,
-      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
-      category: 'Business'
-    },
-    {
-      title: 'Climate Change Research',
-      author: 'Dr. Sarah Chen',
-      slides: 18,
-      image: 'https://images.unsplash.com/photo-1569163139394-de4e4f43e4e5?w=400&h=300&fit=crop',
-      category: 'Academic'
-    },
-    {
-      title: 'Product Launch Deck',
-      author: 'Product Team',
-      slides: 15,
-      image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=300&fit=crop',
-      category: 'Startup'
-    }
-  ];
-
-  return (
-    <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-secondary/10">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-            <Zap className="h-4 w-4" />
-            Get Started in Seconds
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            How would you like to
-            <span className="text-primary"> start creating?</span>
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Choose your preferred method and watch your ideas transform into professional presentations
-          </p>
-        </div>
-
-        {/* Creation Methods */}
-        <div className="grid md:grid-cols-3 gap-6 mb-16">
-          {creationMethods.map((method) => (
-            <Card 
-              key={method.id}
-              className={`group cursor-pointer transition-all duration-300 hover:shadow-xl border-2 ${
-                hoveredMethod === method.id ? 'border-primary shadow-lg scale-105' : 'border-border hover:border-primary/50'
-              }`}
-              onMouseEnter={() => setHoveredMethod(method.id)}
-              onMouseLeave={() => setHoveredMethod(null)}
-            >
-              <CardContent className="p-8 text-center">
-                <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-r ${method.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                  <method.icon className="h-8 w-8 text-white" />
-                </div>
-                
-                <div className="mb-4">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <h3 className="text-xl font-bold">{method.title}</h3>
-                    <Badge variant="secondary" className="text-xs">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {method.time}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground mb-4">{method.description}</p>
-                </div>
-
-                <div className="bg-secondary/50 rounded-lg p-3 mb-6 text-sm italic text-muted-foreground">
-                  "{method.example}"
-                </div>
-
-                <Button asChild className="w-full group-hover:bg-primary group-hover:text-white transition-colors">
-                  <Link to={method.route}>
-                    Start Creating
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-
+const QuickStart = () => (
+  <section className="py-24 bg-white border-t border-gray-100">
+    <div className="max-w-6xl mx-auto px-4">
+      <div className="text-center mb-14">
+        <div className="text-sm font-semibold text-purple-600 uppercase tracking-wider mb-3">What educators say</div>
+        <h2 className="text-4xl font-bold text-gray-900">Professors love it</h2>
       </div>
-    </section>
-  );
-};
+      <div className="grid md:grid-cols-3 gap-6 mb-16">
+        {testimonials.map(({ quote, name, role }) => (
+          <div key={name} className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+            <div className="text-purple-400 text-3xl font-serif leading-none mb-3">"</div>
+            <p className="text-gray-700 text-sm leading-relaxed mb-4">{quote}</p>
+            <div>
+              <div className="font-semibold text-gray-900 text-sm">{name}</div>
+              <div className="text-gray-400 text-xs">{role}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl p-10 text-center text-white">
+        <h2 className="text-3xl font-bold mb-3">Ready to save hours on every lecture?</h2>
+        <p className="text-purple-200 mb-7 text-lg">No signup required. Generate your first deck in 30 seconds.</p>
+        <Link to="/create" className="inline-flex items-center gap-2 bg-white text-purple-700 font-semibold px-8 py-3.5 rounded-xl text-base hover:bg-purple-50 transition-colors shadow-lg">
+          Create your first presentation
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+    </div>
+  </section>
+);
 
 export default QuickStart;
