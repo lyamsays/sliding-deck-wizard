@@ -70,7 +70,13 @@ const DeckViewer: React.FC<DeckViewerProps> = ({ deck: propDeck, onClose }) => {
           speakerNotes: slide.speakerNotes || '',
           imageUrl: slide.imageUrl || '',
           revisedPrompt: slide.revisedPrompt || '',
-          style: slide.style || {},
+          style: slide.style && Object.keys(slide.style).length > 0 ? slide.style : {
+            backgroundColor: '#1e1b4b',
+            textColor: '#ffffff',
+            accentColor: '#7c3aed',
+            titleFont: '"Inter", sans-serif',
+            bodyFont: '"Inter", sans-serif',
+          },
           cropData: slide.cropData || null,
         })) as Slide[];
         setSlides(typedSlides);

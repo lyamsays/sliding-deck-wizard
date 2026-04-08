@@ -117,7 +117,7 @@ const SlideContent: React.FC<SlideContentProps> = ({
           <div className="flex flex-row-reverse">
             <div className="flex-grow">
               <ul className="space-y-3">
-                {slide.bullets.map((bullet, bulletIndex) => (
+                {(slide.bullets || []).map((bullet, bulletIndex) => (
                   <li 
                     key={bulletIndex} 
                     className="flex items-start"
@@ -147,7 +147,7 @@ const SlideContent: React.FC<SlideContentProps> = ({
           <div className="flex flex-row">
             <div className="flex-grow">
               <ul className="space-y-3">
-                {slide.bullets.map((bullet, bulletIndex) => (
+                {(slide.bullets || []).map((bullet, bulletIndex) => (
                   <li 
                     key={bulletIndex} 
                     className="flex items-start"
@@ -180,7 +180,7 @@ const SlideContent: React.FC<SlideContentProps> = ({
             </div>
             <div className="w-full">
               <ul className="space-y-3">
-                {slide.bullets.map((bullet, bulletIndex) => (
+                {(slide.bullets || []).map((bullet, bulletIndex) => (
                   <li 
                     key={bulletIndex} 
                     className="flex items-center justify-center text-center"
@@ -214,7 +214,7 @@ const SlideContent: React.FC<SlideContentProps> = ({
                 </div>
               </div>
               <ul className="space-y-3 flex-grow">
-                {slide.bullets.map((bullet, bulletIndex) => (
+                {(slide.bullets || []).map((bullet, bulletIndex) => (
                   <li 
                     key={bulletIndex} 
                     className="flex items-start"
@@ -241,7 +241,7 @@ const SlideContent: React.FC<SlideContentProps> = ({
           <div className="flex flex-row">
             <div className="flex-grow">
               <ul className="space-y-3">
-                {slide.bullets.map((bullet, bulletIndex) => (
+                {(slide.bullets || []).map((bullet, bulletIndex) => (
                   <li 
                     key={bulletIndex} 
                     className="flex items-start"

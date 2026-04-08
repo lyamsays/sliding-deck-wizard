@@ -33,13 +33,14 @@ export class ImageGenerationService {
 
     // Enhanced prompt engineering with context
     const enhancedPrompt = this.enhancePrompt(prompt, slideTitle, slideContext);
+    // Pass slideTitle separately for better Unsplash search
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         console.log(`Image generation attempt ${attempt}/${retries} for prompt:`, enhancedPrompt);
         
         const result = await Promise.race([
-          this.callGenerateImageFunction(enhancedPrompt),
+          this.callGenerateImageFunction(enhancedPrompt, slideTitle),
           this.createTimeoutPromise(timeout)
         ]);
 
@@ -80,9 +81,9 @@ export class ImageGenerationService {
     }
   }
 
-  private static async callGenerateImageFunction(prompt: string): Promise<GeneratedImage> {
+  private static async callGenerateImageFunction(prompt: string, slideTitle?: string): Promise<GeneratedImage> {
     const { data, error } = await supabase.functions.invoke('generate-image', {
-      body: { prompt }
+      body: { prompt, slideTitle }
     });
 
     if (error) {
@@ -90,10 +91,17 @@ export class ImageGenerationService {
     }
 
     if (!data || data.error) {
-      throw new Error(data?.error || 'Unknown error from image generation service');
+      throw new Error(data?.error || 'No image found');
     }
 
-    return data;
+    if (!data.imageUrl) {
+      throw new Error('No image URL returned');
+    }
+
+    return {
+      imageUrl: data.imageUrl,
+      revisedPrompt: data.altDescription || prompt,
+    };
   }
 
   private static createTimeoutPromise(timeout: number): Promise<never> {

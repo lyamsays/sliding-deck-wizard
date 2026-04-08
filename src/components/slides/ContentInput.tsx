@@ -19,8 +19,6 @@ interface ContentInputProps {
   setPurpose: (purpose: string) => void;
   tone: string;
   setTone: (tone: string) => void;
-  framework: string;
-  setFramework: (framework: string) => void;
   autoGenerateImages: boolean;
   setAutoGenerateImages: (auto: boolean) => void;
   selectedTheme: string;
@@ -39,8 +37,6 @@ const ContentInput: React.FC<ContentInputProps> = ({
   setPurpose,
   tone,
   setTone,
-  framework,
-  setFramework,
   autoGenerateImages,
   setAutoGenerateImages,
   selectedTheme,

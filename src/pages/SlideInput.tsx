@@ -686,7 +686,7 @@ const SlideInput = () => {
     editedSlides.forEach((slide, index) => {
       content += `## Slide ${index + 1}: ${slide.title}\n\n`;
       
-      slide.bullets.forEach(bullet => {
+      (slide.bullets || []).forEach(bullet => {
         content += `* ${bullet}\n`;
       });
       

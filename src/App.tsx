@@ -54,7 +54,6 @@ const App = () => {
                 <Route path="/sign-up" element={<SignUp />} />
                 <Route path="/my-decks" element={<MyDecks />} />
                 <Route path="/themes" element={<Themes />} />
-                <Route path="/instant-creator" element={<InstantCreator />} />
                 <Route path="/features" element={<Features />} />
                 <Route path="/how-it-works" element={<HowItWorksPage />} />
                 <Route path="/pricing" element={<PricingPage />} />

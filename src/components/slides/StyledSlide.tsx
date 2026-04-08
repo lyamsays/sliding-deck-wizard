@@ -195,9 +195,9 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }
       {isEditDialogOpen && (
         <SlideEditDialog
           slide={slide}
-          isOpen={isEditDialogOpen}
-          onClose={() => setIsEditDialogOpen(false)}
-          onSave={(updatedSlide) => {
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSlideUpdate={(updatedSlide) => {
             onSlideUpdate(index, updatedSlide);
             setIsEditDialogOpen(false);
           }}

@@ -22,6 +22,7 @@ import TrySuccess from '@/components/slides/TrySuccess';
 import TryBeforeSignup from '@/components/slides/TryBeforeSignup';
 
 interface SlidesResponse {
+  deckTitle?: string;
   slides: Slide[];
 }
 
@@ -282,12 +283,13 @@ const SlideInput = () => {
       const responsePromise = supabase.functions.invoke('generate-slides', {
         body: { 
           content: setupData.content,
-          profession: setupData.profession,
-          purpose: setupData.purpose,
-          tone: setupData.tone,
-          framework: setupData.profession === "Consultant" ? framework : undefined,
+          role: setupData.profession || 'Professor',
+          audience: setupData.purpose || 'General Audience',
+          tone: setupData.tone || 'Professional',
+          purpose: setupData.purpose || 'Lecture / Class',
           themeId: setupData.selectedTheme,
-          autoGenerateImages: setupData.autoGenerateImages
+          autoGenerateImages: setupData.autoGenerateImages,
+          numSlides: 8,
         }
       });
       
@@ -311,14 +313,11 @@ const SlideInput = () => {
       console.log("SlideInput: Successfully auto-generated slides:", slidesData.slides.length);
       
       setGenerationProgress(100);
-      setGeneratedSlides(slidesData.slides);
-      setEditedSlides(slidesData.slides);
+      const autoStyledSlides = applySmartLayout(slidesData.slides, selectedTheme);
+      setGeneratedSlides(autoStyledSlides);
+      setEditedSlides(autoStyledSlides);
       
-      if (slidesData.slides.length > 0) {
-        setDeckTitle(slidesData.slides[0].title);
-      } else {
-        setDeckTitle('Untitled Deck');
-      }
+      setDeckTitle(slidesData.deckTitle || (slidesData.slides.length > 0 ? slidesData.slides[0].title : 'Untitled Deck'));
       
       toast({
         title: "Slides generated!",
@@ -420,11 +419,7 @@ const SlideInput = () => {
       setGeneratedSlides(styledSlides);
       setEditedSlides(styledSlides);
       
-      if (slidesData.slides.length > 0) {
-        setDeckTitle(slidesData.slides[0].title);
-      } else {
-        setDeckTitle('Untitled Deck');
-      }
+      setDeckTitle(slidesData.deckTitle || (slidesData.slides.length > 0 ? slidesData.slides[0].title : 'Untitled Deck'));
       
       toast({
         title: "🎉 Slides generated successfully!",
@@ -747,8 +742,6 @@ Why Choose Our Team:
             setPurpose={setPurpose}
             tone={tone}
             setTone={setTone}
-            framework={framework}
-            setFramework={setFramework}
             autoGenerateImages={autoGenerateImages}
             setAutoGenerateImages={setAutoGenerateImages}
             selectedTheme={selectedTheme}
