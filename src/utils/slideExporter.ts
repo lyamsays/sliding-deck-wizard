@@ -11,7 +11,11 @@ export interface ExportOptions {
   onError?: (error: string) => void;
 }
 
-// ─── NATIVE PPTX EXPORT (no screenshots — real editable PowerPoint) ───────────
+// PowerPoint dimensions: 10" x 5.625" (16:9)
+const W = 10;
+const H = 5.625;
+
+// ─── PPTX EXPORT — matches StyledSlide preview exactly ───────────────────────
 export const exportToPowerPoint = async (options: ExportOptions): Promise<void> => {
   const { deckTitle, slides, onProgress, onSuccess, onError } = options;
 
@@ -26,88 +30,110 @@ export const exportToPowerPoint = async (options: ExportOptions): Promise<void> 
       const slide = slides[i];
       const pSlide = pptx.addSlide();
 
-      // ── Background ────────────────────────────────────────────
-      const bg = slide.style?.backgroundColor || '#FFFFFF';
-      const isDark = bg.includes('gradient') ||
-        bg === '#0d1b2a' || bg === '#111111' || bg === '#0f2318' ||
-        bg.startsWith('#0') || bg.startsWith('#1');
+      const bg = slide.style?.backgroundColor || '#fdfaf5';
+      const textColor = (slide.style?.textColor || '#111827').replace('#', '');
+      const accentColor = (slide.style?.accentColor || '#7c3aed').replace('#', '');
+      const solidBg = extractHexFromGradient(bg);
+      const isTitle = slide.slideType === 'title' || i === 0;
+      const hasImage = !!slide.imageUrl;
+      const bullets = slide.bullets || [];
 
-      const textColor = slide.style?.textColor || (isDark ? '#FFFFFF' : '#111827');
-      const accentColor = slide.style?.accentColor || '#7C3AED';
+      // Background fill
+      pSlide.background = { fill: solidBg };
 
-      // Solid background (gradients are converted to their start color)
-      const solidBg = bg.startsWith('#') ? bg : extractHexFromGradient(bg);
-      pSlide.background = { fill: solidBg.replace('#', '') };
+      // ── Full-height left accent bar (matches CSS: absolute left-0 top-0 bottom-0 w-1.5)
+      pSlide.addShape(pptx.ShapeType.rect, {
+        x: 0, y: 0, w: 0.08, h: H,
+        fill: { color: accentColor },
+        line: { color: accentColor, transparency: 100 },
+      });
 
-      // ── Background image (if available) ──────────────────────
-      if (slide.imageUrl && slide.imageUrl.startsWith('http')) {
+      // ── Right-side image (matches CSS: absolute right-0 top-0 bottom-0 w-2/5)
+      if (hasImage && slide.imageUrl?.startsWith('http')) {
         try {
+          // Image occupies right 40%
           pSlide.addImage({
             path: slide.imageUrl,
-            x: '55%', y: 0, w: '45%', h: '100%',
+            x: W * 0.6, y: 0, w: W * 0.4, h: H,
           });
-          // Overlay for readability
+          // Gradient overlay: left edge of image fades to background color
           pSlide.addShape(pptx.ShapeType.rect, {
-            x: '55%', y: 0, w: '45%', h: '100%',
-            fill: { color: solidBg.replace('#', ''), transparency: 20 },
-            line: { color: 'FFFFFF', transparency: 100 },
+            x: W * 0.6, y: 0, w: W * 0.08, h: H,
+            fill: { color: solidBg, transparency: 0 },
+            line: { color: solidBg, transparency: 100 },
           });
-        } catch {
-          // Image failed to load — skip silently
+        } catch { /* skip if image fails */ }
+      }
+
+      // ── Content area (matches CSS: paddingLeft 6%, paddingRight 45% if image else 8%)
+      const contentX = 0.45;  // 6% of 10" ≈ 0.45" (after accent bar)
+      const contentW = hasImage ? W * 0.54 : W * 0.86;  // leave room for image
+
+      if (isTitle) {
+        // ── TITLE SLIDE LAYOUT ──────────────────────────────────
+        // Eyebrow subtitle above main title
+        if (slide.subtitle) {
+          pSlide.addText(slide.subtitle.toUpperCase(), {
+            x: contentX, y: H * 0.28, w: contentW, h: 0.4,
+            fontSize: 9,
+            bold: true,
+            color: accentColor,
+            fontFace: 'Calibri',
+            charSpacing: 3,
+          });
         }
-      }
 
-      // ── Accent bar ────────────────────────────────────────────
-      pSlide.addShape(pptx.ShapeType.rect, {
-        x: 0.3, y: 1.1, w: 0.05, h: 0.5,
-        fill: { color: accentColor.replace('#', '') },
-        line: { color: accentColor.replace('#', ''), transparency: 100 },
-      });
-
-      // ── Title ─────────────────────────────────────────────────
-      const isTitle = slide.slideType === 'title' || i === 0;
-      pSlide.addText(slide.title || '', {
-        x: isTitle ? '10%' : 0.5,
-        y: isTitle ? '30%' : 0.35,
-        w: slide.imageUrl ? '52%' : (isTitle ? '80%' : '90%'),
-        h: isTitle ? 1.5 : 0.75,
-        fontSize: isTitle ? 36 : 26,
-        bold: true,
-        color: textColor.replace('#', ''),
-        fontFace: 'Calibri',
-        align: isTitle ? 'center' : 'left',
-        valign: 'middle',
-        wrap: true,
-      });
-
-      // ── Subtitle (title slides) ───────────────────────────────
-      if (isTitle && slide.subtitle) {
-        pSlide.addText(slide.subtitle, {
-          x: '10%', y: '55%', w: '80%', h: 0.5,
-          fontSize: 16,
-          color: accentColor.replace('#', ''),
+        // Main title — large, left-aligned
+        pSlide.addText(slide.title || '', {
+          x: contentX, y: H * 0.38, w: contentW, h: H * 0.4,
+          fontSize: 32,
+          bold: true,
+          color: textColor,
           fontFace: 'Calibri',
-          align: 'center',
-          italic: true,
+          valign: 'top',
+          wrap: true,
         });
-      }
 
-      // ── Bullets ───────────────────────────────────────────────
-      const bullets = slide.bullets || [];
-      if (bullets.length > 0 && !isTitle) {
-        const bulletY = 1.25;
-        const availableH = slide.imageUrl ? 3.5 : 4.5;
-        const bulletH = availableH / Math.max(bullets.length, 1);
+      } else {
+        // ── CONTENT SLIDE LAYOUT ──────────────────────────────────
+        // Title
+        pSlide.addText(slide.title || '', {
+          x: contentX, y: 0.35, w: contentW, h: 0.85,
+          fontSize: 22,
+          bold: true,
+          color: textColor,
+          fontFace: 'Calibri',
+          valign: 'middle',
+          wrap: true,
+        });
+
+        // Thin separator line under title
+        pSlide.addShape(pptx.ShapeType.line, {
+          x: contentX, y: 1.28, w: Math.min(contentW, 3.5), h: 0,
+          line: { color: accentColor, width: 1.5, transparency: 60 },
+        });
+
+        // Bullets — one text box per bullet for clean layout
+        const bulletStartY = 1.45;
+        const bulletSpacing = Math.min((H - bulletStartY - 0.4) / Math.max(bullets.length, 1), 0.85);
 
         bullets.forEach((bullet, bi) => {
+          const colonIdx = bullet.indexOf(':');
+          const hasColon = colonIdx > 0 && colonIdx < 45;
+
+          const textParts = hasColon
+            ? [
+                { text: bullet.substring(0, colonIdx), options: { bold: true, color: accentColor, fontSize: 13 } as any },
+                { text: bullet.substring(colonIdx), options: { bold: false, color: textColor, fontSize: 13 } as any },
+              ]
+            : [{ text: bullet, options: { bold: false, color: textColor, fontSize: 13 } as any }];
+
           pSlide.addText([
-            { text: '• ', options: { color: accentColor.replace('#', ''), bold: true, fontSize: 14 } },
-            { text: bullet, options: { color: textColor.replace('#', ''), fontSize: 14 } },
+            { text: '▸  ', options: { bold: true, color: accentColor, fontSize: 11 } as any },
+            ...textParts,
           ], {
-            x: 0.5,
-            y: bulletY + (bi * bulletH),
-            w: slide.imageUrl ? '52%' : '90%',
-            h: bulletH * 0.9,
+            x: contentX, y: bulletStartY + (bi * bulletSpacing),
+            w: contentW, h: bulletSpacing * 0.92,
             fontFace: 'Calibri',
             valign: 'middle',
             wrap: true,
@@ -115,129 +141,113 @@ export const exportToPowerPoint = async (options: ExportOptions): Promise<void> 
         });
       }
 
-      // ── Speaker notes ─────────────────────────────────────────
-      if (slide.speakerNotes) {
-        pSlide.addNotes(slide.speakerNotes);
-      }
-
-      // ── Slide number ──────────────────────────────────────────
-      pSlide.addText(`${i + 1} / ${slides.length}`, {
-        x: '88%', y: '93%', w: '10%', h: 0.25,
-        fontSize: 9,
-        color: isDark ? 'AAAAAA' : '999999',
+      // ── Slide number (bottom-right, subtle)
+      pSlide.addText(`${i + 1}`, {
+        x: W - 0.6, y: H - 0.35, w: 0.5, h: 0.25,
+        fontSize: 8,
+        color: 'AAAAAA',
         fontFace: 'Calibri',
         align: 'right',
       });
+
+      // ── Speaker notes
+      if (slide.speakerNotes) {
+        pSlide.addNotes(slide.speakerNotes);
+      }
     }
 
     await pptx.writeFile({ fileName: `${deckTitle || 'presentation'}.pptx` });
-    onSuccess?.(`PowerPoint exported — ${slides.length} slides`);
+    onSuccess?.(`PowerPoint downloaded — ${slides.length} slides with speaker notes`);
 
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Failed to export PowerPoint';
-    onError?.(msg);
+    onError?.(error instanceof Error ? error.message : 'PowerPoint export failed');
     throw error;
   }
 };
 
-// ─── PDF EXPORT (screenshot-based, reliable) ─────────────────────────────────
-const waitForContent = () =>
-  new Promise<void>(resolve => {
-    if (document.fonts?.ready) {
-      document.fonts.ready.then(() => setTimeout(resolve, 500));
-    } else {
-      setTimeout(resolve, 1000);
-    }
-  });
-
-const findSlideElements = (): HTMLElement[] => {
-  let els = document.querySelectorAll('[id^="slide-content-"]') as NodeListOf<HTMLElement>;
-  if (els.length > 0) return Array.from(els).filter(el => el.offsetHeight > 0);
-
-  const containers = document.querySelectorAll('[id^="slide-"]') as NodeListOf<HTMLElement>;
-  const found: HTMLElement[] = [];
-  containers.forEach(c => {
-    const inner = c.querySelector('[id^="slide-content-"]') as HTMLElement;
-    if (inner) found.push(inner);
-  });
-  if (found.length > 0) return found;
-
-  throw new Error('No slides found. Please ensure slides are visible and fully loaded.');
-};
-
+// ─── PDF EXPORT — screenshot-based (pixel-perfect match to browser preview) ──
 export const exportToPDF = async (options: ExportOptions): Promise<void> => {
   const { deckTitle, onProgress, onSuccess, onError } = options;
   try {
-    await waitForContent();
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise<void>(r => document.fonts?.ready ? document.fonts.ready.then(() => setTimeout(r, 600)) : setTimeout(r, 1200));
 
-    const slideElements = findSlideElements();
-    if (slideElements.length === 0) throw new Error('No slides found to export.');
-
-    onProgress?.(0, slideElements.length);
-
+    const slideEls = getSlideElements();
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [1920, 1080] });
     const pw = pdf.internal.pageSize.getWidth();
     const ph = pdf.internal.pageSize.getHeight();
 
-    for (let i = 0; i < slideElements.length; i++) {
+    for (let i = 0; i < slideEls.length; i++) {
       if (i > 0) pdf.addPage();
-      onProgress?.(i + 1, slideElements.length);
-      slideElements[i].scrollIntoView({ behavior: 'instant', block: 'center' });
-      await new Promise(r => setTimeout(r, 400));
-      const canvas = await html2canvas(slideElements[i], {
-        backgroundColor: null, scale: 1, useCORS: true, allowTaint: true,
-        width: slideElements[i].offsetWidth, height: slideElements[i].offsetHeight,
+      onProgress?.(i + 1, slideEls.length);
+      slideEls[i].scrollIntoView({ behavior: 'instant', block: 'center' });
+      await delay(350);
+      const canvas = await html2canvas(slideEls[i], {
+        backgroundColor: null, scale: 2, useCORS: true, allowTaint: true,
+        width: slideEls[i].offsetWidth, height: slideEls[i].offsetHeight,
+        logging: false,
       });
       pdf.addImage(canvas.toDataURL('image/png', 0.95), 'PNG', 0, 0, pw, ph, '', 'FAST');
     }
 
     pdf.save(`${deckTitle || 'presentation'}.pdf`);
-    onSuccess?.('PDF exported successfully');
+    onSuccess?.('PDF downloaded');
   } catch (error) {
-    onError?.(error instanceof Error ? error.message : 'Failed to export PDF');
+    onError?.(error instanceof Error ? error.message : 'PDF export failed');
     throw error;
   }
 };
 
+// ─── IMAGES ZIP EXPORT ────────────────────────────────────────────────────────
 export const exportToImages = async (options: ExportOptions): Promise<void> => {
   const { deckTitle, onProgress, onSuccess, onError } = options;
   try {
-    await waitForContent();
-    const slideElements = findSlideElements();
-    onProgress?.(0, slideElements.length);
-
+    await delay(800);
+    const slideEls = getSlideElements();
     const JSZip = (await import('jszip')).default;
     const zip = new JSZip();
-    const folder = zip.folder(deckTitle || 'presentation');
+    const folder = zip.folder(deckTitle || 'slides');
 
-    for (let i = 0; i < slideElements.length; i++) {
-      onProgress?.(i + 1, slideElements.length);
-      slideElements[i].scrollIntoView({ behavior: 'instant', block: 'center' });
-      await new Promise(r => setTimeout(r, 400));
-      const canvas = await html2canvas(slideElements[i], {
-        backgroundColor: null, scale: 2, useCORS: true, allowTaint: true,
+    for (let i = 0; i < slideEls.length; i++) {
+      onProgress?.(i + 1, slideEls.length);
+      slideEls[i].scrollIntoView({ behavior: 'instant', block: 'center' });
+      await delay(350);
+      const canvas = await html2canvas(slideEls[i], {
+        backgroundColor: null, scale: 2, useCORS: true, allowTaint: true, logging: false,
       });
-      const b64 = canvas.toDataURL('image/png').split(',')[1];
-      folder?.file(`slide-${i + 1}.png`, b64, { base64: true });
+      folder?.file(`slide-${String(i + 1).padStart(2, '0')}.png`, canvas.toDataURL('image/png').split(',')[1], { base64: true });
     }
 
     const blob = await zip.generateAsync({ type: 'blob' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `${deckTitle || 'presentation'}-slides.zip`;
+    const a = Object.assign(document.createElement('a'), { href: url, download: `${deckTitle || 'slides'}.zip` });
     document.body.appendChild(a); a.click();
     URL.revokeObjectURL(url); document.body.removeChild(a);
 
-    onSuccess?.('Images exported successfully');
+    onSuccess?.(`${slideEls.length} slide images downloaded as ZIP`);
   } catch (error) {
-    onError?.(error instanceof Error ? error.message : 'Failed to export images');
+    onError?.(error instanceof Error ? error.message : 'Image export failed');
     throw error;
   }
 };
 
-// ─── Helper ───────────────────────────────────────────────────────────────────
-function extractHexFromGradient(gradient: string): string {
-  const match = gradient.match(/#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})/);
-  return match ? match[0] : '#1a1a2e';
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function getSlideElements(): HTMLElement[] {
+  const byId = document.querySelectorAll('[id^="slide-content-"]') as NodeListOf<HTMLElement>;
+  if (byId.length > 0) return Array.from(byId).filter(el => el.offsetHeight > 0);
+  throw new Error('No slides found. Please ensure slides are visible before exporting.');
+}
+
+function extractHexFromGradient(bg: string): string {
+  // Try to extract hex from the background string
+  const matches = bg.match(/#([0-9a-fA-F]{6})/g);
+  if (matches && matches.length > 0) {
+    // For gradients, use the middle color if available, otherwise first
+    const mid = matches[Math.floor(matches.length / 2)];
+    return mid.replace('#', '');
+  }
+  return 'FFFFFF';
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise(r => setTimeout(r, ms));
 }
