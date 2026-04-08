@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 // 1. Create a product "Educator Pro" at https://dashboard.stripe.com/products
 // 2. Add a recurring monthly price of $15.00
 // 3. Copy the price ID (starts with price_) and paste below
-const STRIPE_PRICE_ID = 'price_REPLACE_WITH_YOUR_PRICE_ID';
+const STRIPE_PRICE_ID = 'price_1TK5YuLmA0QjAzumxuF3hKCt';
 
 const FREE_FEATURES = [
   '3 presentations per month',
