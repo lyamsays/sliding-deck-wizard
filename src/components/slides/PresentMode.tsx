@@ -38,6 +38,19 @@ const PresentMode: React.FC<PresentModeProps> = ({ slides, startIndex = 0, onClo
     return () => window.removeEventListener('keydown', handler);
   }, [next, prev, onClose]);
 
+  // Touch swipe support for mobile
+  useEffect(() => {
+    let startX = 0;
+    const onTouchStart = (e: TouchEvent) => { startX = e.touches[0].clientX; };
+    const onTouchEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) > 50) dx < 0 ? next() : prev();
+    };
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => { window.removeEventListener('touchstart', onTouchStart); window.removeEventListener('touchend', onTouchEnd); };
+  }, [next, prev]);
+
   // Auto-hide controls
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>;
@@ -121,7 +134,7 @@ const PresentMode: React.FC<PresentModeProps> = ({ slides, startIndex = 0, onClo
         {/* Speaker notes panel */}
         {showNotes && slide?.speakerNotes && (
           <div
-            className="flex-shrink-0 overflow-y-auto rounded-lg ml-4"
+            className="flex-shrink-0 overflow-y-auto rounded-lg ml-4 hidden sm:block"
             style={{ width: '28vw', maxHeight: '80vh', backgroundColor: 'rgba(255,255,255,0.08)', padding: '20px', color: 'rgba(255,255,255,0.85)', fontSize: '14px', lineHeight: 1.7 }}
             onClick={e => e.stopPropagation()}
           >
@@ -172,9 +185,13 @@ const PresentMode: React.FC<PresentModeProps> = ({ slides, startIndex = 0, onClo
           <ChevronRight className="h-7 w-7" />
         </button>
 
-        {/* Keyboard hint */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none" style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', letterSpacing: '0.05em' }}>
+        {/* Keyboard hint — desktop only */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none hidden sm:block" style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', letterSpacing: '0.05em' }}>
           ← → navigate · N notes · Esc exit
+        </div>
+        {/* Mobile hint */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none sm:hidden" style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px' }}>
+          swipe to navigate · tap × to exit
         </div>
       </div>
     </div>

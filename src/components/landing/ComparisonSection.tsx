@@ -29,7 +29,7 @@ const ComparisonSection = () => (
         <h2 className="text-4xl font-bold text-gray-900 mb-4">Built for professors, not everyone</h2>
         <p className="text-lg text-gray-500">Gamma is great. PowerPoint is powerful. Neither was built for how professors actually work.</p>
       </div>
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm overflow-x-auto">
         <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-100">
           <div className="p-4 text-sm font-medium text-gray-500">Feature</div>
           <div className="p-4 text-center">

@@ -218,42 +218,45 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
                   <span>Last edited now</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex rounded-lg border border-border overflow-hidden">
-                  <button onClick={() => setViewMode('outline')} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors ${viewMode === 'outline' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
-                    <List className="h-3.5 w-3.5" /> Outline
-                  </button>
-                  <button onClick={() => setViewMode('slide')} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors ${viewMode === 'slide' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
-                    <Grid3X3 className="h-3.5 w-3.5" /> Slides
-                  </button>
-                </div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                {/* Row 1: view toggle + theme */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex rounded-lg border border-border overflow-hidden">
+                    <button onClick={() => setViewMode('outline')} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm transition-colors ${viewMode === 'outline' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+                      <List className="h-3.5 w-3.5" /><span className="hidden sm:inline ml-1">Outline</span>
+                    </button>
+                    <button onClick={() => setViewMode('slide')} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm transition-colors ${viewMode === 'slide' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+                      <Grid3X3 className="h-3.5 w-3.5" /><span className="hidden sm:inline ml-1">Slides</span>
+                    </button>
+                  </div>
 
-                {/* Theme switcher */}
-                <div className="relative">
-                  <Button variant="outline" size="sm" onClick={() => setShowThemeSwitcher(s => !s)}>
-                    <Palette className="h-3.5 w-3.5 mr-1.5" /> Theme
+                  {/* Theme switcher */}
+                  <div className="relative">
+                    <Button variant="outline" size="sm" onClick={() => setShowThemeSwitcher(s => !s)} className="h-8 px-2.5 text-xs sm:text-sm">
+                      <Palette className="h-3.5 w-3.5 sm:mr-1.5" /><span className="hidden sm:inline">Theme</span>
+                    </Button>
+                    {showThemeSwitcher && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setShowThemeSwitcher(false)} />
+                        <ThemeSwitcher
+                          slides={slides}
+                          currentThemeId={currentThemeId}
+                          onThemeChange={handleThemeChange}
+                          onClose={() => setShowThemeSwitcher(false)}
+                        />
+                      </>
+                    )}
+                  </div>
+
+                  <Button variant="default" size="sm" onClick={() => setIsPresentMode(true)} className="bg-purple-600 hover:bg-purple-700 text-white h-8 px-2.5 text-xs sm:text-sm">
+                    <Play className="h-3.5 w-3.5 sm:mr-1.5" /><span className="hidden sm:inline">Present</span>
                   </Button>
-                  {showThemeSwitcher && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowThemeSwitcher(false)} />
-                      <ThemeSwitcher
-                        slides={slides}
-                        currentThemeId={currentThemeId}
-                        onThemeChange={handleThemeChange}
-                        onClose={() => setShowThemeSwitcher(false)}
-                      />
-                    </>
-                  )}
+
+                  <Button onClick={onSave} disabled={isSaving} size="sm" className={`h-8 px-2.5 text-xs sm:text-sm ${!user ? 'bg-green-600 hover:bg-green-700 text-white animate-pulse' : ''}`}>
+                    <Save className="h-3.5 w-3.5 sm:mr-1.5" />
+                    <span className="hidden sm:inline">{isSaving ? 'Saving...' : !user ? 'Save free' : 'Save'}</span>
+                  </Button>
                 </div>
-
-                <Button variant="default" size="sm" onClick={() => setIsPresentMode(true)} className="bg-purple-600 hover:bg-purple-700 text-white">
-                  <Play className="h-3.5 w-3.5 mr-1.5" /> Present
-                </Button>
-
-                <Button onClick={onSave} disabled={isSaving} size="sm" className={!user ? 'bg-green-600 hover:bg-green-700 text-white animate-pulse' : ''}>
-                  <Save className="h-3.5 w-3.5 mr-1.5" />
-                  {isSaving ? 'Saving...' : !user ? 'Save (Sign up free!)' : 'Save'}
-                </Button>
               </div>
             </div>
           </CardContent>
@@ -312,11 +315,21 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
               <div>
                 {/* Mobile navigation */}
                 <div className="lg:hidden flex items-center justify-between mb-3">
-                  <span className="text-sm text-muted-foreground">{safeIndex + 1} / {slides.length}</span>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setSelectedIndex(Math.max(0, safeIndex - 1))} disabled={safeIndex === 0}>← Prev</Button>
-                    <Button variant="outline" size="sm" onClick={() => setSelectedIndex(Math.min(slides.length - 1, safeIndex + 1))} disabled={safeIndex === slides.length - 1}>Next →</Button>
-                  </div>
+                  <button
+                    onClick={() => setSelectedIndex(Math.max(0, safeIndex - 1))}
+                    disabled={safeIndex === 0}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-muted transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" /> Prev
+                  </button>
+                  <span className="text-sm font-medium text-muted-foreground">{safeIndex + 1} / {slides.length}</span>
+                  <button
+                    onClick={() => setSelectedIndex(Math.min(slides.length - 1, safeIndex + 1))}
+                    disabled={safeIndex === slides.length - 1}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-muted transition-colors"
+                  >
+                    Next <ChevronRight className="h-4 w-4" />
+                  </button>
                 </div>
 
                 {/* Slide — no card wrapper */}

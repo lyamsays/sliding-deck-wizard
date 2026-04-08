@@ -533,13 +533,13 @@ Mitigation Strategies:
           {/* Slide count selector */}
           <div className="space-y-2">
             <Label className="font-medium text-sm">Number of Slides</Label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-5 gap-2">
               {[6, 8, 10, 12, 15].map(n => (
                 <button
                   key={n}
                   type="button"
                   onClick={() => setNumSlides(n)}
-                  className="flex-1 py-2 rounded-lg border text-sm font-medium transition-all"
+                  className="py-2 rounded-lg border text-sm font-medium transition-all text-center"
                   style={numSlides === n
                     ? { backgroundColor: '#7c3aed', color: '#ffffff', borderColor: '#7c3aed' }
                     : { borderColor: '#e5e7eb', backgroundColor: 'transparent' }
@@ -575,7 +575,7 @@ Mitigation Strategies:
               <p className="text-sm text-muted-foreground">
                 Choose a visual style for your presentation
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {[...themes.filter(t => t.categories.includes('educator')), ...themes.filter(t => !t.categories.includes('educator'))].slice(0, 9).map((theme) => (
                   <div
                     key={theme.id}

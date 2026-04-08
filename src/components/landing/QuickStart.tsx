@@ -15,7 +15,7 @@ const QuickStart = () => (
         <div className="text-sm font-semibold text-purple-600 uppercase tracking-wider mb-3">What educators say</div>
         <h2 className="text-4xl font-bold text-gray-900">Professors love it</h2>
       </div>
-      <div className="grid md:grid-cols-3 gap-6 mb-16">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
         {testimonials.map(({ quote, name, role }) => (
           <div key={name} className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
             <div className="text-purple-400 text-3xl font-serif leading-none mb-3">"</div>

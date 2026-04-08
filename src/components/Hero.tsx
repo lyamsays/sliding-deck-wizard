@@ -59,8 +59,8 @@ const Hero = () => {
           ))}
         </div>
 
-        {/* Product screenshot mockup — real slide preview */}
-        <div className="relative mx-auto max-w-5xl">
+        {/* Product screenshot mockup — hidden on small screens, shown on md+ */}
+        <div className="relative mx-auto max-w-5xl hidden md:block">
           {/* Browser chrome */}
           <div className="rounded-t-2xl bg-gray-100 border border-gray-200 border-b-0 px-4 py-3 flex items-center gap-2">
             <div className="flex gap-1.5">

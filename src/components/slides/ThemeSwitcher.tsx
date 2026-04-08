@@ -37,7 +37,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ slides, currentThemeId, o
   ];
 
   return (
-    <div className="absolute top-full right-0 mt-2 z-50 rounded-xl border border-border bg-background shadow-xl p-4" style={{ width: '360px' }}>
+    <div className="absolute top-full right-0 mt-2 z-50 rounded-xl border border-border bg-background shadow-xl p-4" style={{ width: 'min(360px, calc(100vw - 2rem))', maxHeight: '80vh', overflowY: 'auto' }}>
       <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Switch Theme</div>
       <div className="grid grid-cols-3 gap-2 max-h-80 overflow-y-auto pr-1">
         {sorted.map(theme => {
