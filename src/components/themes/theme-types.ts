@@ -1,5 +1,5 @@
 
-export type ThemeCategory = 'all' | 'dark' | 'consulting' | 'academic' | 'modern';
+export type ThemeCategory = 'all' | 'dark' | 'consulting' | 'academic' | 'modern' | 'educator';
 
 export interface Theme {
   id: string;

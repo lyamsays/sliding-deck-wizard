@@ -10,7 +10,7 @@ const CTA = () => {
           Ready to Create Beautiful Slide Decks?
         </h2>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10">
-          Join thousands of professionals who have revolutionized their presentation workflow with Sliding.io
+          The AI presentation tool built specifically for educators and researchers
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button size="lg" className="bg-primary hover:bg-primary/90 transition-all">

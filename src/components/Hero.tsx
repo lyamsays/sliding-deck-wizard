@@ -17,14 +17,14 @@ const Hero = () => {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-gray-900 mb-8 leading-tight">
-            Create presentations that
+            Turn your notes into
             <span className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 bg-clip-text text-transparent block mt-2">
-              command attention
+              lecture-ready slides
             </span>
           </h1>
           
           <p className="text-xl md:text-2xl text-gray-600 mb-12 leading-relaxed max-w-3xl mx-auto">
-            Transform your ideas into professional slide decks in seconds. Designed for consultants, professors, and business leaders who demand excellence.
+            Upload your research papers, lecture notes, or syllabi — and get beautiful, audience-specific presentations with speaker notes in seconds.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
@@ -45,15 +45,15 @@ const Hero = () => {
           <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-500">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <span>No design skills needed</span>
+              <span>Upload PDF, Word, or notes</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <span>AI-generated visuals</span>
+              <span>Educator-specific templates</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <span>Professional themes</span>
+              <span>Speaker notes included</span>
             </div>
           </div>
         </div>

@@ -292,7 +292,7 @@ const InstantCreator = () => {
             </div>
             <Separator orientation="vertical" className="h-12" />
             <div>
-              <div className="text-2xl font-bold text-primary">50K+</div>
+              <div className="text-2xl font-bold text-primary">100%</div>
               <div className="text-sm text-muted-foreground">Professionals trust us</div>
             </div>
             <Separator orientation="vertical" className="h-12" />

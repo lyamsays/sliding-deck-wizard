@@ -68,7 +68,7 @@ const SmartLoading: React.FC<SmartLoadingProps> = ({
           </div>
           <div className="flex flex-col items-center gap-1">
             <Users className="h-4 w-4 text-primary" />
-            <div className="text-xs text-muted-foreground">50K+ users</div>
+            <div className="text-xs text-muted-foreground">Educators worldwide</div>
           </div>
           <div className="flex flex-col items-center gap-1">
             <Target className="h-4 w-4 text-primary" />

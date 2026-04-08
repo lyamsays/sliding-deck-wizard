@@ -16,7 +16,7 @@ const TryBeforeSignup = () => {
   const benefits = [
     { icon: Zap, text: "Create unlimited presentations" },
     { icon: Clock, text: "Save hours of work" },
-    { icon: Users, text: "Join 50K+ professionals" },
+    { icon: Users, text: "Built for educators" },
     { icon: CheckCircle, text: "No credit card required" }
   ];
 

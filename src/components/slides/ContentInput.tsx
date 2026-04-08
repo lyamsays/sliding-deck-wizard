@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Lightbulb, Sparkles, Upload, FileText, ArrowRight } from 'lucide-react';
 import { themes } from '@/components/themes/theme-data';
 import ThemePreview from '@/components/themes/ThemePreview';
+import DocumentUpload from './DocumentUpload';
 
 interface ContentInputProps {
   slideContent: string;
@@ -417,7 +418,7 @@ Mitigation Strategies:
           Create Your Presentation
         </CardTitle>
         <p className="text-muted-foreground">
-          Describe your presentation or paste your content, and our AI will create professional slides
+          Upload your notes, research papers, or lecture materials — or paste text directly. Claude will generate audience-specific slides with speaker notes.
         </p>
       </CardHeader>
       
@@ -476,6 +477,12 @@ Mitigation Strategies:
               </Select>
             </div>
           </div>
+
+          {/* Document Upload */}
+          <DocumentUpload
+            onContentExtracted={(content) => setSlideContent(content)}
+            disabled={isGenerating}
+          />
 
           {/* Content Input */}
           <div className="space-y-3">
@@ -548,7 +555,7 @@ Mitigation Strategies:
                 Choose a visual style for your presentation
               </p>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {themes.slice(0, 6).map((theme) => (
+                {[...themes.filter(t => t.categories.includes('educator')), ...themes.filter(t => !t.categories.includes('educator'))].slice(0, 9).map((theme) => (
                   <div
                     key={theme.id}
                     className={`relative cursor-pointer rounded-lg border-2 transition-all ${

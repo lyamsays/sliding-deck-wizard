@@ -2,6 +2,8 @@
 export interface Slide {
   id: string;
   title: string;
+  subtitle?: string;
+  slideType?: 'title' | 'content' | 'data' | 'quote' | 'summary' | 'split';
   bullets: string[];
   bulletPoints?: string[]; // Add for compatibility
   slideNumber?: number; // Add for slide numbering

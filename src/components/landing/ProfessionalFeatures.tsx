@@ -156,7 +156,7 @@ const ProfessionalFeatures = () => {
               Ready to transform your presentation workflow?
             </h3>
             <p className="text-lg opacity-90 mb-6">
-              Join thousands of consultants and professors who've already made the switch
+              Built specifically for educators — not a generic tool with education bolted on
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" variant="secondary" asChild className="font-semibold">
