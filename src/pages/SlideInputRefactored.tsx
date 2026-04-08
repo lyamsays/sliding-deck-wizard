@@ -52,6 +52,7 @@ const SlideInput = () => {
   const [tone, setTone] = useState<string>("Professional");
   const [framework, setFramework] = useState<string>("None");
   const [autoGenerateImages, setAutoGenerateImages] = useState(false);
+  const [numSlides, setNumSlides] = useState<number>(8);
   const [selectedTheme, setSelectedTheme] = useState<string>('pristine');
   
   // UI state
@@ -289,7 +290,7 @@ const SlideInput = () => {
           purpose: setupData.purpose || 'Lecture / Class',
           themeId: setupData.selectedTheme,
           autoGenerateImages: setupData.autoGenerateImages,
-          numSlides: 8,
+          numSlides: numSlides,
         }
       });
       
@@ -386,7 +387,7 @@ const SlideInput = () => {
           purpose: purpose,
           themeId: selectedTheme,
           autoGenerateImages: autoGenerateImages,
-          numSlides: 8,
+          numSlides: numSlides,
         }
       });
       
@@ -532,6 +533,11 @@ const SlideInput = () => {
     const updatedSlides = [...editedSlides];
     updatedSlides[index] = editedSlide;
     setEditedSlides(updatedSlides);
+  };
+
+  const handleSlidesReorder = (newSlides: Slide[]) => {
+    setEditedSlides(newSlides);
+    setGeneratedSlides(newSlides);
   };
   
   const onTryExample = () => {
@@ -748,6 +754,8 @@ Why Choose Our Team:
             setSelectedTheme={setSelectedTheme}
             onSubmit={handleSubmit}
             isGenerating={isGenerating}
+            numSlides={numSlides}
+            setNumSlides={setNumSlides}
             onTryExample={onTryExample}
           />
         )}
@@ -790,6 +798,7 @@ Why Choose Our Team:
               setViewMode={setViewMode}
               onSave={handleSave}
               onSlideEdit={handleSlideEdit}
+              onSlidesReorder={handleSlidesReorder}
               isSaving={isSaving}
               user={user}
             />

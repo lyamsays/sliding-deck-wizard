@@ -23,6 +23,8 @@ interface ContentInputProps {
   setAutoGenerateImages: (auto: boolean) => void;
   selectedTheme: string;
   setSelectedTheme: (theme: string) => void;
+  numSlides: number;
+  setNumSlides: (n: number) => void;
   onSubmit: (e: React.FormEvent) => void;
   isGenerating: boolean;
   onTryExample: () => void;
@@ -41,6 +43,8 @@ const ContentInput: React.FC<ContentInputProps> = ({
   setAutoGenerateImages,
   selectedTheme,
   setSelectedTheme,
+  numSlides,
+  setNumSlides,
   onSubmit,
   isGenerating,
   onTryExample
@@ -525,6 +529,23 @@ Mitigation Strategies:
             )}
           </div>
 
+
+          {/* Slide count selector */}
+          <div className="space-y-2">
+            <Label className="font-medium text-sm">Number of Slides</Label>
+            <div className="flex gap-2">
+              {[6, 8, 10, 12, 15].map(n => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setNumSlides(n)}
+                  className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${numSlides === n ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/50 hover:bg-muted'}`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Advanced Options */}
           <div className="space-y-4 p-4 bg-secondary/10 rounded-lg">
