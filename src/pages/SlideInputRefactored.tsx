@@ -53,6 +53,7 @@ const SlideInput = () => {
   const [framework, setFramework] = useState<string>("None");
   const [autoGenerateImages, setAutoGenerateImages] = useState(false);
   const [numSlides, setNumSlides] = useState<number>(8);
+  const [savedDeckId, setSavedDeckId] = useState<string | undefined>(undefined);
   const [selectedTheme, setSelectedTheme] = useState<string>('pristine');
   
   // UI state
@@ -67,6 +68,18 @@ const SlideInput = () => {
   useEffect(() => {
     console.log("SlideInput: Component mounted, user status:", user ? "Logged in" : "Not logged in");
     
+    // Check if we're continuing editing an existing deck (from My Decks)
+    if (location.state?.deck) {
+      const { deck } = location.state;
+      setDeckTitle(deck.title || '');
+      setEditedSlides(deck.slides || []);
+      setGeneratedSlides(deck.slides || []);
+      if (deck.slides?.[0]?.style?.colorScheme) {
+        setSelectedTheme(deck.slides[0].style.colorScheme);
+      }
+      return;
+    }
+
     const setupDataString = localStorage.getItem('setupData');
     if (setupDataString) {
       try {
@@ -755,6 +768,7 @@ Phosphorylation, glycosylation, ubiquitination — regulate protein activity, lo
               onSave={handleSave}
               onSlideEdit={handleSlideEdit}
               onSlidesReorder={handleSlidesReorder}
+              deckId={savedDeckId}
               isSaving={isSaving}
               user={user}
             />

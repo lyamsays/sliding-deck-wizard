@@ -36,6 +36,7 @@ interface SlideEditorProps {
   onSlidesReorder?: (slides: Slide[]) => void;
   isSaving: boolean;
   user: any;
+  deckId?: string;
 }
 
 // ── Sortable slide thumbnail ──────────────────────────────────────────────────
@@ -103,13 +104,24 @@ const SortableSlide = ({
 // ── Main SlideEditor ──────────────────────────────────────────────────────────
 const SlideEditor: React.FC<SlideEditorProps> = ({
   slides, deckTitle, setDeckTitle, viewMode, setViewMode,
-  onSave, onSlideEdit, onSlidesReorder, isSaving, user
+  onSave, onSlideEdit, onSlidesReorder, isSaving, user, deckId
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isExporting, setIsExporting] = useState<string | null>(null);
   const [isPresentMode, setIsPresentMode] = useState(false);
   const [showThemeSwitcher, setShowThemeSwitcher] = useState(false);
   const { toast } = useToast();
+
+  const copyShareLink = () => {
+    if (!deckId) {
+      toast({ title: 'Save your deck first', description: 'Sign up free and save to get a shareable link.' });
+      return;
+    }
+    const url = `${window.location.origin}/deck/${deckId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast({ title: 'Link copied!', description: 'Share this link with anyone — no login required.' });
+    });
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -250,6 +262,10 @@ const SlideEditor: React.FC<SlideEditorProps> = ({
 
                   <Button variant="default" size="sm" onClick={() => setIsPresentMode(true)} className="bg-purple-600 hover:bg-purple-700 text-white h-8 px-2.5 text-xs sm:text-sm">
                     <Play className="h-3.5 w-3.5 sm:mr-1.5" /><span className="hidden sm:inline">Present</span>
+                  </Button>
+
+                  <Button variant="outline" size="sm" onClick={copyShareLink} className="h-8 px-2.5 text-xs sm:text-sm" title="Copy shareable link">
+                    <Link2 className="h-3.5 w-3.5 sm:mr-1.5" /><span className="hidden sm:inline">Share</span>
                   </Button>
 
                   <Button onClick={onSave} disabled={isSaving} size="sm" className={`h-8 px-2.5 text-xs sm:text-sm ${!user ? 'bg-green-600 hover:bg-green-700 text-white animate-pulse' : ''}`}>

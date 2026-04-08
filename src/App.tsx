@@ -13,6 +13,7 @@ import Themes from "./pages/Themes";
 import InstantCreator from "./pages/InstantCreator";
 import SlideInputRefactored from "./pages/SlideInputRefactored";
 import NotFound from "./pages/NotFound";
+import SharedDeck from "./pages/SharedDeck";
 import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -65,6 +66,7 @@ const App = () => {
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
                 <Route path="/terms" element={<TermsOfServicePage />} />
                 <Route path="/security" element={<SecurityPage />} />
+                <Route path="/deck/:deckId" element={<SharedDeck />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </ErrorBoundary>
