@@ -32,7 +32,7 @@ const NarrativeMode: React.FC<NarrativeModeProps> = ({
   
   const formatSlidesForAI = () => {
     return slides.map((slide, index) => {
-      return `Slide ${index + 1}: ${slide.title}\n${slide.bullets.map(bullet => `- ${bullet}`).join('\n')}`;
+      return `Slide ${index + 1}: ${slide.title}\n${(slide.bullets || []).map(bullet => `- ${bullet}`).join('\n')}`;
     }).join('\n\n');
   };
   

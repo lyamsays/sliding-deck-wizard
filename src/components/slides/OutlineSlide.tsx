@@ -26,7 +26,7 @@ const OutlineSlide: React.FC<OutlineSlideProps> = ({ slide, index, onSlideUpdate
   
   const handleBulletChange = (bulletIndex: number, e: React.FormEvent<HTMLLIElement>) => {
     const newBulletText = e.currentTarget.textContent || "";
-    const updatedBullets = [...slide.bullets];
+    const updatedBullets = [...(slide.bullets || [])];
     updatedBullets[bulletIndex] = newBulletText;
     
     onSlideUpdate(index, {
@@ -37,7 +37,7 @@ const OutlineSlide: React.FC<OutlineSlideProps> = ({ slide, index, onSlideUpdate
   
   const handleCopySlide = () => {
     let content = `${slide.title}\n\n`;
-    slide.bullets.forEach(bullet => {
+    (slide.bullets || []).forEach(bullet => {
       content += `• ${bullet}\n`;
     });
     
@@ -78,7 +78,7 @@ const OutlineSlide: React.FC<OutlineSlideProps> = ({ slide, index, onSlideUpdate
       </CardHeader>
       <CardContent className="pt-6">
         <ul className="space-y-3">
-          {slide.bullets.map((bullet, bulletIndex) => (
+          {(slide.bullets || []).map((bullet, bulletIndex) => (
             <li 
               key={bulletIndex} 
               className="flex items-start"

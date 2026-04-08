@@ -153,7 +153,7 @@ const DeckViewer: React.FC<DeckViewerProps> = ({ deck: propDeck, onClose }) => {
       pdf.setFontSize(12);
       let yPosition = 50;
       
-      slide.bullets.forEach((bullet) => {
+      (slide.bullets || []).forEach((bullet) => {
         const lines = pdf.splitTextToSize(`• ${bullet}`, pageWidth - 40);
         pdf.text(lines, 30, yPosition);
         yPosition += lines.length * 7;
@@ -283,7 +283,7 @@ const DeckViewer: React.FC<DeckViewerProps> = ({ deck: propDeck, onClose }) => {
                   <div>
                     <h4 className="font-semibold mb-3">Content</h4>
                     <ul className="space-y-2">
-                      {slide.bullets.map((bullet, bulletIndex) => (
+                      {(slide.bullets || []).map((bullet, bulletIndex) => (
                         <li key={bulletIndex} className="flex items-start">
                           <span className="text-primary mr-2 mt-1">•</span>
                           <span>{bullet}</span>

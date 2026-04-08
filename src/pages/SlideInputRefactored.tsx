@@ -128,7 +128,16 @@ const SlideInput = () => {
     console.log("SlideInput: Applying smart layout with theme:", themeId, themeData);
     
     return slides.map((slide, index) => ({
-      ...slide,
+      // Normalize all fields — Claude may return null for optional fields
+      id: slide.id || `slide-${index}`,
+      title: slide.title || `Slide ${index + 1}`,
+      subtitle: slide.subtitle || undefined,
+      slideType: slide.slideType || 'content',
+      bullets: Array.isArray(slide.bullets) ? slide.bullets : [],
+      visualSuggestion: slide.visualSuggestion || '',
+      speakerNotes: slide.speakerNotes || '',
+      imageUrl: slide.imageUrl || '',
+      revisedPrompt: slide.revisedPrompt || '',
       style: {
         backgroundColor: themeData.background,
         iconType: getIconSuggestion(slide.title, slide.visualSuggestion),

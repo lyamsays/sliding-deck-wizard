@@ -49,7 +49,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
   
   const handleBulletChange = (bulletIndex: number, e: React.FormEvent<HTMLLIElement>) => {
     const newBulletText = e.currentTarget.textContent || "";
-    const updatedBullets = [...slide.bullets];
+    const updatedBullets = [...(slide.bullets || [])];
     updatedBullets[bulletIndex] = newBulletText;
     
     onSlideUpdate(index, {
@@ -211,7 +211,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate, 
             {/* Text Content - Takes up 7 columns when image exists, 12 when no image */}
             <div className={slide.imageUrl ? "col-span-7" : "col-span-12"}>
               <ul className="space-y-4">
-                {slide.bullets.map((bullet, bulletIndex) => (
+                {(slide.bullets || []).map((bullet, bulletIndex) => (
                   <li 
                     key={bulletIndex} 
                     className="flex items-start text-lg"
