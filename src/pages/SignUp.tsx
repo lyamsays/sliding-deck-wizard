@@ -1,6 +1,7 @@
 import React, { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import Logo from '@/components/Logo';
 
@@ -23,7 +24,19 @@ const SignUp = () => {
     setLoading(true); setError('');
     const { error } = await signUp(email, password);
     if (error) { setError(error.message); setLoading(false); }
-    else setSuccess(true);
+    else {
+      setSuccess(true);
+      // Send welcome email
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: {
+            to: email,
+            subject: 'Welcome to Sliding.io',
+            html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:40px 20px;"><h1 style="color:#111;">Welcome to Sliding.io</h1><p style="color:#555;line-height:1.6;">Your account is ready. Generate your first AI-powered lecture slides in under 30 seconds.</p><div style="background:#f5f3ff;border-radius:12px;padding:20px;margin:24px 0;"><p style="font-weight:600;color:#7c3aed;margin:0 0 8px;">Your free plan includes:</p><ul style="color:#555;margin:0;padding-left:20px;line-height:2;"><li>3 presentations per month</li><li>Up to 8 slides per deck</li><li>All visual themes</li><li>Present mode &amp; PDF export</li></ul></div><a href="https://usesliding.com/create" style="display:block;text-align:center;background:#7c3aed;color:white;font-weight:600;padding:14px;border-radius:12px;text-decoration:none;">Create your first presentation →</a><p style="color:#999;font-size:13px;text-align:center;margin-top:24px;">Questions? <a href="mailto:lyam@usesliding.com" style="color:#7c3aed;">lyam@usesliding.com</a></p></div>`,
+          }
+        });
+      } catch { /* email failure shouldn't block signup success */ }
+    }
   };
 
   const handleGoogle = async () => {
