@@ -28,7 +28,7 @@ interface SlidesResponse {
   slides: Slide[];
 }
 
-const SlideInput = () => {
+const SlideInputRefactored = () => {
   console.log("SlideInput component rendering");
   
   const location = useLocation();
