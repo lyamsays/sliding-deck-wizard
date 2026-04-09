@@ -26,7 +26,7 @@ const AboutPage = () => {
 
           <div className="my-10 bg-purple-50 border border-purple-100 rounded-2xl p-8">
             <p className="italic text-gray-700 text-lg leading-relaxed">
-              "I built Sliding.io because I kept watching people in academia — professors, researchers, TAs — spend hours every week wrestling with PowerPoint. The content was already in their heads. The slides were just friction."
+              "As a law student with a passion for AI and entrepreneurship, I kept hearing the same frustration in conversations with mentors and professors: building presentations is time-consuming, repetitive, and often a barrier to getting real work done."
             </p>
             <div className="mt-4 flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-sm">
@@ -34,13 +34,13 @@ const AboutPage = () => {
               </div>
               <div>
                 <div className="font-semibold text-gray-900 text-sm">Lyam Ouattara</div>
-                <div className="text-gray-500 text-xs">Founder — Cornell '24, BU Law '27</div>
+                <div className="text-gray-500 text-xs">Founder — Cornell '25, BU Law '28</div>
               </div>
             </div>
           </div>
 
           <p>
-            Sliding.io isn't trying to be Gamma or PowerPoint. It's a tool built specifically for the way educators work — uploading lecture notes, research papers, and syllabi, then getting structured, audience-specific slides with real pedagogical speaker notes in under a minute.
+            Sliding.io is built specifically for the way educators work — uploading lecture notes, research papers, and syllabi, then getting structured, audience-specific slides with real pedagogical speaker notes in under a minute.
           </p>
 
           <h2 className="text-2xl font-bold mt-12 mb-4">What makes it different</h2>

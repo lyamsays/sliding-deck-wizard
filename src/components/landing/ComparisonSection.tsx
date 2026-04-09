@@ -27,7 +27,7 @@ const ComparisonSection = () => (
       <div className="text-center mb-12">
         <div className="text-sm font-semibold text-purple-600 uppercase tracking-wider mb-3">Why Sliding.io</div>
         <h2 className="text-4xl font-bold text-gray-900 mb-4">Built for professors, not everyone</h2>
-        <p className="text-lg text-gray-500">Gamma is great. PowerPoint is powerful. Neither was built for how professors actually work.</p>
+        <p className="text-lg text-gray-500">Existing AI presentation tools are built for everyone. Sliding.io is built only for educators.</p>
       </div>
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm overflow-x-auto">
         <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-100">
@@ -35,7 +35,7 @@ const ComparisonSection = () => (
           <div className="p-4 text-center">
             <div className="text-sm font-bold text-purple-700 bg-purple-50 rounded-lg px-2 py-1">Sliding.io</div>
           </div>
-          <div className="p-4 text-center"><div className="text-sm font-medium text-gray-500">Gamma</div></div>
+          <div className="p-4 text-center"><div className="text-sm font-medium text-gray-500">Other AI tools</div></div>
           <div className="p-4 text-center"><div className="text-sm font-medium text-gray-500">PowerPoint</div></div>
         </div>
         {rows.map((row, i) => (

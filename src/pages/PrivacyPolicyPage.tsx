@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -7,98 +6,78 @@ const PrivacyPolicyPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900">
-            Privacy Policy
-          </h1>
-          <p className="mt-4 text-gray-500">
-            Last updated: April 8, 2026
-          </p>
+      <main className="max-w-3xl mx-auto px-4 py-16 sm:py-24">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900">Privacy Policy</h1>
+          <p className="mt-3 text-gray-500 text-sm">Last updated: April 8, 2026</p>
         </div>
 
-        <div className="prose prose-lg mx-auto">
-          <h2>Overview</h2>
-          <p>
-            At Sliding.io, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and services.
-          </p>
-          
-          <p className="font-bold">
-            Your data is your own. We never sell it.
-          </p>
-          
-          <h2>Information We Collect</h2>
-          <p>
-            We collect information that you provide directly to us when you:
-          </p>
-          <ul>
-            <li>Create an account</li>
-            <li>Use our presentation creation services</li>
-            <li>Contact our support team</li>
-            <li>Subscribe to our newsletters</li>
-          </ul>
-          
-          <p>
-            This information may include:
-          </p>
-          <ul>
-            <li>Your name, email address, and other contact details</li>
-            <li>Content you upload to create presentations</li>
-            <li>Your preferences and settings</li>
-            <li>Feedback and survey responses</li>
-          </ul>
-          
-          <h2>How We Use Your Information</h2>
-          <p>
-            We use your information primarily to:
-          </p>
-          <ul>
-            <li>Provide, maintain, and improve our services</li>
-            <li>Create and generate presentation content</li>
-            <li>Respond to your comments, questions, and requests</li>
-            <li>Send you technical notices, updates, and administrative messages</li>
-            <li>Improve and develop new features and offerings</li>
-          </ul>
-          
-          <h2>Data Retention</h2>
-          <p>
-            We retain your information as long as necessary to provide our services and fulfill the purposes outlined in this Privacy Policy. You can request deletion of your account and associated data at any time.
-          </p>
-          
-          <h2>Data Security</h2>
-          <p>
-            We implement appropriate technical and organizational measures to protect the security of your personal information. However, no method of transmission over the Internet or electronic storage is 100% secure.
-          </p>
-          
-          <h2>Your Rights</h2>
-          <p>
-            Depending on your location, you may have rights regarding your personal information, including:
-          </p>
-          <ul>
-            <li>The right to access and receive a copy of your data</li>
-            <li>The right to rectify or update your data</li>
-            <li>The right to delete your data</li>
-            <li>The right to restrict processing of your data</li>
-          </ul>
-          
-          <h2>Changes to This Policy</h2>
-          <p>
-            We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date.
-          </p>
-          
-          <h2>Contact Us</h2>
-          <p>
-            If you have any questions about this Privacy Policy, please contact us at:
-          </p>
-          <p>
-            <a href="mailto:lyam@usesliding.com" className="text-primary hover:underline">
-              lyam@usesliding.com
-            </a>
-          </p>
+        <div className="prose prose-gray max-w-none space-y-8 text-gray-700">
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">Overview</h2>
+            <p>Sliding.io is operated by Lyam Ouattara ("I", "me", "we"). This Privacy Policy explains what data I collect when you use Sliding.io, how I use it, and your rights regarding that data. Your data is your own. I never sell it.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">What I collect</h2>
+            <ul className="list-disc list-inside space-y-2">
+              <li><strong>Account information</strong> — your email address and password when you sign up</li>
+              <li><strong>Presentation content</strong> — text you paste or documents you upload to generate slides, and the slides generated from that content</li>
+              <li><strong>Usage data</strong> — basic analytics like pages visited and features used, to understand how the product is being used</li>
+              <li><strong>Payment information</strong> — handled entirely by Stripe. I never see or store your credit card details</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">How I use your data</h2>
+            <ul className="list-disc list-inside space-y-2">
+              <li>To provide and improve the Sliding.io service</li>
+              <li>To generate slides from your content via the Anthropic Claude API</li>
+              <li>To send transactional emails (account confirmation, subscription receipts)</li>
+              <li>To respond to support requests</li>
+            </ul>
+            <p className="mt-3">I do not use your content to train AI models. I do not share your data with third parties for advertising purposes.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">Third-party services</h2>
+            <p>Sliding.io uses the following third-party services, each with their own privacy policies:</p>
+            <ul className="list-disc list-inside space-y-2 mt-2">
+              <li><strong>Supabase</strong> — database and authentication (supabase.com/privacy)</li>
+              <li><strong>Anthropic</strong> — AI slide generation; your content is processed per Anthropic's API usage policy (anthropic.com/privacy)</li>
+              <li><strong>Stripe</strong> — payment processing (stripe.com/privacy)</li>
+              <li><strong>Unsplash</strong> — stock images for slides (unsplash.com/privacy)</li>
+              <li><strong>Vercel</strong> — website hosting (vercel.com/legal/privacy-policy)</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">Data storage and security</h2>
+            <p>Your data is stored in Supabase's hosted database with row-level security. Passwords are hashed and never stored in plaintext. All data is transmitted over HTTPS.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">Your rights</h2>
+            <ul className="list-disc list-inside space-y-2">
+              <li><strong>Access</strong> — you can view all your saved decks at any time via My Decks</li>
+              <li><strong>Deletion</strong> — you can delete any individual deck at any time. To delete your account and all associated data, email lyam@usesliding.com</li>
+              <li><strong>Export</strong> — you can download your presentations as PowerPoint, PDF, or images at any time</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">Cookies</h2>
+            <p>Sliding.io uses only functional cookies necessary for authentication (session tokens). No tracking or advertising cookies are used.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">Contact</h2>
+            <p>Questions about this Privacy Policy? Email <a href="mailto:lyam@usesliding.com" className="text-primary hover:underline">lyam@usesliding.com</a>.</p>
+          </section>
+
         </div>
       </main>
-      
       <Footer />
     </div>
   );

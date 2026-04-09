@@ -1,8 +1,10 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Clock, ArrowRight } from 'lucide-react';
+import { Clock, ArrowRight, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const posts = [
   {
@@ -40,6 +42,23 @@ const posts = [
 ];
 
 const BlogPage = () => {
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async () => {
+    if (!email.includes('@')) return;
+    setLoading(true);
+    try {
+      await supabase.from('newsletter_subscribers').insert({ email, source: 'blog' });
+      setSubscribed(true);
+    } catch {
+      setSubscribed(true); // Even on duplicate, show success
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -80,10 +99,29 @@ const BlogPage = () => {
         <div className="mt-16 bg-purple-50 rounded-2xl p-8 text-center border border-purple-100">
           <h2 className="text-xl font-bold text-gray-900 mb-2">Get new posts by email</h2>
           <p className="text-gray-500 text-sm mb-5">One or two articles a month on education, AI, and teaching strategy. No spam.</p>
-          <div className="flex max-w-sm mx-auto gap-2">
-            <input type="email" placeholder="you@university.edu" className="flex-1 rounded-xl border border-gray-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" />
-            <button className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-5 py-2 rounded-xl transition-colors">Subscribe</button>
-          </div>
+          {subscribed ? (
+            <div className="flex items-center justify-center gap-2 text-green-600 font-medium">
+              <Check className="h-5 w-5" /> You're subscribed!
+            </div>
+          ) : (
+            <div className="flex max-w-sm mx-auto gap-2">
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
+                placeholder="you@university.edu"
+                className="flex-1 rounded-xl border border-gray-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+              <button
+                onClick={handleSubscribe}
+                disabled={loading || !email.includes('@')}
+                className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-5 py-2 rounded-xl transition-colors disabled:opacity-50"
+              >
+                {loading ? '...' : 'Subscribe'}
+              </button>
+            </div>
+          )}
         </div>
       </main>
       <Footer />

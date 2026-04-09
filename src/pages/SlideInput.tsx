@@ -590,7 +590,7 @@ const SlideInput = () => {
     
     toast({
       title: "Generating images",
-      description: `Starting image generation for ${totalSlides} slides like Gamma...`,
+      description: `Starting image generation for ${totalSlides} slides ...`,
     });
     
     try {
@@ -656,7 +656,7 @@ const SlideInput = () => {
       
       toast({
         title: "Images generated automatically!",
-        description: `Successfully generated ${processedCount} images like Gamma.`,
+        description: `Successfully generated ${processedCount} images .`,
       });
     } catch (error) {
       const err = error as Error;
