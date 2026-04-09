@@ -14,7 +14,7 @@ const TermsOfServicePage = () => {
             Terms of Service
           </h1>
           <p className="mt-4 text-gray-500">
-            Last updated: May 1, 2025
+            Last updated: April 8, 2026
           </p>
         </div>
 

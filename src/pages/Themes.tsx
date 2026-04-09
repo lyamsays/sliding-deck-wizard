@@ -12,7 +12,7 @@ import { themes } from '@/components/themes/theme-data';
 import { ThemeFilter } from '@/components/themes/ThemeFilter';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-type FilterType = 'all' | 'dark' | 'consulting' | 'academic' | 'modern';
+type FilterType = 'all' | 'dark' | 'educator' | 'academic' | 'modern';
 
 const Themes = () => {
   const { toast } = useToast();

@@ -1,81 +1,51 @@
-
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Upload, Wand2, PencilRuler, Download } from 'lucide-react';
+
+const steps = [
+  { icon: Upload, step: '01', title: 'Upload or paste your content', desc: 'Drop in a PDF, Word doc, or paste your lecture notes directly. Research papers, syllabi, outlines — anything works. Up to 20MB.' },
+  { icon: Wand2, step: '02', title: 'Set your audience and generate', desc: 'Select your role (Professor, TA, K-12 teacher) and your audience (undergrads, PhD students, executives). Pick a slide count and theme. Hit Generate — slides appear in under 30 seconds.' },
+  { icon: PencilRuler, step: '03', title: 'Edit, reorder, switch themes', desc: 'Drag slides to reorder, add or delete slides, switch themes live without regenerating. Click any slide to edit bullets or regenerate just that one slide with specific instructions.' },
+  { icon: Download, step: '04', title: 'Present or export', desc: 'Click Present for fullscreen mode with speaker notes. Or download as editable PowerPoint (with notes embedded), PDF, or a ZIP of images. Share a public link to let others view the deck.' },
+];
 
 const HowItWorksPage = () => {
-  const steps = [
-    {
-      number: 1,
-      title: "Paste in your content",
-      description: "Bullet points, outlines, or short text — just paste what you have, no formatting required."
-    },
-    {
-      number: 2,
-      title: "Our AI drafts full slides",
-      description: "The AI organizes your content into slides with appropriate visuals and formatting automatically."
-    },
-    {
-      number: 3,
-      title: "Review, refine, and export",
-      description: "Make any final adjustments and download as PowerPoint or PDF. That's it!"
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      <main className="max-w-3xl mx-auto px-4 py-16 sm:py-24">
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
-            <span className="block">How It Works</span>
-            <span className="block text-primary">Simple, Fast, Effective</span>
-          </h1>
-          <p className="mt-6 max-w-2xl mx-auto text-xl text-gray-500">
-            Three easy steps from raw content to professional slides
-          </p>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 mb-4">How it works</h1>
+          <p className="text-xl text-gray-500">From your notes to classroom-ready slides in 4 steps</p>
         </div>
 
-        <div className="relative">
-          {/* Timeline line */}
-          <div className="hidden md:block absolute left-1/2 h-full w-0.5 bg-gray-200 transform -translate-x-1/2"></div>
-          
-          {/* Steps */}
-          {steps.map((step, index) => (
-            <div key={index} className="relative mb-24 last:mb-0">
-              <div className="md:flex md:items-center md:gap-8">
-                {/* Step number and content - alternating sides */}
-                <div className={`md:w-1/2 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
-                  <div className="flex items-center mb-4">
-                    <div className="flex-shrink-0 h-12 w-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl">
-                      {step.number}
-                    </div>
-                    <h2 className="ml-4 text-2xl font-bold text-gray-900">{step.title}</h2>
-                  </div>
-                  <p className="text-lg text-gray-600 ml-16">{step.description}</p>
+        <div className="space-y-6">
+          {steps.map(({ icon: Icon, step, title, desc }) => (
+            <div key={step} className="flex gap-5 bg-white rounded-2xl border border-gray-100 p-6 hover:border-purple-200 transition-colors">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                  <Icon className="h-5 w-5 text-purple-600" />
                 </div>
               </div>
-              
-              {/* Arrow to next step */}
-              {index < steps.length - 1 && (
-                <div className="flex justify-center my-8">
-                  <ArrowRight className="h-8 w-8 text-primary" />
-                </div>
-              )}
+              <div>
+                <div className="text-xs font-bold text-purple-400 tracking-widest mb-1">STEP {step}</div>
+                <h2 className="font-semibold text-gray-900 mb-1">{title}</h2>
+                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+              </div>
             </div>
           ))}
         </div>
-        
-        <div className="mt-16 text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">Ready to try it yourself?</h3>
-          <a href="/create" className="inline-block bg-primary text-white px-6 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors">
-            Create Your First Deck
-          </a>
+
+        <div className="mt-12 bg-purple-600 rounded-2xl p-8 text-center text-white">
+          <h2 className="text-xl font-bold mb-2">See it in action</h2>
+          <p className="text-purple-200 text-sm mb-5">Click "Try Example" on the create page to generate a real deck from psychology lecture notes.</p>
+          <Link to="/create" className="inline-flex items-center gap-2 bg-white text-purple-700 font-semibold px-6 py-2.5 rounded-xl text-sm hover:bg-purple-50 transition-colors">
+            Generate your first deck →
+          </Link>
         </div>
       </main>
-      
       <Footer />
     </div>
   );

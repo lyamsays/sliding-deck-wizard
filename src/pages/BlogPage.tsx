@@ -1,113 +1,91 @@
-
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Button } from "@/components/ui/button";
-import { Clock, User } from 'lucide-react';
+import { Clock, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const posts = [
+  {
+    title: "Why Professors Spend 4 Hours a Week on Slides (And How to Get That Time Back)",
+    excerpt: "A survey of 200 educators found the average professor spends between 3-5 hours per week creating and updating presentation materials. Here's the breakdown — and what to do about it.",
+    date: "April 8, 2026",
+    readTime: "5 min read",
+    category: "Educator Productivity",
+    slug: "professor-slide-time"
+  },
+  {
+    title: "The Testing Effect: Why Your Slides Should Generate Discussion, Not Just Transfer Information",
+    excerpt: "Cognitive science research consistently shows that retrieval practice beats passive re-reading. Here's how to design slides that force active recall — and why your speaker notes matter more than your bullets.",
+    date: "April 3, 2026",
+    readTime: "7 min read",
+    category: "Teaching & Learning",
+    slug: "testing-effect-slides"
+  },
+  {
+    title: "Behind Sliding.io: How I Built an AI Presentation Tool for Professors in Law School",
+    excerpt: "I'm a first-year law student at BU who graduated from Cornell last year. This is the story of why I built Sliding.io, what I got wrong the first three times, and what the product looks like today.",
+    date: "March 28, 2026",
+    readTime: "8 min read",
+    category: "Company",
+    slug: "behind-sliding-io"
+  },
+  {
+    title: "Spaced Repetition, Forgetting Curves, and What They Mean for Lecture Design",
+    excerpt: "Ebbinghaus showed we forget 70% of new information within 24 hours. The implications for how professors structure lectures — and the slides within them — are significant and underappreciated.",
+    date: "March 20, 2026",
+    readTime: "6 min read",
+    category: "Teaching & Learning",
+    slug: "spaced-repetition-lectures"
+  },
+];
 
 const BlogPage = () => {
-  const blogPosts = [
-    {
-      title: "5 Ways AI Is Transforming Presentation Creation",
-      excerpt: "Discover how artificial intelligence is revolutionizing the way professionals create and deliver presentations in 2025.",
-      author: "Lyam Johnson",
-      date: "May 5, 2025",
-      readTime: "5 min read",
-      category: "AI & Productivity"
-    },
-    {
-      title: "From Outline to Presentation: A 10-Minute Guide",
-      excerpt: "Learn how to transform your rough notes into a polished presentation in just minutes using smart AI tools.",
-      author: "Sarah Chen",
-      date: "April 28, 2025",
-      readTime: "4 min read",
-      category: "Tutorials"
-    },
-    {
-      title: "The Psychology of Effective Slides: Less is More",
-      excerpt: "Research shows that simpler slides with focused messaging lead to better audience retention and engagement.",
-      author: "Dr. Michael Rivera",
-      date: "April 15, 2025",
-      readTime: "7 min read",
-      category: "Presentation Strategy"
-    },
-    {
-      title: "Behind the Scenes: How We Built Sliding.io",
-      excerpt: "A look at our journey from idea to product, and the challenges we faced along the way.",
-      author: "Lyam Johnson",
-      date: "April 3, 2025",
-      readTime: "6 min read",
-      category: "Company News"
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      <main className="max-w-4xl mx-auto px-4 py-16 sm:py-24">
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
-            <span className="block">Sliding.io</span>
-            <span className="block text-primary">Blog</span>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 mb-4">
+            The <span className="text-primary">Sliding.io</span> Blog
           </h1>
-          <p className="mt-6 max-w-2xl mx-auto text-xl text-gray-500">
-            Insights on AI-powered productivity, presentation strategy, and company updates
+          <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+            Writing on education, cognitive science, teaching strategy, and building Sliding.io.
+            <br />
+            <span className="text-sm mt-1 block">By <a href="/about" className="text-primary hover:underline">Lyam Ouattara</a></span>
           </p>
         </div>
 
-        <div className="grid gap-10 lg:grid-cols-2 mt-16">
-          {blogPosts.map((post, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="bg-gray-100 h-48"></div>
-              <div className="p-6">
-                <div className="flex items-center space-x-2 text-sm text-primary mb-2">
-                  <span>{post.category}</span>
+        <div className="space-y-8">
+          {posts.map((post, i) => (
+            <article key={i} className="bg-white rounded-2xl border border-gray-100 p-7 hover:border-purple-200 hover:shadow-sm transition-all group">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-3 py-1 rounded-full">{post.category}</span>
+                <div className="flex items-center gap-1 text-xs text-gray-400">
+                  <Clock className="h-3.5 w-3.5" />
+                  {post.readTime}
                 </div>
-                <h2 className="text-xl font-bold mb-2 hover:text-primary transition-colors">
-                  <a href="#post">{post.title}</a>
-                </h2>
-                <p className="text-gray-600 mb-4">
-                  {post.excerpt}
-                </p>
-                <div className="flex items-center justify-between text-sm text-gray-500">
-                  <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4" />
-                    <span>{post.author}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4" />
-                    <span>{post.readTime}</span>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <Button variant="link" className="p-0 h-auto text-primary">Read more →</Button>
-                </div>
+                <span className="text-xs text-gray-400">{post.date}</span>
               </div>
-            </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary transition-colors leading-snug">
+                {post.title}
+              </h2>
+              <p className="text-gray-600 text-sm leading-relaxed mb-4">{post.excerpt}</p>
+              <div className="flex items-center gap-1 text-sm text-primary font-medium">
+                Read more <ArrowRight className="h-4 w-4" />
+              </div>
+            </article>
           ))}
         </div>
-        
-        <div className="mt-16 flex justify-center">
-          <Button variant="outline" size="lg">Load More Articles</Button>
-        </div>
-        
-        <div className="mt-20 max-w-3xl mx-auto bg-primary/5 rounded-lg p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Subscribe to Our Newsletter</h2>
-          <p className="text-gray-600 mb-6">
-            Get the latest articles, tutorials, and company news delivered straight to your inbox.
-          </p>
-          <div className="flex max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Your email address"
-              className="flex-grow rounded-l-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-            <Button className="rounded-l-none">Subscribe</Button>
+
+        <div className="mt-16 bg-purple-50 rounded-2xl p-8 text-center border border-purple-100">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Get new posts by email</h2>
+          <p className="text-gray-500 text-sm mb-5">One or two articles a month on education, AI, and teaching strategy. No spam.</p>
+          <div className="flex max-w-sm mx-auto gap-2">
+            <input type="email" placeholder="you@university.edu" className="flex-1 rounded-xl border border-gray-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" />
+            <button className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-5 py-2 rounded-xl transition-colors">Subscribe</button>
           </div>
         </div>
       </main>
-      
       <Footer />
     </div>
   );

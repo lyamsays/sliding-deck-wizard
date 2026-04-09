@@ -29,7 +29,7 @@ const ContactPage = () => {
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           <div className="bg-white p-6 lg:p-8 rounded-lg shadow-sm">
             <h2 className="text-2xl font-bold mb-6">Contact Us</h2>
-            <form>
+            <form action="mailto:lyam@usesliding.com" method="post" encType="text/plain">
               <div className="space-y-4">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">

@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Toggle } from "@/components/ui/toggle";
-import { Moon, BookOpen, Briefcase, Sparkles } from "lucide-react";
+import { Moon, BookOpen, Sparkles } from "lucide-react";
 
-type FilterType = 'all' | 'dark' | 'consulting' | 'academic' | 'modern';
+type FilterType = 'all' | 'dark' | 'educator' | 'academic' | 'modern';
 
 interface ThemeFilterProps {
   activeFilter: FilterType;
@@ -13,8 +13,8 @@ interface ThemeFilterProps {
 export const ThemeFilter = ({ activeFilter, setActiveFilter }: ThemeFilterProps) => {
   const filters = [
     { id: 'all', label: 'All Themes', icon: null },
+    { id: 'educator', label: 'Educator', icon: <BookOpen className="h-4 w-4" /> },
     { id: 'dark', label: 'Dark Mode', icon: <Moon className="h-4 w-4" /> },
-    { id: 'consulting', label: 'Consulting', icon: <Briefcase className="h-4 w-4" /> },
     { id: 'academic', label: 'Academic', icon: <BookOpen className="h-4 w-4" /> },
     { id: 'modern', label: 'Modern', icon: <Sparkles className="h-4 w-4" /> },
   ];
