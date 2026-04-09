@@ -28,6 +28,8 @@ interface ContentInputProps {
   onSubmit: (e: React.FormEvent) => void;
   isGenerating: boolean;
   onTryExample: () => void;
+  isPro?: boolean;
+  onDocUploadGate?: () => void;
 }
 
 const ContentInput: React.FC<ContentInputProps> = ({
@@ -47,7 +49,9 @@ const ContentInput: React.FC<ContentInputProps> = ({
   setNumSlides,
   onSubmit,
   isGenerating,
-  onTryExample
+  onTryExample,
+  isPro,
+  onDocUploadGate,
 }) => {
   const quickPrompts = [
     `Digital Transformation Strategy for Mid-Market Manufacturing Companies
@@ -484,6 +488,8 @@ Mitigation Strategies:
           <DocumentUpload
             onContentExtracted={(content) => setSlideContent(content)}
             disabled={isGenerating}
+            isPro={isPro}
+            onPaywallTrigger={onDocUploadGate}
           />
 
           {/* Content Input */}

@@ -51,9 +51,22 @@ const BlogPage = () => {
     setLoading(true);
     try {
       await supabase.from('newsletter_subscribers').insert({ email, source: 'blog' });
+      // Send welcome email via Supabase Edge Function
+      supabase.functions.invoke('send-email', {
+        body: {
+          to: email,
+          subject: 'Welcome to the Sliding.io newsletter',
+          html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px">
+            <h2 style="font-size:22px;font-weight:700;color:#1e1b4b;margin-bottom:8px">You're in 🎉</h2>
+            <p style="color:#4b5563;line-height:1.6">Thanks for subscribing to the Sliding.io blog. We write about teaching with AI, presentation design for educators, and building tools that actually save professors time.</p>
+            <p style="color:#4b5563;line-height:1.6">While you're here — <a href="https://www.usesliding.com/create" style="color:#7c3aed;font-weight:600">try creating a deck from your lecture notes</a>. It takes about 30 seconds.</p>
+            <p style="color:#9ca3af;font-size:13px;margin-top:32px">You can unsubscribe any time by replying to this email.</p>
+          </div>`
+        }
+      }).catch(() => {}); // Fire-and-forget, don't block UI
       setSubscribed(true);
     } catch {
-      setSubscribed(true); // Even on duplicate, show success
+      setSubscribed(true);
     } finally {
       setLoading(false);
     }

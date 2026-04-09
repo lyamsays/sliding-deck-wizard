@@ -736,6 +736,8 @@ Phosphorylation, glycosylation, ubiquitination — regulate protein activity, lo
             numSlides={numSlides}
             setNumSlides={setNumSlides}
             onTryExample={onTryExample}
+            isPro={isPro}
+            onDocUploadGate={() => setPaywallReason('doc_upload')}
           />
         )}
         

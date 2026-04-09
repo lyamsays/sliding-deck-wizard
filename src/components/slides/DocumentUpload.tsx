@@ -6,11 +6,13 @@ import { useToast } from '@/hooks/use-toast';
 interface DocumentUploadProps {
   onContentExtracted: (content: string, fileName: string) => void;
   disabled?: boolean;
+  isPro?: boolean;
+  onPaywallTrigger?: () => void;
 }
 
 type UploadState = 'idle' | 'reading' | 'done' | 'error';
 
-const DocumentUpload: React.FC<DocumentUploadProps> = ({ onContentExtracted, disabled }) => {
+const DocumentUpload: React.FC<DocumentUploadProps> = ({ onContentExtracted, disabled, isPro, onPaywallTrigger }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<UploadState>('idle');
   const [fileName, setFileName] = useState('');
@@ -69,7 +71,11 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onContentExtracted, dis
   };
 
   const handleFile = async (file: File) => {
-    const maxSize = 20 * 1024 * 1024; // 10MB
+    if (!isPro) {
+      onPaywallTrigger?.();
+      return;
+    }
+    const maxSize = 20 * 1024 * 1024;
     if (file.size > maxSize) {
       setError('File too large. Maximum size is 20MB.');
       setState('error');
