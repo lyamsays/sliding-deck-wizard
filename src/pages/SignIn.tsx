@@ -1,31 +1,127 @@
-
-import React from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import SignInForm from '../components/auth/SignInForm';
-import { Link } from 'react-router-dom';
+import React, { useState, FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { Eye, EyeOff, Sparkles } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 const SignIn = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { signIn, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) { setError('Please fill in all fields'); return; }
+    setLoading(true); setError('');
+    const { error } = await signIn(email, password);
+    if (error) { setError(error.message); setLoading(false); }
+    else navigate('/my-decks');
+  };
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    await signInWithGoogle();
+  };
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
-      
-      <main className="flex-1 py-12 md:py-24 px-4">
-        <div className="max-w-md mx-auto">
-          <SignInForm />
-          
-          <div className="text-center mt-6">
-            <p className="text-sm text-gray-600">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Simple header */}
+      <div className="flex justify-center pt-8 pb-2">
+        <Link to="/"><Logo /></Link>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-sm">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+            {/* Heading */}
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
+              <p className="text-sm text-gray-500 mt-1">Sign in to access your presentations</p>
+            </div>
+
+            {/* Google OAuth */}
+            <button
+              onClick={handleGoogle}
+              disabled={googleLoading}
+              className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors mb-4 disabled:opacity-50"
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18">
+                <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
+                <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/>
+                <path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z"/>
+                <path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.31z"/>
+              </svg>
+              {googleLoading ? 'Redirecting...' : 'Continue with Google'}
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-xs text-gray-400">or</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+
+            {/* Email form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setError(''); }}
+                  placeholder="you@university.edu"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700">Password</label>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => { setPassword(e.target.value); setError(''); }}
+                    placeholder="Your password"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent pr-10"
+                    required
+                  />
+                  <button type="button" onClick={() => setShowPassword(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {error && <p className="text-sm text-red-600">{error}</p>}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Signing in...' : 'Sign In'}
+              </button>
+            </form>
+
+            <p className="text-center text-sm text-gray-500 mt-5">
               Don't have an account?{' '}
-              <Link to="/signup" className="text-primary hover:underline font-medium">
-                Sign up
-              </Link>
+              <Link to="/sign-up" className="text-primary font-medium hover:underline">Sign up free</Link>
             </p>
           </div>
+
+          <p className="text-center text-xs text-gray-400 mt-4">
+            By signing in, you agree to our{' '}
+            <Link to="/terms" className="underline">Terms of Service</Link>
+            {' '}and{' '}
+            <Link to="/privacy" className="underline">Privacy Policy</Link>
+          </p>
         </div>
-      </main>
-      
-      <Footer />
+      </div>
     </div>
   );
 };

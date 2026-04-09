@@ -52,7 +52,9 @@ const App = () => {
                 <Route path="/slide-input" element={<SlideInputRefactored />} />
                 <Route path="/instant-creator" element={<SlideInputRefactored />} />
                 <Route path="/sign-in" element={<SignIn />} />
+                <Route path="/signin" element={<SignIn />} />
                 <Route path="/sign-up" element={<SignUp />} />
+                <Route path="/signup" element={<SignUp />} />
                 <Route path="/my-decks" element={<MyDecks />} />
                 <Route path="/themes" element={<Themes />} />
                 <Route path="/features" element={<Features />} />

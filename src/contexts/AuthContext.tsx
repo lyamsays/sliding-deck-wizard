@@ -10,6 +10,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   loading: boolean;
 }
 
@@ -145,12 +146,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/my-decks` },
+    });
+  };
+
   const value = {
     user,
     session,
     signIn,
     signUp,
     signOut,
+    signInWithGoogle,
     loading,
   };
 
