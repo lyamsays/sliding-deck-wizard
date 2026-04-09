@@ -15,7 +15,7 @@ const AboutPage = () => {
             About <span className="text-primary">Sliding.io</span>
           </h1>
           <p className="text-xl text-gray-500">
-            An AI presentation tool built by an educator, for educators.
+            An AI presentation tool built for educators.
           </p>
         </div>
 
