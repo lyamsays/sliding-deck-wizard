@@ -14,23 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      newsletter_subscribers: {
+        Row: {
+          id: string
+          email: string
+          subscribed_at: string | null
+          source: string | null
+        }
+        Insert: {
+          id?: string
+          email: string
+          subscribed_at?: string | null
+          source?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          subscribed_at?: string | null
+          source?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
           id: string
+          is_pro: boolean | null
+          pro_started_at: string | null
           profession: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           id: string
+          is_pro?: boolean | null
+          pro_started_at?: string | null
           profession?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
+          is_pro?: boolean | null
+          pro_started_at?: string | null
           profession?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           updated_at?: string | null
         }
         Relationships: []

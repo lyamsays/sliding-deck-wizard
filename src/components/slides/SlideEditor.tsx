@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Slide } from '@/types/deck';
 import {
   Save, Download, Play, List, Grid3X3, FileText,
-  Image as ImageIcon, Plus, Trash2, GripVertical, Palette
+  Image as ImageIcon, Plus, Trash2, GripVertical, Palette,
+  Link2, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import StyledSlide from './StyledSlide';
 import OutlineSlide from './OutlineSlide';

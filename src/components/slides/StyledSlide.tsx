@@ -48,7 +48,7 @@ const StyledSlide: React.FC<StyledSlideProps> = ({ slide, index, onSlideUpdate }
 
   // ── Title renderer ─────────────────────────────────────────────────────────
   const renderTitle = (size: string, mb = '4%') => (
-    <h2 style={{ color: text, fontFamily: tfont, fontWeight: 800, fontSize: size, lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: bullets.length ? mb : 0, margin: 0, marginBottom: bullets.length ? mb : 0 }}>
+    <h2 style={{ color: text, fontFamily: tfont, fontWeight: 800, fontSize: size, lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: bullets.length ? mb : 0 }}>
       {slide.title}
     </h2>
   );
