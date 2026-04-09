@@ -21,7 +21,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Sliding.io <hello@usesliding.com>",
+        from: "Sliding.io <onboarding@resend.dev>",
         to: [to],
         subject,
         html,
