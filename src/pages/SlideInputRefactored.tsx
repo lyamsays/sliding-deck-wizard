@@ -820,12 +820,6 @@ Phosphorylation, glycosylation, ubiquitination — regulate protein activity, lo
       )}
       
       <Footer />
-    </div>
-  );
-};
-
-export default SlideInput
-
       {paywallReason && (
         <PaywallModal
           reason={paywallReason}
