@@ -7,7 +7,8 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { SlideDeck, convertDbSlidesToTypedSlides } from '@/types/deck';
 import DeckList from '@/components/decks/DeckList';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Zap } from 'lucide-react';
+import { usePlan, FREE_DECK_LIMIT } from '@/hooks/usePlan';
 
 const MyDecks = () => {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ const MyDecks = () => {
   const [deleting, setDeleting] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { isPro, deckCount } = usePlan();
 
   useEffect(() => {
     if (!user) { navigate('/sign-in'); return; }
@@ -77,6 +79,25 @@ const MyDecks = () => {
               New presentation
             </button>
           </div>
+
+          {/* Upgrade banner — show when at or near free limit */}
+          {!isPro && deckCount >= FREE_DECK_LIMIT && (
+            <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-4">
+              <div>
+                <div className="font-semibold text-amber-800 text-sm">You've used {deckCount} of {FREE_DECK_LIMIT} free presentations this month</div>
+                <div className="text-amber-700 text-xs mt-0.5">Upgrade to Educator Pro for unlimited presentations.</div>
+              </div>
+              <a href="/pricing" className="flex-shrink-0 flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
+                <Zap className="h-3.5 w-3.5" /> Upgrade
+              </a>
+            </div>
+          )}
+          {!isPro && deckCount === FREE_DECK_LIMIT - 1 && (
+            <div className="mb-6 bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-center justify-between gap-4">
+              <div className="text-blue-700 text-xs">1 free presentation remaining this month.</div>
+              <a href="/pricing" className="flex-shrink-0 text-blue-600 text-xs font-semibold hover:underline">See Pro →</a>
+            </div>
+          )}
 
           {/* Content */}
           {loading ? (

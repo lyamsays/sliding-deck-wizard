@@ -20,6 +20,8 @@ import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import ImageGenerationProgress from '@/components/slides/ImageGenerationProgress';
 import TrySuccess from '@/components/slides/TrySuccess';
 import TryBeforeSignup from '@/components/slides/TryBeforeSignup';
+import PaywallModal from '@/components/PaywallModal';
+import { usePlan, FREE_DECK_LIMIT, FREE_SLIDE_LIMIT } from '@/hooks/usePlan';
 
 interface SlidesResponse {
   deckTitle?: string;
@@ -33,6 +35,7 @@ const SlideInput = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isPro, deckCount, loading: planLoading } = usePlan();
   
   const autoGenerate = new URLSearchParams(location.search).get('autoGenerate') === 'true';
   
@@ -54,6 +57,7 @@ const SlideInput = () => {
   const [autoGenerateImages, setAutoGenerateImages] = useState(false);
   const [numSlides, setNumSlides] = useState<number>(8);
   const [savedDeckId, setSavedDeckId] = useState<string | undefined>(undefined);
+  const [paywallReason, setPaywallReason] = useState<'deck_limit' | 'doc_upload' | 'slide_limit' | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<string>('pristine');
   
   // UI state
@@ -332,7 +336,7 @@ const SlideInput = () => {
           purpose: setupData.purpose || 'Lecture / Class',
           themeId: setupData.selectedTheme,
           autoGenerateImages: setupData.autoGenerateImages,
-          numSlides: numSlides,
+          numSlides: (!user || isPro) ? numSlides : Math.min(numSlides, FREE_SLIDE_LIMIT),
         }
       });
       
@@ -389,6 +393,12 @@ const SlideInput = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Paywall: free tier deck limit
+    if (user && !isPro && deckCount >= FREE_DECK_LIMIT) {
+      setPaywallReason('deck_limit');
+      return;
+    }
     console.log("SlideInput: Form submitted for slide generation");
     
     localStorage.setItem('selectedTheme', selectedTheme);
@@ -429,7 +439,7 @@ const SlideInput = () => {
           purpose: purpose,
           themeId: selectedTheme,
           autoGenerateImages: autoGenerateImages,
-          numSlides: numSlides,
+          numSlides: (!user || isPro) ? numSlides : Math.min(numSlides, FREE_SLIDE_LIMIT),
         }
       });
       
@@ -814,4 +824,16 @@ Phosphorylation, glycosylation, ubiquitination — regulate protein activity, lo
   );
 };
 
-export default SlideInput;
+export default SlideInput
+
+      {paywallReason && (
+        <PaywallModal
+          reason={paywallReason}
+          onClose={() => setPaywallReason(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default SlideInputRefactored;
