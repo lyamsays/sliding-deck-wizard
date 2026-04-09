@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import EarlyAccessBanner from './EarlyAccessBanner';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { PresentationIcon, MenuIcon, X, Palette } from 'lucide-react';
@@ -19,6 +20,7 @@ const Navbar = () => {
 
   return (
     <>
+      <EarlyAccessBanner />
       <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-40 sticky top-0">
         <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
           <div className="flex lg:flex-1">

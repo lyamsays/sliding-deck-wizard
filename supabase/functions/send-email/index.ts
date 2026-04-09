@@ -22,6 +22,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: "Sliding.io <onboarding@resend.dev>",
+        reply_to: "lyam@usesliding.com",
         to: [to],
         subject,
         html,
