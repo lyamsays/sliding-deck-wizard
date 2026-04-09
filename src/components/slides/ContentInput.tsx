@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -410,6 +410,8 @@ Mitigation Strategies:
 • Continuous innovation roadmap with quarterly releases`
   ];
 
+  const [showAllThemes, setShowAllThemes] = useState(false);
+
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader className="text-center">
@@ -571,12 +573,26 @@ Mitigation Strategies:
             
             {/* Theme Selection */}
             <div className="space-y-3">
-              <Label className="font-medium">Presentation Theme</Label>
-              <p className="text-sm text-muted-foreground">
-                Choose a visual style for your presentation
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="font-medium">Presentation Theme</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Educator themes shown — {showAllThemes ? 'showing all' : `${themes.filter(t => !t.categories.includes('educator')).length} more available`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAllThemes(s => !s)}
+                  className="text-xs text-primary hover:underline font-medium flex-shrink-0 ml-2"
+                >
+                  {showAllThemes ? 'Show less' : 'Show all'}
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                {[...themes.filter(t => t.categories.includes('educator')), ...themes.filter(t => !t.categories.includes('educator'))].slice(0, 9).map((theme) => (
+                {(showAllThemes
+                  ? [...themes.filter(t => t.categories.includes('educator')), ...themes.filter(t => !t.categories.includes('educator'))]
+                  : themes.filter(t => t.categories.includes('educator'))
+                ).map((theme) => (
                   <div
                     key={theme.id}
                     className={`relative cursor-pointer rounded-lg border-2 transition-all ${
@@ -587,11 +603,6 @@ Mitigation Strategies:
                     onClick={() => setSelectedTheme(theme.id)}
                   >
                     <ThemePreview themeId={theme.id} />
-                    <div className="absolute bottom-2 left-2 right-2">
-                      <div className="bg-black/70 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
-                        {theme.name}
-                      </div>
-                    </div>
                     {selectedTheme === theme.id && (
                       <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
                         ✓
@@ -600,6 +611,15 @@ Mitigation Strategies:
                   </div>
                 ))}
               </div>
+              {!showAllThemes && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllThemes(true)}
+                  className="w-full py-2 rounded-lg border border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                >
+                  + Show all {themes.length} themes
+                </button>
+              )}
             </div>
           </div>
 

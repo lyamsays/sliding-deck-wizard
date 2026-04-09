@@ -4,7 +4,7 @@ import { Theme } from './theme-types';
 export const themes: Theme[] = [
   {
     id: 'aurora',
-    name: 'Aurora',
+    name: 'Indigo',
     description: 'Sophisticated dark theme with electric blue accents',
     background: 'linear-gradient(135deg, #0c0c0f 0%, #1a1625 50%, #2d1b69 100%)',
     accentColor: '#00d4ff',
@@ -30,7 +30,7 @@ export const themes: Theme[] = [
   },
   {
     id: 'obsidian',
-    name: 'Obsidian',
+    name: 'Graphite',
     description: 'Deep black with warm amber highlights',
     background: 'linear-gradient(135deg, #000000 0%, #1c1c1c 50%, #2a2a2a 100%)',
     accentColor: '#f59e0b',
@@ -69,7 +69,7 @@ export const themes: Theme[] = [
   },
   {
     id: 'crimson',
-    name: 'Crimson',
+    name: 'Scarlet',
     description: 'Bold crimson gradients for impactful presentations',
     background: 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 50%, #dc2626 100%)',
     accentColor: '#fbbf24',
@@ -82,7 +82,7 @@ export const themes: Theme[] = [
   },
   {
     id: 'sage',
-    name: 'Sage',
+    name: 'Mint',
     description: 'Calming sage green with premium typography',
     background: 'linear-gradient(135deg, #f0f9ff 0%, #ecfdf5 50%, #f7fee7 100%)',
     accentColor: '#059669',
@@ -160,7 +160,7 @@ export const themes: Theme[] = [
   },
   {
     id: 'ivory',
-    name: 'Ivory',
+    name: 'Golden',
     description: 'Warm ivory with elegant gold accents',
     background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fde68a 100%)',
     accentColor: '#d97706',

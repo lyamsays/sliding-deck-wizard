@@ -35,7 +35,7 @@ const PREVIEWS: Record<string, { title: string; eyebrow?: string; bullets: strin
 
 const ThemePreview = ({ themeId }: ThemePreviewProps) => {
   const theme = themes.find(t => t.id === themeId) || themes[0];
-  const preview = PREVIEWS[themeId] || PREVIEWS['pristine'] || {
+  const preview = PREVIEWS[themeId] || PREVIEWS['ivory-clean'] || {
     title: theme.name,
     bullets: ['Evidence-based slide content', 'Clear structure for your audience', 'Professional academic design'],
   };
