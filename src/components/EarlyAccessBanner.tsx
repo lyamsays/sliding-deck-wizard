@@ -19,7 +19,7 @@ const EarlyAccessBanner: React.FC = () => {
       <span className="font-medium">
         Early Access —{' '}
         <a
-          href="mailto:lyam@usesliding.com?subject=Sliding.io Feedback"
+          href="/contact"
           className="underline underline-offset-2 hover:opacity-80 transition-opacity"
         >
           share your feedback
