@@ -11,7 +11,7 @@ import { Sparkles, Zap } from 'lucide-react';
 import { usePlan, FREE_DECK_LIMIT } from '@/hooks/usePlan';
 
 const MyDecks = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [decks, setDecks] = useState<SlideDeck[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -20,9 +20,10 @@ const MyDecks = () => {
   const { isPro, deckCount } = usePlan();
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { navigate('/sign-in'); return; }
     fetchDecks();
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchDecks = async () => {
     try {
