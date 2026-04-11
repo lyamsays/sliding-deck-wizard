@@ -5,41 +5,8 @@ import { Clock, ArrowRight, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { posts } from '@/data/posts';
 
-const posts = [
-  {
-    title: "Why Professors Spend 4 Hours a Week on Slides (And How to Get That Time Back)",
-    excerpt: "A survey of 200 educators found the average professor spends between 3-5 hours per week creating and updating presentation materials. Here's the breakdown — and what to do about it.",
-    date: "April 8, 2026",
-    readTime: "5 min read",
-    category: "Educator Productivity",
-    slug: "professor-slide-time"
-  },
-  {
-    title: "The Testing Effect: Why Your Slides Should Generate Discussion, Not Just Transfer Information",
-    excerpt: "Cognitive science research consistently shows that retrieval practice beats passive re-reading. Here's how to design slides that force active recall — and why your speaker notes matter more than your bullets.",
-    date: "April 3, 2026",
-    readTime: "7 min read",
-    category: "Teaching & Learning",
-    slug: "testing-effect-slides"
-  },
-  {
-    title: "Behind Sliding.io: How I Built an AI Presentation Tool for Professors in Law School",
-    excerpt: "I'm a first-year law student at BU who graduated from Cornell last year. This is the story of why I built Sliding.io, what I got wrong the first three times, and what the product looks like today.",
-    date: "March 28, 2026",
-    readTime: "8 min read",
-    category: "Company",
-    slug: "behind-sliding-io"
-  },
-  {
-    title: "Spaced Repetition, Forgetting Curves, and What They Mean for Lecture Design",
-    excerpt: "Ebbinghaus showed we forget 70% of new information within 24 hours. The implications for how professors structure lectures — and the slides within them — are significant and underappreciated.",
-    date: "March 20, 2026",
-    readTime: "6 min read",
-    category: "Teaching & Learning",
-    slug: "spaced-repetition-lectures"
-  },
-];
 
 const BlogPage = () => {
   const [email, setEmail] = useState('');
@@ -89,7 +56,7 @@ const BlogPage = () => {
 
         <div className="space-y-8">
           {posts.map((post, i) => (
-            <article key={i} className="bg-white rounded-2xl border border-gray-100 p-7 hover:border-purple-200 hover:shadow-sm transition-all group">
+            <Link to={`/blog/${post.slug}`} key={i} className="block bg-white rounded-2xl border border-gray-100 p-7 hover:border-purple-200 hover:shadow-sm transition-all group">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-3 py-1 rounded-full">{post.category}</span>
                 <div className="flex items-center gap-1 text-xs text-gray-400">
@@ -105,7 +72,7 @@ const BlogPage = () => {
               <div className="flex items-center gap-1 text-sm text-primary font-medium">
                 Read more <ArrowRight className="h-4 w-4" />
               </div>
-            </article>
+            </Link>
           ))}
         </div>
 
