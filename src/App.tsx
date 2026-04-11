@@ -3,6 +3,7 @@ import React from "react";
 import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import Index from "./pages/Index";
 import SlideInput from "./pages/SlideInput";
 import Create from "./pages/Create";
@@ -73,6 +74,7 @@ const App = () => {
               </Routes>
             </ErrorBoundary>
           </BrowserRouter>
+          <Analytics />
       </AuthProvider>
     </QueryClientProvider>
   );
